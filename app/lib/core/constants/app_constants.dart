@@ -3,7 +3,7 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API
-  static const String apiBaseUrl = 'https://kanavumeipada-backend-production.up.railway.app/api';
+  static const String apiBaseUrl = 'https://kanavumeipada-production.up.railway.app/api';
   static const String apiTimeoutSeconds = 30;
 
   // Firebase
