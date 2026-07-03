@@ -46,8 +46,9 @@ export async function feedRoutes(fastify: FastifyInstance, pool: Pool) {
   // Get global feed (all posts)
   fastify.get('/api/feed/global', async (request, reply) => {
     try {
-      const limit = Math.min(parseInt(request.query.limit || '20'), 100);
-      const offset = parseInt(request.query.offset || '0');
+      const query = request.query as any;
+      const limit = Math.min(parseInt(query.limit || '20'), 100);
+      const offset = parseInt(query.offset || '0');
 
       const posts = await feedService.getGlobalFeed(limit, offset);
 

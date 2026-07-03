@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import type { User } from './user.service';
+import type { User } from '../types/auth';
 
 export interface FeedPost {
   id: string;

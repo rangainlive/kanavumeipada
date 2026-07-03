@@ -108,8 +108,9 @@ export async function challengeRoutes(fastify: FastifyInstance, pool: Pool) {
   // Get active challenges
   fastify.get('/api/challenges', async (request, reply) => {
     try {
-      const limit = Math.min(parseInt(request.query.limit || '20'), 100);
-      const offset = parseInt(request.query.offset || '0');
+      const query = request.query as any;
+      const limit = Math.min(parseInt(query.limit || '20'), 100);
+      const offset = parseInt(query.offset || '0');
 
       const challenges = await challengeService.getActiveChallenges(limit, offset);
 
