@@ -4,7 +4,7 @@ class AppConstants {
 
   // API
   static const String apiBaseUrl = 'https://kanavumeipada-production.up.railway.app/api';
-  static const String apiTimeoutSeconds = 30;
+  static const int apiTimeoutSeconds = 30;
 
   // Firebase
   static const String firebaseProjectId = 'kanavumeipada';

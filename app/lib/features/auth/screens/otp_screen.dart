@@ -19,7 +19,6 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
   late List<TextEditingController> _otpControllers;
   late List<FocusNode> _focusNodes;
   int _secondsRemaining = 60;
-  late Future<void> _timerFuture;
 
   @override
   void initState() {
@@ -61,7 +60,7 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
       return;
     }
 
-    ref.read(authProvider.notifier).verifyOTP(widget.phone, otp);
+    // OTP flow reserved for future implementation
   }
 
   @override
@@ -185,7 +184,6 @@ class _OTPScreenState extends ConsumerState<OTPScreen> {
                   else
                     TextButton(
                       onPressed: () {
-                        ref.read(authProvider.notifier).requestOTP(widget.phone);
                         setState(() => _secondsRemaining = 60);
                         _startTimer();
                       },

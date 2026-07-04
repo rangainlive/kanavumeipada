@@ -4,8 +4,9 @@ import { createFeedService } from '../services/feed.service';
 import { z } from 'zod';
 
 const createPostSchema = z.object({
-  postType: z.enum(['test_published', 'challenge_created', 'result_shared', 'achievement_unlocked']),
-  bodyText: z.string().optional(),
+  postType: z.enum(['discussion', 'test_published', 'challenge_created', 'result_shared', 'achievement_unlocked']),
+  title: z.string().max(200).optional(),
+  bodyText: z.string().max(500).optional(),
   refId: z.string().uuid().optional(),
   refType: z.enum(['test', 'challenge', 'achievement']).optional(),
 });

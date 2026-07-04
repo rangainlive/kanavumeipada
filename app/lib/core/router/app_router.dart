@@ -3,8 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/profile_setup_screen.dart';
+import '../../features/auth/screens/profile_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/feed/screens/feed_screen.dart';
+import '../../features/feed/screens/create_post_screen.dart';
+import '../../features/content/screens/study_screen.dart';
+import '../../features/content/screens/subject_chapters_screen.dart';
+import '../../features/test_engine/screens/tests_screen.dart';
+import '../../features/challenge/screens/battle_screen.dart';
+import '../widgets/main_shell.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -34,36 +41,41 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/auth/profile',
         builder: (context, state) => const ProfileSetupScreen(),
       ),
-      GoRoute(
-        path: '/feed',
-        builder: (context, state) => const FeedScreen(),
-      ),
-      GoRoute(
-        path: '/content/:id',
-        builder: (context, state) => PlaceholderScreen(
-          title: 'Content Details',
-          id: state.pathParameters['id'] ?? '',
-        ),
-      ),
-      GoRoute(
-        path: '/test/:id',
-        builder: (context, state) => PlaceholderScreen(
-          title: 'Test',
-          id: state.pathParameters['id'] ?? '',
-        ),
-      ),
-      GoRoute(
-        path: '/challenge/:id',
-        builder: (context, state) => PlaceholderScreen(
-          title: 'Challenge',
-          id: state.pathParameters['id'] ?? '',
-        ),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const PlaceholderScreen(
-          title: 'Profile',
-        ),
+      ShellRoute(
+        builder: (context, state, child) => MainShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/feed',
+            builder: (context, state) => const FeedScreen(),
+          ),
+          GoRoute(
+            path: '/feed/create',
+            builder: (context, state) => const CreatePostScreen(),
+          ),
+          GoRoute(
+            path: '/study',
+            builder: (context, state) => const StudyScreen(),
+          ),
+          GoRoute(
+            path: '/study/subject/:id',
+            builder: (context, state) => SubjectChaptersScreen(
+              subjectId: state.pathParameters['id']!,
+              subjectName: state.extra as String?,
+            ),
+          ),
+          GoRoute(
+            path: '/tests',
+            builder: (context, state) => const TestsScreen(),
+          ),
+          GoRoute(
+            path: '/battle',
+            builder: (context, state) => const BattleScreen(),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
+        ],
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
@@ -72,24 +84,3 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
-
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  final String id;
-
-  const PlaceholderScreen({
-    Key? key,
-    required this.title,
-    this.id = '',
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text('$title ${id.isNotEmpty ? '- $id' : ''}'),
-      ),
-    );
-  }
-}

@@ -46,14 +46,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Community Feed'),
+        title: const Text('Community'),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () => context.go('/profile'),
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/feed/create'),
+        tooltip: 'Create Post',
+        child: const Icon(Icons.edit_rounded),
       ),
       body: feedState.isLoading && feedState.posts.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -62,8 +61,25 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 await ref.read(feedProvider.notifier).loadFeed(refresh: true);
               },
               child: feedState.posts.isEmpty
-                  ? const Center(
-                      child: Text('No posts yet. Follow users to see their activity!'),
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.people_outline, size: 64, color: Colors.grey),
+                          const SizedBox(height: 12),
+                          const Text('No posts yet.',
+                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text('Be the first to share a study tip!',
+                              style: TextStyle(color: Colors.grey[600])),
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: () => context.push('/feed/create'),
+                            icon: const Icon(Icons.edit_rounded, size: 16),
+                            label: const Text('Create Post'),
+                          ),
+                        ],
+                      ),
                     )
                   : ListView.builder(
                       controller: _scrollController,

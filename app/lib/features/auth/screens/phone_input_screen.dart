@@ -36,8 +36,6 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
       return;
     }
 
-    ref.read(authProvider.notifier).requestOTP(phone);
-
     if (mounted) {
       context.go('/auth/otp', extra: phone);
     }

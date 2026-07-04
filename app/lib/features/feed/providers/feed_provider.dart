@@ -51,6 +51,8 @@ class FeedPost {
 
   String getDisplayText() {
     switch (postType) {
+      case 'discussion':
+        return '💬 Discussion';
       case 'test_published':
         return '📝 New Test Published';
       case 'challenge_created':
@@ -60,7 +62,7 @@ class FeedPost {
       case 'achievement_unlocked':
         return '🎉 Achievement Unlocked';
       default:
-        return 'Posted';
+        return '💬 Post';
     }
   }
 }
@@ -98,7 +100,7 @@ class FeedState {
 }
 
 class FeedNotifier extends StateNotifier<FeedState> {
-  final String apiUrl = 'http://localhost:3000/api';
+  static const String apiUrl = 'https://kanavumeipada-production.up.railway.app/api';
   final String? token;
 
   FeedNotifier(this.token) : super(FeedState());
@@ -111,8 +113,9 @@ class FeedNotifier extends StateNotifier<FeedState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
+      final endpoint = token != null ? '/feed' : '/feed/global';
       final response = await http.get(
-        Uri.parse('$apiUrl/feed?limit=20&offset=${state.offset}'),
+        Uri.parse('$apiUrl$endpoint?limit=20&offset=${state.offset}'),
         headers: token != null ? {'Authorization': 'Bearer $token'} : {},
       );
 
