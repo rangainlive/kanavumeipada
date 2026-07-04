@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   phone VARCHAR(20) UNIQUE NOT NULL,
   email VARCHAR(255),
@@ -19,7 +19,7 @@ CREATE TABLE users (
 );
 
 -- User Streaks table
-CREATE TABLE user_streaks (
+CREATE TABLE IF NOT EXISTS user_streaks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   current_streak INT DEFAULT 0,
@@ -30,7 +30,7 @@ CREATE TABLE user_streaks (
 );
 
 -- Subjects table
-CREATE TABLE subjects (
+CREATE TABLE IF NOT EXISTS subjects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL UNIQUE,
   icon VARCHAR(255),
@@ -40,7 +40,7 @@ CREATE TABLE subjects (
 );
 
 -- Chapters table
-CREATE TABLE chapters (
+CREATE TABLE IF NOT EXISTS chapters (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   subject_id UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE chapters (
 );
 
 -- Questions table
-CREATE TABLE questions (
+CREATE TABLE IF NOT EXISTS questions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   chapter_id UUID NOT NULL REFERENCES chapters(id) ON DELETE CASCADE,
   text TEXT NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE questions (
 );
 
 -- Question Options table
-CREATE TABLE question_options (
+CREATE TABLE IF NOT EXISTS question_options (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
   text TEXT NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE question_options (
 );
 
 -- Question Ratings table
-CREATE TABLE question_ratings (
+CREATE TABLE IF NOT EXISTS question_ratings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -90,11 +90,11 @@ CREATE TABLE question_ratings (
 );
 
 -- Tests table
-CREATE TABLE tests (
+CREATE TABLE IF NOT EXISTS tests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   chapter_id UUID NOT NULL REFERENCES chapters(id) ON DELETE CASCADE,
   creator_id UUID NOT NULL REFERENCES users(id),
-  type VARCHAR(50) DEFAULT 'practice', -- practice, challenge, daily, official
+  type VARCHAR(50) DEFAULT 'practice',
   title VARCHAR(255),
   description TEXT,
   time_limit_sec INT,
@@ -108,7 +108,7 @@ CREATE TABLE tests (
 );
 
 -- Test Questions junction table
-CREATE TABLE test_questions (
+CREATE TABLE IF NOT EXISTS test_questions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   test_id UUID NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
   question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
@@ -117,7 +117,7 @@ CREATE TABLE test_questions (
 );
 
 -- Test Attempts table
-CREATE TABLE test_attempts (
+CREATE TABLE IF NOT EXISTS test_attempts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   test_id UUID NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -131,7 +131,7 @@ CREATE TABLE test_attempts (
 );
 
 -- Attempt Answers table
-CREATE TABLE attempt_answers (
+CREATE TABLE IF NOT EXISTS attempt_answers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   attempt_id UUID NOT NULL REFERENCES test_attempts(id) ON DELETE CASCADE,
   question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
@@ -142,7 +142,7 @@ CREATE TABLE attempt_answers (
 );
 
 -- Challenges table
-CREATE TABLE challenges (
+CREATE TABLE IF NOT EXISTS challenges (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   test_id UUID NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
   creator_id UUID NOT NULL REFERENCES users(id),
@@ -151,13 +151,13 @@ CREATE TABLE challenges (
   max_participants INT,
   start_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   end_at TIMESTAMP NOT NULL,
-  status VARCHAR(50) DEFAULT 'draft', -- draft, active, closed, distributed
+  status VARCHAR(50) DEFAULT 'draft',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Challenge Participants table
-CREATE TABLE challenge_participants (
+CREATE TABLE IF NOT EXISTS challenge_participants (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -169,10 +169,10 @@ CREATE TABLE challenge_participants (
 );
 
 -- Wallet Transactions table
-CREATE TABLE wallet_transactions (
+CREATE TABLE IF NOT EXISTS wallet_transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type VARCHAR(50) NOT NULL, -- topup, entry_fee, prize, creator_reward, platform_fee, refund
+  type VARCHAR(50) NOT NULL,
   amount_coins INT NOT NULL,
   reference_id VARCHAR(255),
   description TEXT,
@@ -181,7 +181,7 @@ CREATE TABLE wallet_transactions (
 );
 
 -- Payment Orders table
-CREATE TABLE payment_orders (
+CREATE TABLE IF NOT EXISTS payment_orders (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   razorpay_order_id VARCHAR(255) UNIQUE,
@@ -192,12 +192,12 @@ CREATE TABLE payment_orders (
 );
 
 -- Feed Posts table
-CREATE TABLE feed_posts (
+CREATE TABLE IF NOT EXISTS feed_posts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  post_type VARCHAR(50) NOT NULL, -- test_published, challenge_created, result_shared, achievement_unlocked
+  post_type VARCHAR(50) NOT NULL,
   ref_id UUID,
-  ref_type VARCHAR(50), -- test, challenge, achievement
+  ref_type VARCHAR(50),
   body_text TEXT,
   likes_count INT DEFAULT 0,
   comments_count INT DEFAULT 0,
@@ -206,7 +206,7 @@ CREATE TABLE feed_posts (
 );
 
 -- Post Likes table
-CREATE TABLE post_likes (
+CREATE TABLE IF NOT EXISTS post_likes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   post_id UUID NOT NULL REFERENCES feed_posts(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -215,7 +215,7 @@ CREATE TABLE post_likes (
 );
 
 -- Post Comments table
-CREATE TABLE post_comments (
+CREATE TABLE IF NOT EXISTS post_comments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   post_id UUID NOT NULL REFERENCES feed_posts(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -225,7 +225,7 @@ CREATE TABLE post_comments (
 );
 
 -- User Follows table
-CREATE TABLE user_follows (
+CREATE TABLE IF NOT EXISTS user_follows (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   follower_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   followee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -235,7 +235,7 @@ CREATE TABLE user_follows (
 );
 
 -- Achievements table
-CREATE TABLE achievements (
+CREATE TABLE IF NOT EXISTS achievements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   key VARCHAR(100) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
@@ -247,7 +247,7 @@ CREATE TABLE achievements (
 );
 
 -- User Achievements table
-CREATE TABLE user_achievements (
+CREATE TABLE IF NOT EXISTS user_achievements (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   achievement_id UUID NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
@@ -255,19 +255,19 @@ CREATE TABLE user_achievements (
   UNIQUE(user_id, achievement_id)
 );
 
--- Create indexes for better performance
-CREATE INDEX idx_users_phone ON users(phone);
-CREATE INDEX idx_users_exam_target ON users(exam_target);
-CREATE INDEX idx_chapters_subject_id ON chapters(subject_id);
-CREATE INDEX idx_questions_chapter_id ON questions(chapter_id);
-CREATE INDEX idx_tests_creator_id ON tests(creator_id);
-CREATE INDEX idx_tests_chapter_id ON tests(chapter_id);
-CREATE INDEX idx_test_attempts_user_id ON test_attempts(user_id);
-CREATE INDEX idx_test_attempts_test_id ON test_attempts(test_id);
-CREATE INDEX idx_challenges_creator_id ON challenges(creator_id);
-CREATE INDEX idx_challenge_participants_user_id ON challenge_participants(user_id);
-CREATE INDEX idx_wallet_transactions_user_id ON wallet_transactions(user_id);
-CREATE INDEX idx_feed_posts_user_id ON feed_posts(user_id);
-CREATE INDEX idx_feed_posts_created_at ON feed_posts(created_at DESC);
-CREATE INDEX idx_user_follows_follower_id ON user_follows(follower_id);
-CREATE INDEX idx_user_follows_followee_id ON user_follows(followee_id);
+-- Indexes (IF NOT EXISTS supported in PG 9.5+)
+CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_exam_target ON users(exam_target);
+CREATE INDEX IF NOT EXISTS idx_chapters_subject_id ON chapters(subject_id);
+CREATE INDEX IF NOT EXISTS idx_questions_chapter_id ON questions(chapter_id);
+CREATE INDEX IF NOT EXISTS idx_tests_creator_id ON tests(creator_id);
+CREATE INDEX IF NOT EXISTS idx_tests_chapter_id ON tests(chapter_id);
+CREATE INDEX IF NOT EXISTS idx_test_attempts_user_id ON test_attempts(user_id);
+CREATE INDEX IF NOT EXISTS idx_test_attempts_test_id ON test_attempts(test_id);
+CREATE INDEX IF NOT EXISTS idx_challenges_creator_id ON challenges(creator_id);
+CREATE INDEX IF NOT EXISTS idx_challenge_participants_user_id ON challenge_participants(user_id);
+CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user_id ON wallet_transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_feed_posts_user_id ON feed_posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_feed_posts_created_at ON feed_posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_follows_follower_id ON user_follows(follower_id);
+CREATE INDEX IF NOT EXISTS idx_user_follows_followee_id ON user_follows(followee_id);

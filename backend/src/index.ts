@@ -3,6 +3,8 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { registerAuthMiddleware } from './middleware/auth.middleware';
 import { authRoutes } from './routes/auth.routes';
 import { feedRoutes } from './routes/feed.routes';
@@ -83,8 +85,21 @@ fastify.register((fastify) => testRoutes(fastify, pool));
 fastify.register((fastify) => walletRoutes(fastify, pool));
 fastify.register((fastify) => challengeRoutes(fastify, pool));
 
+const runMigrations = async () => {
+  try {
+    const sql = readFileSync(join(__dirname, 'db', 'init.sql'), 'utf8');
+    await pool.query(sql);
+    console.log('✅ Database schema initialized');
+  } catch (err) {
+    console.error('❌ Migration failed:', (err as Error).message);
+    throw err;
+  }
+};
+
 const start = async () => {
   try {
+    await runMigrations();
+
     const port = parseInt(process.env.PORT || '3000');
     const host = process.env.HOST || '0.0.0.0';
 
