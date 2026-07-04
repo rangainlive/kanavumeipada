@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../auth/providers/auth_provider.dart';
 
 class FeedPost {
   final String id;
@@ -215,6 +216,3 @@ final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
   final authState = ref.watch(authProvider);
   return FeedNotifier(authState.token);
 });
-
-// Import the auth provider
-import '../../auth/providers/auth_provider.dart';

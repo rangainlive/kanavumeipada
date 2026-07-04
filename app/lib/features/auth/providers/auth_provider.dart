@@ -1,42 +1,41 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:convert';
+import '../services/google_auth_service.dart';
+
+const _apiUrl = 'https://kanavumeipada-production.up.railway.app/api';
 
 class User {
   final String id;
-  final String phone;
+  final String email;
   final String? name;
-  final String? email;
   final String? examTarget;
-  final String? state;
-  final String language;
+  final String? userState;
   final int coinsBalance;
   final int xp;
 
   User({
     required this.id,
-    required this.phone,
+    required this.email,
     this.name,
-    this.email,
     this.examTarget,
-    this.state,
-    this.language = 'en',
+    this.userState,
     this.coinsBalance = 0,
     this.xp = 0,
   });
 
   bool get isProfileComplete =>
-      name != null && name!.isNotEmpty && examTarget != null && state != null;
+      name != null && name!.isNotEmpty && examTarget != null && userState != null;
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'],
-      phone: json['phone'],
+      email: json['email'] ?? '',
       name: json['name'],
-      email: json['email'],
       examTarget: json['examTarget'],
-      state: json['state'],
-      language: json['language'] ?? 'en',
+      userState: json['state'],
       coinsBalance: json['coinsBalance'] ?? 0,
       xp: json['xp'] ?? 0,
     );
@@ -48,7 +47,6 @@ class AuthState {
   final bool isAuthenticated;
   final User? user;
   final String? token;
-  final String? refreshToken;
   final String? error;
 
   AuthState({
@@ -56,7 +54,6 @@ class AuthState {
     this.isAuthenticated = false,
     this.user,
     this.token,
-    this.refreshToken,
     this.error,
   });
 
@@ -65,7 +62,6 @@ class AuthState {
     bool? isAuthenticated,
     User? user,
     String? token,
-    String? refreshToken,
     String? error,
   }) {
     return AuthState(
@@ -73,116 +69,151 @@ class AuthState {
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       user: user ?? this.user,
       token: token ?? this.token,
-      refreshToken: refreshToken ?? this.refreshToken,
       error: error ?? this.error,
     );
   }
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  final String apiUrl = 'http://localhost:3000/api';
+  late GoogleAuthService _googleAuthService;
 
-  AuthNotifier() : super(AuthState());
+  AuthNotifier() : super(AuthState()) {
+    _googleAuthService = GoogleAuthService();
+    _loadToken();
+  }
 
-  Future<void> requestOTP(String phone) async {
-    state = state.copyWith(isLoading: true, error: null);
-    try {
-      final response = await http.post(
-        Uri.parse('$apiUrl/auth/request-otp'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phone}),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to request OTP');
+  Future<void> _loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    if (token != null) {
+      state = state.copyWith(isLoading: true);
+      try {
+        final response = await http.get(
+          Uri.parse('$_apiUrl/auth/me'),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          state = state.copyWith(
+            isLoading: false,
+            isAuthenticated: true,
+            token: token,
+            user: User.fromJson(data['user']),
+          );
+        } else {
+          await prefs.remove('token');
+          state = AuthState();
+        }
+      } catch (_) {
+        state = AuthState();
       }
-
-      state = state.copyWith(isLoading: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
     }
   }
 
-  Future<void> verifyOTP(String phone, String otp) async {
+  Future<void> register(String email, String password, String name) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await http.post(
-        Uri.parse('$apiUrl/auth/verify-otp'),
+        Uri.parse('$_apiUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'phone': phone,
-          'otp': otp,
-        }),
+        body: jsonEncode({'email': email, 'password': password, 'name': name}),
       );
-
-      if (response.statusCode != 200) {
-        final data = jsonDecode(response.body);
-        throw Exception(data['error'] ?? 'Verification failed');
-      }
-
       final data = jsonDecode(response.body);
-      final user = User.fromJson(data['user']);
-
+      if (response.statusCode != 201) {
+        throw Exception(data['error'] ?? 'Registration failed');
+      }
+      await _saveToken(data['token']);
       state = state.copyWith(
         isLoading: false,
         isAuthenticated: true,
-        user: user,
         token: data['token'],
-        refreshToken: data['refreshToken'],
+        user: User.fromJson(data['user']),
       );
     } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  Future<void> login(String email, String password) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        throw Exception(data['error'] ?? 'Login failed');
+      }
+      await _saveToken(data['token']);
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        isAuthenticated: true,
+        token: data['token'],
+        user: User.fromJson(data['user']),
       );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString().replaceAll('Exception: ', ''));
     }
   }
 
   Future<void> updateProfile({
     required String name,
     required String examTarget,
-    required String state,
+    required String userState,
     String? email,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await http.post(
-        Uri.parse('$apiUrl/auth/profile'),
+        Uri.parse('$_apiUrl/auth/profile'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${this.state.token}',
+          'Authorization': 'Bearer ${state.token}',
         },
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'examTarget': examTarget,
-          'state': state,
-        }),
+        body: jsonEncode({'name': name, 'examTarget': examTarget, 'state': userState}),
       );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to update profile');
-      }
-
       final data = jsonDecode(response.body);
-      final user = User.fromJson(data['user']);
-
+      if (response.statusCode != 200) {
+        throw Exception(data['error'] ?? 'Profile update failed');
+      }
       state = state.copyWith(
         isLoading: false,
-        user: user,
+        user: User.fromJson(data['user']),
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString().replaceAll('Exception: ', ''));
     }
   }
 
-  void logout() {
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
+  }
+
+  Future<void> loginWithGoogle() async {
+    state = state.copyWith(isLoading: true, error: null);
+    final result = await _googleAuthService.authenticateWithGoogle();
+
+    if (!result['success']) {
+      state = state.copyWith(isLoading: false, error: result['error']);
+      return;
+    }
+
+    await _saveToken(result['token']);
+    state = state.copyWith(
+      isLoading: false,
+      isAuthenticated: true,
+      token: result['token'],
+      user: User.fromJson(result['user']),
+    );
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await _googleAuthService.signOut();
     state = AuthState();
   }
 }

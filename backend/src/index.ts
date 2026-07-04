@@ -31,10 +31,36 @@ pool.on('error', (err) => {
 });
 
 // Register plugins
-fastify.register(helmet);
+fastify.register(helmet, {
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false,   // required for Google Sign-In popup
+  crossOriginEmbedderPolicy: false,
+});
+
+const corsOriginConfig = (requestOrigin: string | undefined, cb: (err: Error | null, allow: boolean) => void) => {
+  if (!requestOrigin) return cb(null, true);
+
+  const allowedOrigins = (process.env.CORS_ORIGIN || '*').split(',').map(o => o.trim());
+
+  if (allowedOrigins.includes('*')) return cb(null, true);
+
+  for (const origin of allowedOrigins) {
+    if (origin === requestOrigin) return cb(null, true);
+    if (origin.endsWith(':*')) {
+      if (requestOrigin.startsWith(origin.slice(0, -2))) return cb(null, true);
+    }
+  }
+
+  cb(new Error(`Origin ${requestOrigin} not allowed`), false);
+};
+
 fastify.register(cors, {
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: corsOriginConfig,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
 });
 
 // Register auth middleware

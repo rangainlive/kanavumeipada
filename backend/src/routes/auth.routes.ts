@@ -1,17 +1,20 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { Pool } from 'pg';
 import { jwtService } from '../services/jwt.service';
 import { createUserService } from '../services/user.service';
-import type { PhoneOTPRequest, VerifyOTPRequest, ProfileUpdateRequest } from '../types/auth';
+import { createGoogleOAuthService } from '../services/google-oauth.service';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 
-const phoneOTPSchema = z.object({
-  phone: z.string().min(10).max(20),
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string().min(1).max(255),
 });
 
-const verifyOTPSchema = z.object({
-  phone: z.string().min(10).max(20),
-  otp: z.string().length(6),
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
 });
 
 const profileUpdateSchema = z.object({
@@ -22,56 +25,72 @@ const profileUpdateSchema = z.object({
   language: z.string().optional(),
 });
 
+const googleAuthSchema = z.object({
+  token: z.string().min(1),
+});
+
 export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
   const userService = createUserService(pool);
+  const googleOAuthService = createGoogleOAuthService(pool);
 
-  // Request phone OTP
-  fastify.post<{ Body: PhoneOTPRequest }>('/api/auth/request-otp', async (request, reply) => {
+  // Register
+  fastify.post('/api/auth/register', async (request, reply) => {
     try {
-      const { phone } = phoneOTPSchema.parse(request.body);
+      const { email, password, name } = registerSchema.parse(request.body);
 
-      // In production, integrate with Firebase to send OTP
-      // For now, we'll simulate it
-      const otp = '123456'; // Simulate OTP for development
+      const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+      if (existing.rows.length > 0) {
+        return reply.code(400).send({ error: 'Email already registered' });
+      }
 
-      // Store OTP in Redis (cache) with expiry of 10 minutes
-      // This would be: await redis.setex(`otp:${phone}`, 600, otp);
+      const password_hash = await bcrypt.hash(password, 10);
 
-      return reply.code(200).send({
-        message: 'OTP sent successfully',
-        requestId: `req_${Date.now()}`,
-        // In development only, return OTP:
-        ...(process.env.NODE_ENV === 'development' && { otp }),
+      const result = await pool.query(
+        `INSERT INTO users (email, password_hash, name, coins_balance, xp, is_active)
+         VALUES ($1, $2, $3, 100, 0, true) RETURNING *`,
+        [email, password_hash, name]
+      );
+
+      const user = result.rows[0];
+      await userService.initializeStreak(user.id);
+
+      const { token, expiresIn } = jwtService.generateToken(user.id, email);
+      const refreshToken = jwtService.generateRefreshToken(user.id);
+
+      return reply.code(201).send({
+        token,
+        refreshToken,
+        expiresIn,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          coinsBalance: user.coins_balance,
+          isProfileComplete: !!user.exam_target && !!user.state,
+        },
       });
     } catch (error: any) {
-      return reply.code(400).send({
-        error: 'Invalid phone number',
-        message: error.message,
-      });
+      return reply.code(400).send({ error: error.message });
     }
   });
 
-  // Verify OTP and create/login user
-  fastify.post<{ Body: VerifyOTPRequest }>('/api/auth/verify-otp', async (request, reply) => {
+  // Login
+  fastify.post('/api/auth/login', async (request, reply) => {
     try {
-      const { phone, otp } = verifyOTPSchema.parse(request.body);
+      const { email, password } = loginSchema.parse(request.body);
 
-      // In production, verify OTP from Redis
-      // For development, accept any 6-digit code
-      if (otp.length !== 6) {
-        return reply.code(400).send({ error: 'Invalid OTP' });
+      const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      if (result.rows.length === 0) {
+        return reply.code(401).send({ error: 'Invalid email or password' });
       }
 
-      // Get or create user
-      let user = await userService.getUserByPhone(phone);
-
-      if (!user) {
-        user = await userService.createUser(phone);
-        await userService.initializeStreak(user.id);
+      const user = result.rows[0];
+      const valid = await bcrypt.compare(password, user.password_hash);
+      if (!valid) {
+        return reply.code(401).send({ error: 'Invalid email or password' });
       }
 
-      // Generate JWT tokens
-      const { token, expiresIn } = jwtService.generateToken(user.id, phone);
+      const { token, expiresIn } = jwtService.generateToken(user.id, email);
       const refreshToken = jwtService.generateRefreshToken(user.id);
 
       return reply.code(200).send({
@@ -80,40 +99,31 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
         expiresIn,
         user: {
           id: user.id,
-          phone: user.phone,
+          email: user.email,
           name: user.name,
-          isProfileComplete:
-            !!user.name && !!user.examTarget && !!user.state && user.coinsBalance >= 0,
+          coinsBalance: user.coins_balance,
+          examTarget: user.exam_target,
+          state: user.state,
+          isProfileComplete: !!user.exam_target && !!user.state,
         },
       });
     } catch (error: any) {
-      return reply.code(400).send({
-        error: 'Authentication failed',
-        message: error.message,
-      });
+      return reply.code(400).send({ error: error.message });
     }
   });
 
   // Update profile
-  fastify.post<{ Body: ProfileUpdateRequest }>(
+  fastify.post(
     '/api/auth/profile',
     { onRequest: [fastify.authenticate] },
     async (request: any, reply) => {
       try {
         const data = profileUpdateSchema.parse(request.body);
         const userId = request.user.userId;
-
         const user = await userService.updateProfile(userId, data);
-
-        return reply.code(200).send({
-          message: 'Profile updated successfully',
-          user,
-        });
+        return reply.code(200).send({ message: 'Profile updated successfully', user });
       } catch (error: any) {
-        return reply.code(400).send({
-          error: 'Profile update failed',
-          message: error.message,
-        });
+        return reply.code(400).send({ error: error.message });
       }
     }
   );
@@ -124,55 +134,52 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
     { onRequest: [fastify.authenticate] },
     async (request: any, reply) => {
       try {
-        const userId = request.user.userId;
-        const user = await userService.getUserById(userId);
-
-        if (!user) {
-          return reply.code(404).send({ error: 'User not found' });
-        }
-
+        const user = await userService.getUserById(request.user.userId);
+        if (!user) return reply.code(404).send({ error: 'User not found' });
         return reply.code(200).send({ user });
       } catch (error: any) {
-        return reply.code(500).send({
-          error: 'Failed to fetch user',
-          message: error.message,
-        });
+        return reply.code(500).send({ error: error.message });
       }
     }
   );
 
   // Refresh token
-  fastify.post<{ Body: { refreshToken: string } }>(
-    '/api/auth/refresh',
-    async (request, reply) => {
-      try {
-        const { refreshToken } = request.body as { refreshToken: string };
+  fastify.post('/api/auth/refresh', async (request: any, reply) => {
+    try {
+      const { refreshToken } = request.body;
+      if (!refreshToken) return reply.code(400).send({ error: 'Refresh token required' });
 
-        if (!refreshToken) {
-          return reply.code(400).send({ error: 'Refresh token required' });
-        }
+      const decoded = jwtService.verifyRefreshToken(refreshToken);
+      const user = await userService.getUserById(decoded.userId);
+      if (!user) return reply.code(401).send({ error: 'User not found' });
 
-        const decoded = jwtService.verifyRefreshToken(refreshToken);
-        const user = await userService.getUserById(decoded.userId);
+      const { token, expiresIn } = jwtService.generateToken(user.id, user.email || '');
+      const newRefreshToken = jwtService.generateRefreshToken(user.id);
 
-        if (!user) {
-          return reply.code(401).send({ error: 'User not found' });
-        }
-
-        const { token, expiresIn } = jwtService.generateToken(user.id, user.phone);
-        const newRefreshToken = jwtService.generateRefreshToken(user.id);
-
-        return reply.code(200).send({
-          token,
-          refreshToken: newRefreshToken,
-          expiresIn,
-        });
-      } catch (error: any) {
-        return reply.code(401).send({
-          error: 'Token refresh failed',
-          message: error.message,
-        });
-      }
+      return reply.code(200).send({ token, refreshToken: newRefreshToken, expiresIn });
+    } catch (error: any) {
+      return reply.code(401).send({ error: error.message });
     }
-  );
+  });
+
+  // Google OAuth
+  fastify.post('/api/auth/google', async (request, reply) => {
+    try {
+      const { token } = googleAuthSchema.parse(request.body);
+      const result = await googleOAuthService.handleGoogleAuth(token);
+      return reply.code(200).send(result);
+    } catch (error: any) {
+      return reply.code(401).send({ error: error.message });
+    }
+  });
+
+  // Google OAuth authorization URL
+  fastify.get('/api/auth/google/authorize', async (request, reply) => {
+    try {
+      const authUrl = googleOAuthService.getAuthorizationUrl();
+      return reply.code(200).send({ authUrl });
+    } catch (error: any) {
+      return reply.code(400).send({ error: error.message });
+    }
+  });
 }

@@ -12,7 +12,6 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   late TextEditingController _nameController;
-  late TextEditingController _emailController;
   String? _selectedExam;
   String? _selectedState;
 
@@ -40,13 +39,11 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _emailController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
@@ -63,8 +60,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     ref.read(authProvider.notifier).updateProfile(
       name: _nameController.text,
       examTarget: _selectedExam!,
-      state: _selectedState!,
-      email: _emailController.text.isEmpty ? null : _emailController.text,
+      userState: _selectedState!,
     );
   }
 
@@ -112,20 +108,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               decoration: InputDecoration(
                 hintText: 'Enter your full name',
                 prefixIcon: const Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Email Address',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                hintText: 'Enter your email (optional)',
-                prefixIcon: const Icon(Icons.email),
               ),
             ),
             const SizedBox(height: 24),

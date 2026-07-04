@@ -1,34 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/auth/screens/phone_input_screen.dart';
-import '../../features/auth/screens/otp_screen.dart';
+import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/profile_setup_screen.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import '../../features/feed/screens/feed_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
   return GoRouter(
-    initialLocation: '/auth/phone',
+    initialLocation: authState.isAuthenticated
+        ? (authState.user?.isProfileComplete == true ? '/feed' : '/auth/profile')
+        : '/auth/login',
+    redirect: (context, state) {
+      final isAuth = authState.isAuthenticated;
+      final isProfileComplete = authState.user?.isProfileComplete ?? false;
+      final isAuthRoute = state.matchedLocation.startsWith('/auth');
+
+      if (!isAuth && !isAuthRoute) return '/auth/login';
+      if (isAuth && !isProfileComplete && state.matchedLocation != '/auth/profile') {
+        return '/auth/profile';
+      }
+      if (isAuth && isProfileComplete && isAuthRoute) return '/feed';
+      return null;
+    },
     routes: [
       GoRoute(
-        path: '/auth',
-        redirect: (context, state) => '/auth/phone',
-      ),
-      GoRoute(
-        path: '/auth/phone',
-        builder: (context, state) => const PhoneInputScreen(),
-      ),
-      GoRoute(
-        path: '/auth/otp',
-        builder: (context, state) {
-          final phone = state.extra as String?;
-          if (phone == null) {
-            return const Scaffold(
-              body: Center(child: Text('Error: Phone number not provided')),
-            );
-          }
-          return OTPScreen(phone: phone);
-        },
+        path: '/auth/login',
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/auth/profile',
