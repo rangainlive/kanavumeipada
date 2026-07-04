@@ -199,13 +199,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     onPressed: authState.isLoading
                         ? null
                         : () => ref.read(authProvider.notifier).loginWithGoogle(),
-                    icon: Image.network(
-                      'https://www.google.com/favicon.ico',
-                      width: 20,
-                      height: 20,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.g_mobiledata, size: 22),
-                    ),
+                    icon: const Icon(Icons.g_mobiledata, size: 22, color: Colors.redAccent),
                     label: const Text('Continue with Google',
                         style: TextStyle(fontSize: 15)),
                   ),

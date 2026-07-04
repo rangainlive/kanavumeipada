@@ -7,12 +7,7 @@ class JWTService {
   private refreshExpiresIn = '30d';
 
   generateToken(userId: string, phone: string): { token: string; expiresIn: string } {
-    const payload: JWTPayload = {
-      userId,
-      phone,
-      iat: Math.floor(Date.now() / 1000),
-      exp: 0, // will be set by jwt.sign
-    };
+    const payload = { userId, phone };
 
     const token = jwt.sign(payload, this.secret, {
       expiresIn: this.expiresIn,
