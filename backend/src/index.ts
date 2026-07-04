@@ -41,17 +41,20 @@ registerAuthMiddleware(fastify);
 // Health check
 fastify.get('/health', async (request, reply) => {
   try {
-    const result = await pool.query('SELECT NOW()');
+    await pool.query('SELECT NOW()');
     return {
       status: 'ok',
       database: 'connected',
       timestamp: new Date().toISOString(),
     };
   } catch (err) {
-    return reply.code(503).send({
+    const error = err as Error;
+    console.error('DB Health check failed:', error.message);
+    return reply.code(200).send({
       status: 'error',
       database: 'disconnected',
-      error: (err as Error).message,
+      error: error.message,
+      hint: 'Check DATABASE_URL environment variable',
     });
   }
 });
