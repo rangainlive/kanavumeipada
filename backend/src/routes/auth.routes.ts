@@ -8,13 +8,13 @@ import bcrypt from 'bcryptjs';
 import axios from 'axios';
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  phone: z.string().min(10).max(15),
   password: z.string().min(6),
   name: z.string().min(1).max(255),
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  phone: z.string().min(10).max(15),
   password: z.string().min(1),
 });
 
@@ -34,28 +34,28 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
   const userService = createUserService(pool);
   const googleOAuthService = createGoogleOAuthService(pool);
 
-  // Register
+  // Register with phone + password
   fastify.post('/api/auth/register', async (request, reply) => {
     try {
-      const { email, password, name } = registerSchema.parse(request.body);
+      const { phone, password, name } = registerSchema.parse(request.body);
 
-      const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+      const existing = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
       if (existing.rows.length > 0) {
-        return reply.code(400).send({ error: 'Email already registered' });
+        return reply.code(400).send({ error: 'Phone number already registered' });
       }
 
       const password_hash = await bcrypt.hash(password, 10);
 
       const result = await pool.query(
-        `INSERT INTO users (email, password_hash, name, coins_balance, xp, is_active)
+        `INSERT INTO users (phone, password_hash, name, coins_balance, xp, is_active)
          VALUES ($1, $2, $3, 100, 0, true) RETURNING *`,
-        [email, password_hash, name]
+        [phone, password_hash, name]
       );
 
       const user = result.rows[0];
       await userService.initializeStreak(user.id);
 
-      const { token, expiresIn } = jwtService.generateToken(user.id, email);
+      const { token, expiresIn } = jwtService.generateToken(user.id, phone);
       const refreshToken = jwtService.generateRefreshToken(user.id);
 
       return reply.code(201).send({
@@ -64,9 +64,11 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
         expiresIn,
         user: {
           id: user.id,
-          email: user.email,
+          phone: user.phone,
           name: user.name,
           coinsBalance: user.coins_balance,
+          examTarget: user.exam_target,
+          state: user.state,
           isProfileComplete: !!user.exam_target && !!user.state,
         },
       });
@@ -75,23 +77,23 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
     }
   });
 
-  // Login
+  // Login with phone + password
   fastify.post('/api/auth/login', async (request, reply) => {
     try {
-      const { email, password } = loginSchema.parse(request.body);
+      const { phone, password } = loginSchema.parse(request.body);
 
-      const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      const result = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
       if (result.rows.length === 0) {
-        return reply.code(401).send({ error: 'Invalid email or password' });
+        return reply.code(401).send({ error: 'Invalid phone number or password' });
       }
 
       const user = result.rows[0];
       const valid = await bcrypt.compare(password, user.password_hash);
       if (!valid) {
-        return reply.code(401).send({ error: 'Invalid email or password' });
+        return reply.code(401).send({ error: 'Invalid phone number or password' });
       }
 
-      const { token, expiresIn } = jwtService.generateToken(user.id, email);
+      const { token, expiresIn } = jwtService.generateToken(user.id, user.phone);
       const refreshToken = jwtService.generateRefreshToken(user.id);
 
       return reply.code(200).send({
@@ -100,6 +102,7 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
         expiresIn,
         user: {
           id: user.id,
+          phone: user.phone,
           email: user.email,
           name: user.name,
           coinsBalance: user.coins_balance,

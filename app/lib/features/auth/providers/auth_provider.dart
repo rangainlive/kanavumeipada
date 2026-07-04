@@ -9,7 +9,8 @@ const _apiUrl = 'https://kanavumeipada-production.up.railway.app/api';
 
 class User {
   final String id;
-  final String email;
+  final String? phone;
+  final String? email;
   final String? name;
   final String? examTarget;
   final String? userState;
@@ -18,7 +19,8 @@ class User {
 
   User({
     required this.id,
-    required this.email,
+    this.phone,
+    this.email,
     this.name,
     this.examTarget,
     this.userState,
@@ -31,13 +33,14 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      email: json['email'] ?? '',
-      name: json['name'],
-      examTarget: json['examTarget'],
-      userState: json['state'],
-      coinsBalance: json['coinsBalance'] ?? 0,
-      xp: json['xp'] ?? 0,
+      id: json['id']?.toString() ?? '',
+      phone: json['phone'] as String?,
+      email: json['email'] as String?,
+      name: json['name'] as String?,
+      examTarget: json['examTarget'] as String?,
+      userState: json['state'] as String?,
+      coinsBalance: (json['coinsBalance'] as num?)?.toInt() ?? 0,
+      xp: (json['xp'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -132,13 +135,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> register(String email, String password, String name) async {
+  Future<void> register(String phone, String password, String name) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await http.post(
         Uri.parse('$_apiUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password, 'name': name}),
+        body: jsonEncode({'phone': phone, 'password': password, 'name': name}),
       );
       final data = jsonDecode(response.body);
       if (response.statusCode != 201) {
@@ -156,13 +159,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String phone, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await http.post(
         Uri.parse('$_apiUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+        body: jsonEncode({'phone': phone, 'password': password}),
       );
       final data = jsonDecode(response.body);
       if (response.statusCode != 200) {

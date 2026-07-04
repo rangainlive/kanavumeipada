@@ -20,6 +20,11 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Migrations: idempotent, safe to run on any existing DB instance
+ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
+ALTER TABLE IF EXISTS users ALTER COLUMN phone DROP NOT NULL;
+
 -- User Streaks table
 CREATE TABLE IF NOT EXISTS user_streaks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

@@ -2,26 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html show window;
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
+import 'features/auth/services/google_sign_in_web_helper.dart';
 
-// Set when Google OAuth redirects back with ?code=...
 String? pendingOAuthCode;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (kIsWeb) {
-    // Detect Google OAuth redirect: http://localhost:5000/?code=...
-    final uri = Uri.parse(html.window.location.href);
-    final code = uri.queryParameters['code'];
-    if (code != null && code.isNotEmpty) {
-      pendingOAuthCode = code;
-      // Clean the URL so back-navigation doesn't re-trigger auth
-      html.window.history.replaceState(null, '', '/');
-    }
+    if (checkAndHandleIfPopup()) return;
+    pendingOAuthCode = getPendingOAuthCode();
   } else {
     await dotenv.load().catchError((_) {});
   }
