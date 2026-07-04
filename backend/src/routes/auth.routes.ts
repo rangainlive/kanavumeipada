@@ -169,17 +169,13 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
       const result = await googleOAuthService.handleGoogleAuth(token);
       return reply.code(200).send(result);
     } catch (error: any) {
+      console.error('[Google Auth]', error.message);
       return reply.code(401).send({ error: error.message });
     }
   });
 
-  // Google OAuth authorization URL
+  // Google OAuth authorization URL (unused — web uses GIS renderButton directly)
   fastify.get('/api/auth/google/authorize', async (request, reply) => {
-    try {
-      const authUrl = googleOAuthService.getAuthorizationUrl();
-      return reply.code(200).send({ authUrl });
-    } catch (error: any) {
-      return reply.code(400).send({ error: error.message });
-    }
+    return reply.code(200).send({ message: 'Use GIS button on client side' });
   });
 }
