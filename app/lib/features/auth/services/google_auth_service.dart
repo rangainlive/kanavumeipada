@@ -85,6 +85,13 @@ class GoogleAuthService {
     }
   }
 
+  Future<Map<String, dynamic>> exchangeOAuthCode(String code) async {
+    if (kIsWeb) {
+      return await exchangeOAuthCodeWeb(code);
+    }
+    return {'success': false, 'error': 'Not supported on this platform'};
+  }
+
   Future<void> signOut() async {
     if (kIsWeb) {
       await signOutGoogleWeb();

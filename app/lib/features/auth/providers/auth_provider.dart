@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../services/google_auth_service.dart';
+import '../../../main.dart' show pendingOAuthCode;
 
 const _apiUrl = 'https://kanavumeipada-production.up.railway.app/api';
 
@@ -78,7 +79,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier() : super(AuthState()) {
     _googleAuthService = GoogleAuthService();
-    _loadToken();
+    if (pendingOAuthCode != null) {
+      final code = pendingOAuthCode!;
+      pendingOAuthCode = null;
+      _exchangeOAuthCode(code);
+    } else {
+      _loadToken();
+    }
+  }
+
+  Future<void> _exchangeOAuthCode(String code) async {
+    state = state.copyWith(isLoading: true, error: null);
+    final result = await _googleAuthService.exchangeOAuthCode(code);
+    if (!result['success']) {
+      state = state.copyWith(isLoading: false, error: result['error'] as String?);
+      return;
+    }
+    await _saveToken(result['token'] as String);
+    state = state.copyWith(
+      isLoading: false,
+      isAuthenticated: true,
+      token: result['token'] as String,
+      user: User.fromJson(result['user'] as Map<String, dynamic>),
+    );
   }
 
   Future<void> _loadToken() async {

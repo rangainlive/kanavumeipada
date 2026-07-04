@@ -5,6 +5,7 @@ import { createUserService } from '../services/user.service';
 import { createGoogleOAuthService } from '../services/google-oauth.service';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import axios from 'axios';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -174,8 +175,43 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
     }
   });
 
-  // Google OAuth authorization URL (unused — web uses GIS renderButton directly)
+  // Exchange Google OAuth authorization code for session token
+  fastify.post('/api/auth/google/code', async (request, reply) => {
+    try {
+      const { code, redirectUri } = request.body as { code: string; redirectUri: string };
+      if (!code || !redirectUri) {
+        return reply.code(400).send({ error: 'code and redirectUri are required' });
+      }
+
+      // Exchange code for id_token at Google's token endpoint
+      const tokenResponse = await axios.post<{ id_token: string }>(
+        'https://oauth2.googleapis.com/token',
+        {
+          code,
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        },
+        { timeout: 10000 }
+      );
+
+      const idToken = tokenResponse.data.id_token;
+      if (!idToken) {
+        return reply.code(400).send({ error: 'No id_token in Google response' });
+      }
+
+      const result = await googleOAuthService.handleGoogleAuth(idToken);
+      return reply.code(200).send(result);
+    } catch (error: any) {
+      const detail = error.response?.data?.error_description || error.message;
+      console.error('[Google Code Exchange]', detail);
+      return reply.code(401).send({ error: `OAuth code exchange failed: ${detail}` });
+    }
+  });
+
+  // Google OAuth authorization URL (legacy, unused)
   fastify.get('/api/auth/google/authorize', async (request, reply) => {
-    return reply.code(200).send({ message: 'Use GIS button on client side' });
+    return reply.code(200).send({ message: 'Use OAuth redirect on client side' });
   });
 }
