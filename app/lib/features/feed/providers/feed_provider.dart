@@ -160,46 +160,53 @@ class FeedNotifier extends StateNotifier<FeedState> {
   };
 
   Future<void> loadFeed({bool refresh = false}) async {
+    if (!mounted) return;
     if (refresh) state = FeedState();
     state = state.copyWith(isLoading: true, error: null);
     try {
       final endpoint = token != null ? '/feed' : '/feed/global';
+      final offset = state.offset;
       final r = await http.get(
-        Uri.parse('$_apiUrl$endpoint?limit=20&offset=${state.offset}'),
+        Uri.parse('$_apiUrl$endpoint?limit=20&offset=$offset'),
         headers: token != null ? {'Authorization': 'Bearer $token'} : {},
       );
+      if (!mounted) return;
       if (r.statusCode != 200) throw Exception('Failed to load feed');
       final data = jsonDecode(r.body);
       final newPosts = (data['posts'] as List)
           .map((p) => FeedPost.fromJson(p as Map<String, dynamic>))
           .toList();
+      if (!mounted) return;
       state = state.copyWith(
         posts: refresh ? newPosts : [...state.posts, ...newPosts],
         isLoading: false,
         hasMore: data['hasMore'] ?? false,
-        offset: state.offset + newPosts.length,
+        offset: offset + newPosts.length,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   Future<void> likePost(String postId) async {
-    if (token == null) return;
+    if (token == null || !mounted) return;
     _patch(postId, (p) => p.copyWith(likesCount: p.likesCount + 1, isLikedByMe: true));
     try {
       final r = await http.post(
         Uri.parse('$_apiUrl/feed/posts/$postId/like'), headers: _authHeaders);
+      if (!mounted) return;
       if (r.statusCode != 200) {
         _patch(postId, (p) => p.copyWith(likesCount: p.likesCount - 1, isLikedByMe: false));
       }
     } catch (_) {
+      if (!mounted) return;
       _patch(postId, (p) => p.copyWith(likesCount: p.likesCount - 1, isLikedByMe: false));
     }
   }
 
   Future<void> unlikePost(String postId) async {
-    if (token == null) return;
+    if (token == null || !mounted) return;
     _patch(postId, (p) => p.copyWith(
         likesCount: (p.likesCount - 1).clamp(0, p.likesCount), isLikedByMe: false));
     try {
@@ -222,13 +229,14 @@ class FeedNotifier extends StateNotifier<FeedState> {
   }
 
   Future<bool> addComment(String postId, String text) async {
-    if (token == null) return false;
+    if (token == null || !mounted) return false;
     try {
       final r = await http.post(
         Uri.parse('$_apiUrl/feed/posts/$postId/comments'),
         headers: _authHeaders,
         body: jsonEncode({'text': text}),
       );
+      if (!mounted) return false;
       if (r.statusCode == 201) {
         _patch(postId, (p) => p.copyWith(commentsCount: p.commentsCount + 1));
         return true;
@@ -238,6 +246,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
   }
 
   void _patch(String postId, FeedPost Function(FeedPost) fn) {
+    if (!mounted) return;
     state = state.copyWith(
       posts: state.posts.map((p) => p.id == postId ? fn(p) : p).toList(),
     );

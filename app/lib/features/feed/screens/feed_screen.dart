@@ -67,14 +67,101 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ── Header ────────────────────────────────────────────────────
-          SliverPersistentHeader(
+          SliverAppBar(
             pinned: true,
-            delegate: _FeedHeaderDelegate(
-              firstName: firstName,
-              exams: exams,
-              topPadding: MediaQuery.of(context).padding.top,
-              onRefresh: () =>
-                  ref.read(feedProvider.notifier).loadFeed(refresh: true),
+            expandedHeight: 80,
+            backgroundColor: const Color(0xFF4338CA),
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 4,
+            shadowColor: Colors.black.withValues(alpha: 0.3),
+            leading: const SizedBox.shrink(),
+            leadingWidth: 0,
+            title: Text(
+              firstName.isEmpty ? 'KanavuMeipada' : 'Hey $firstName! 👋',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  letterSpacing: -0.2),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded,
+                    color: Colors.white, size: 22),
+                onPressed: () =>
+                    ref.read(feedProvider.notifier).loadFeed(refresh: true),
+                tooltip: 'Refresh',
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 16, 14),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            firstName.isEmpty
+                                ? 'Good day! 👋'
+                                : 'Hey $firstName! 👋',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3),
+                          ),
+                          if (exams.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 6,
+                              children: exams
+                                  .map((e) => Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 9, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          border: Border.all(
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.35)),
+                                        ),
+                                        child: Text(e,
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600)),
+                                      ))
+                                  .toList(),
+                            ),
+                          ] else ...[
+                            const SizedBox(height: 4),
+                            Text("What's on your mind today?",
+                                style: TextStyle(
+                                    color:
+                                        Colors.white.withValues(alpha: 0.75),
+                                    fontSize: 13)),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
 
@@ -118,140 +205,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       ),
     );
   }
-}
-
-// ─── Header delegate ──────────────────────────────────────────────────────────
-
-class _FeedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final String firstName;
-  final List<String> exams;
-  final double topPadding;
-  final VoidCallback onRefresh;
-
-  const _FeedHeaderDelegate({
-    required this.firstName,
-    required this.exams,
-    required this.topPadding,
-    required this.onRefresh,
-  });
-
-  // minExtent / maxExtent must include the status-bar height (topPadding)
-  // so the delegate never returns a widget taller than paintExtent.
-  @override
-  double get minExtent => kToolbarHeight + topPadding;
-  @override
-  double get maxExtent => 130 + topPadding;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final collapsed = shrinkOffset >= maxExtent - minExtent;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: overlapsContent
-            ? [BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 14,
-                offset: const Offset(0, 4))]
-            : null,
-      ),
-      // No SafeArea — we compensate with manual topPadding in padding below.
-      child: collapsed
-          // ── Collapsed: compact app bar ──────────────────────────────
-          ? Padding(
-              padding: EdgeInsets.fromLTRB(20, topPadding + 10, 12, 10),
-              child: Row(children: [
-                const Text('KanavuMeipada',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2)),
-                const Spacer(),
-                GestureDetector(
-                  onTap: onRefresh,
-                  child: const Icon(Icons.refresh_rounded,
-                      color: Colors.white, size: 22),
-                ),
-              ]),
-            )
-          // ── Expanded: greeting + exam chips ─────────────────────────
-          : Padding(
-              padding: EdgeInsets.fromLTRB(20, topPadding + 14, 16, 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          firstName.isEmpty
-                              ? 'Good day! 👋'
-                              : 'Hey $firstName! 👋',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.3),
-                        ),
-                        const SizedBox(height: 6),
-                        if (exams.isNotEmpty)
-                          Wrap(
-                            spacing: 6,
-                            children: exams
-                                .map((e) => Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 9, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.35)),
-                                      ),
-                                      child: Text(e,
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600)),
-                                    ))
-                                .toList(),
-                          )
-                        else
-                          Text("What's on your mind today?",
-                              style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.75),
-                                  fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: onRefresh,
-                    child: const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Icon(Icons.refresh_rounded,
-                          color: Colors.white, size: 22),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _FeedHeaderDelegate old) =>
-      old.firstName != firstName ||
-      old.exams.join() != exams.join() ||
-      old.topPadding != topPadding ||
-      old.onRefresh != onRefresh;
 }
 
 // ─── Floating action button ───────────────────────────────────────────────────
