@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../providers/feed_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../features/auth/providers/auth_provider.dart';
 import 'post_detail_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -48,20 +49,31 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final feed = ref.watch(feedProvider);
+    final user = ref.watch(authProvider).user;
+
+    final firstName = (user?.name ?? '').trim().split(' ').first;
+    final exams = (user?.examTarget ?? '')
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
+      floatingActionButton: _PostFab(onTap: () => context.push('/feed/create')),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: CustomScrollView(
         controller: _scroll,
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // ── Sticky header ──────────────────────────────────────────────
+          // ── Header ────────────────────────────────────────────────────
           SliverPersistentHeader(
             pinned: true,
             delegate: _FeedHeaderDelegate(
+              firstName: firstName,
+              exams: exams,
               onRefresh: () =>
                   ref.read(feedProvider.notifier).loadFeed(refresh: true),
-              onPost: () => context.push('/feed/create'),
             ),
           ),
 
@@ -74,7 +86,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (ctx, i) {
@@ -110,107 +122,206 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 // ─── Header delegate ──────────────────────────────────────────────────────────
 
 class _FeedHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final VoidCallback onRefresh, onPost;
-  const _FeedHeaderDelegate({required this.onRefresh, required this.onPost});
+  final String firstName;
+  final List<String> exams;
+  final VoidCallback onRefresh;
+
+  const _FeedHeaderDelegate({
+    required this.firstName,
+    required this.exams,
+    required this.onRefresh,
+  });
 
   @override
-  double get minExtent => 0;
+  double get minExtent => kToolbarHeight + 24;
   @override
-  double get maxExtent => 110;
+  double get maxExtent => 130;
 
   @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final shrink = (shrinkOffset / maxExtent).clamp(0.0, 1.0);
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final collapsed = shrinkOffset >= maxExtent - minExtent;
+
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: const [Color(0xFF4338CA), Color(0xFF3B82F6)],
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: overlapsContent
-            ? [
-                BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4))
-              ]
+            ? [BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 14,
+                offset: const Offset(0, 4))]
             : null,
       ),
       child: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(20, 12 - shrink * 8, 12, 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Opacity(
-                opacity: (1 - shrink * 2).clamp(0.0, 1.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: collapsed
+            // ── Collapsed: compact app bar ──────────────────────────
+            ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(children: [
+                  const Text('KanavuMeipada',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2)),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 20),
+                    onPressed: onRefresh,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ]),
+              )
+            // ── Expanded: greeting + exam chips ─────────────────────
+            : Padding(
+                padding: const EdgeInsets.fromLTRB(20, 14, 16, 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text('Community',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3)),
-                    Text('Share · Discuss · Grow',
-                        style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            fontSize: 12.5)),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            firstName.isEmpty
+                                ? 'Good day! 👋'
+                                : 'Hey $firstName! 👋',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3),
+                          ),
+                          const SizedBox(height: 6),
+                          if (exams.isNotEmpty)
+                            Wrap(
+                              spacing: 6,
+                              children: exams.map((e) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 9, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.35)),
+                                ),
+                                child: Text(e,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600)),
+                              )).toList(),
+                            )
+                          else
+                            Text('What\'s on your mind today?',
+                                style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.75),
+                                    fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_rounded,
+                          color: Colors.white, size: 22),
+                      onPressed: onRefresh,
+                      tooltip: 'Refresh feed',
+                    ),
                   ],
                 ),
               ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.refresh_rounded,
-                    color: Colors.white, size: 22),
-                onPressed: onRefresh,
-                tooltip: 'Refresh',
-              ),
-              GestureDetector(
-                onTap: onPost,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2)),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add_rounded,
-                          color: AppTheme.primary, size: 18),
-                      SizedBox(width: 4),
-                      Text('Post',
-                          style: TextStyle(
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
   @override
   bool shouldRebuild(covariant _FeedHeaderDelegate old) =>
-      old.onRefresh != onRefresh || old.onPost != onPost;
+      old.firstName != firstName ||
+      old.exams.join() != exams.join() ||
+      old.onRefresh != onRefresh;
+}
+
+// ─── Floating action button ───────────────────────────────────────────────────
+
+class _PostFab extends StatefulWidget {
+  final VoidCallback onTap;
+  const _PostFab({required this.onTap});
+
+  @override
+  State<_PostFab> createState() => _PostFabState();
+}
+
+class _PostFabState extends State<_PostFab>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 120));
+    _scale = Tween(begin: 1.0, end: 0.92).animate(
+        CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _ctrl.forward(),
+      onTapUp: (_) {
+        _ctrl.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _ctrl.reverse(),
+      child: ScaleTransition(
+        scale: _scale,
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF4338CA).withValues(alpha: 0.45),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+              SizedBox(width: 8),
+              Text('New Post',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
