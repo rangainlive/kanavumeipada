@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
+import '../../../core/theme/app_theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -10,16 +11,28 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _isLogin = true;
+  bool _isSignUp = false;
   bool _obscurePassword = true;
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 450));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _animController.forward();
+  }
 
   @override
   void dispose() {
+    _animController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
@@ -27,24 +40,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    final auth = ref.read(authProvider.notifier);
-    if (_isLogin) {
-      await auth.login(_phoneController.text.trim(), _passwordController.text);
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+    if (phone.isEmpty || password.isEmpty) return;
+    final notifier = ref.read(authProvider.notifier);
+    if (_isSignUp) {
+      final name = _nameController.text.trim();
+      if (name.isEmpty) return;
+      await notifier.register(phone, password, name);
     } else {
-      await auth.register(
-        _phoneController.text.trim(),
-        _passwordController.text,
-        _nameController.text.trim(),
-      );
+      await notifier.login(phone, password);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final size = MediaQuery.of(context).size;
 
-    ref.listen(authProvider, (prev, next) {
+    ref.listen<AuthState>(authProvider, (prev, next) {
       if (next.isAuthenticated) {
         if (next.user?.isProfileComplete == true) {
           context.go('/feed');
@@ -52,160 +66,263 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           context.go('/auth/profile');
         }
       }
+      if (next.error != null && (prev?.error != next.error)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
     });
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 48),
-                Icon(Icons.school_rounded, size: 72,
-                    color: Theme.of(context).colorScheme.primary),
-                const SizedBox(height: 16),
-                Text('KanavuMeipada',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary)),
-                Text('Compete. Learn. Win.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium),
-                const SizedBox(height: 40),
-
-                // Tab toggle
-                Row(children: [
-                  _tab(context, 'Sign In', _isLogin,
-                      () => setState(() => _isLogin = true)),
-                  _tab(context, 'Sign Up', !_isLogin,
-                      () => setState(() => _isLogin = false)),
-                ]),
-                const SizedBox(height: 28),
-
-                // Name — sign up only
-                if (!_isLogin) ...[
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        prefixIcon: Icon(Icons.person_outline)),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Enter your name' : null,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Phone number
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                      labelText: 'Mobile Number',
-                      prefixIcon: Icon(Icons.phone_outlined),
-                      hintText: '9876543210'),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Enter your mobile number';
-                    if (v.length < 10) return 'Enter a valid mobile number';
-                    return null;
-                  },
+      backgroundColor: AppTheme.bgLight,
+      body: Stack(
+        children: [
+          // Gradient hero
+          Positioned(
+            top: 0, left: 0, right: 0,
+            height: size.height * 0.44,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF3B82F6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(height: 16),
-
-                // Password
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Enter your password';
-                    if (!_isLogin && v.length < 6)
-                      return 'Password must be at least 6 characters';
-                    return null;
-                  },
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(36),
+                  bottomRight: Radius.circular(36),
                 ),
-                const SizedBox(height: 8),
-
-                // Error
-                if (authState.error != null)
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .error
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8)),
-                    child: Text(authState.error!,
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 20, 28, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 52, height: 52,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3)),
+                        ),
+                        child: const Icon(Icons.auto_stories_rounded,
+                            color: Colors.white, size: 28),
+                      ),
+                      const Spacer(),
+                      const Text(
+                        'KanavuMeipada',
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.error)),
-                  ),
-
-                const SizedBox(height: 16),
-
-                // Submit
-                SizedBox(
-                  height: 50,
-                  child: FilledButton(
-                    onPressed: authState.isLoading ? null : _submit,
-                    child: authState.isLoading
-                        ? const SizedBox(
-                            height: 20, width: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : Text(_isLogin ? 'Sign In' : 'Create Account',
-                            style: const TextStyle(fontSize: 16)),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Divider
-                Row(children: [
-                  Expanded(child: Divider(color: Colors.grey[400])),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child:
-                        Text('or', style: TextStyle(color: Colors.grey[600])),
-                  ),
-                  Expanded(child: Divider(color: Colors.grey[400])),
-                ]),
-                const SizedBox(height: 16),
-
-                // Google Sign-In button
-                SizedBox(
-                  height: 50,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      side: BorderSide(color: Colors.grey[300]!),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: authState.isLoading
-                        ? null
-                        : () => ref.read(authProvider.notifier).loginWithGoogle(),
-                    icon: const Icon(Icons.g_mobiledata, size: 22, color: Colors.redAccent),
-                    label: const Text('Continue with Google',
-                        style: TextStyle(fontSize: 15)),
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Prepare Smart. Compete Fair. Win Big.',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 13.5,
+                        ),
+                      ),
+                      const SizedBox(height: 44),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
-              ],
+              ),
+            ),
+          ),
+
+          // Card form
+          Positioned.fill(
+            top: size.height * 0.35,
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.09),
+                        blurRadius: 28,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Tab switcher
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.bgLight,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: Row(children: [
+                          _tab('Sign In', !_isSignUp),
+                          _tab('Sign Up', _isSignUp),
+                        ]),
+                      ),
+                      const SizedBox(height: 22),
+
+                      if (_isSignUp) ...[
+                        _label('Full Name'),
+                        const SizedBox(height: 6),
+                        _field(
+                          controller: _nameController,
+                          hint: 'Your full name',
+                          icon: Icons.person_outline_rounded,
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+
+                      _label('Phone Number'),
+                      const SizedBox(height: 6),
+                      _field(
+                        controller: _phoneController,
+                        hint: '10-digit mobile number',
+                        icon: Icons.phone_outlined,
+                        type: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 14),
+
+                      _label('Password'),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        style: const TextStyle(
+                            fontSize: 15, color: AppTheme.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: _isSignUp
+                              ? 'Min. 6 characters'
+                              : 'Your password',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded,
+                              size: 20),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: AppTheme.textHint, size: 20,
+                            ),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+
+                      GradientButton(
+                        label: _isSignUp ? 'Create Account' : 'Sign In',
+                        onPressed: authState.isLoading ? null : _submit,
+                        isLoading: authState.isLoading,
+                        icon: _isSignUp
+                            ? Icons.rocket_launch_rounded
+                            : Icons.login_rounded,
+                      ),
+
+                      const SizedBox(height: 18),
+                      Row(children: [
+                        Expanded(child: Divider(color: Colors.grey[200])),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('or',
+                              style: TextStyle(
+                                  color: AppTheme.textHint, fontSize: 13)),
+                        ),
+                        Expanded(child: Divider(color: Colors.grey[200])),
+                      ]),
+                      const SizedBox(height: 14),
+
+                      OutlinedButton(
+                        onPressed: authState.isLoading
+                            ? null
+                            : () => ref
+                                .read(authProvider.notifier)
+                                .loginWithGoogle(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          side: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.g_mobiledata,
+                                size: 22, color: Colors.redAccent.shade700),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Continue with Google',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+                      Center(
+                        child: Text(
+                          'By continuing you agree to our Terms & Privacy Policy',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: AppTheme.textHint, fontSize: 11),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tab(String label, bool active) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _isSignUp = label == 'Sign Up'),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: active ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2))
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+              color: active ? AppTheme.primary : AppTheme.textHint,
             ),
           ),
         ),
@@ -213,27 +330,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _tab(BuildContext context, String label, bool active, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-              border: Border(
-                  bottom: BorderSide(
-                      color: active
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.transparent,
-                      width: 2))),
-          child: Text(label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: active
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey)),
-        ),
+  Widget _label(String text) => Text(
+        text,
+        style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textSecondary),
+      );
+
+  Widget _field({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType type = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: type,
+      style: const TextStyle(fontSize: 15, color: AppTheme.textPrimary),
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(icon, size: 20),
       ),
     );
   }

@@ -22,7 +22,7 @@ const profileUpdateSchema = z.object({
   name: z.string().min(1).max(255),
   email: z.string().email().optional(),
   examTarget: z.string().min(1),
-  state: z.string().min(1),
+  state: z.string().optional(),
   language: z.string().optional(),
 });
 
@@ -69,7 +69,7 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
           coinsBalance: user.coins_balance,
           examTarget: user.exam_target,
           state: user.state,
-          isProfileComplete: !!user.exam_target && !!user.state,
+          isProfileComplete: !!user.name && !!user.exam_target,
         },
       });
     } catch (error: any) {
@@ -108,7 +108,7 @@ export async function authRoutes(fastify: FastifyInstance, pool: Pool) {
           coinsBalance: user.coins_balance,
           examTarget: user.exam_target,
           state: user.state,
-          isProfileComplete: !!user.exam_target && !!user.state,
+          isProfileComplete: !!user.name && !!user.exam_target,
         },
       });
     } catch (error: any) {

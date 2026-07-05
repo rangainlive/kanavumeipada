@@ -29,7 +29,7 @@ class User {
   });
 
   bool get isProfileComplete =>
-      name != null && name!.isNotEmpty && examTarget != null && userState != null;
+      name != null && name!.isNotEmpty && examTarget != null;
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -186,7 +186,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> updateProfile({
     required String name,
     required String examTarget,
-    required String userState,
     String? email,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -197,7 +196,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${state.token}',
         },
-        body: jsonEncode({'name': name, 'examTarget': examTarget, 'state': userState}),
+        body: jsonEncode({'name': name, 'examTarget': examTarget, 'state': 'Tamil Nadu'}),
       );
       final data = jsonDecode(response.body);
       if (response.statusCode != 200) {

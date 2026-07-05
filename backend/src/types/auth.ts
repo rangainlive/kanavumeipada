@@ -34,7 +34,7 @@ export interface ProfileUpdateRequest {
   name: string;
   email?: string;
   examTarget: string;
-  state: string;
+  state?: string;
   language?: string;
 }
 

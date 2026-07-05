@@ -88,7 +88,7 @@ export class GoogleOAuthService {
         coinsBalance: user.coins_balance,
         examTarget: user.exam_target,
         state: user.state,
-        isProfileComplete: !!user.exam_target && !!user.state,
+        isProfileComplete: !!user.name && !!user.exam_target,
       },
     };
   }
