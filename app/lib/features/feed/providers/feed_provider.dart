@@ -5,6 +5,8 @@ import '../../auth/providers/auth_provider.dart';
 
 const _apiUrl = 'https://kanavumeipada-production.up.railway.app/api';
 
+// ─── Models ──────────────────────────────────────────────────────────────────
+
 class FeedPost {
   final String id;
   final String userId;
@@ -34,24 +36,29 @@ class FeedPost {
     this.refType,
   });
 
-  FeedPost copyWith({
-    int? likesCount,
-    int? commentsCount,
-    bool? isLikedByMe,
-  }) {
+  // Parse structured content from bodyText (MCQ / Poll / Score encoded as JSON)
+  Map<String, dynamic>? get parsedContent {
+    if (bodyText == null) return null;
+    final trimmed = bodyText!.trim();
+    if (!trimmed.startsWith('{')) return null;
+    try {
+      return jsonDecode(trimmed) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // '_t' key: 'mcq' | 'poll' | 'score' | null → 'text'
+  String get contentType => parsedContent?['_t'] as String? ?? 'text';
+
+  FeedPost copyWith({int? likesCount, int? commentsCount, bool? isLikedByMe}) {
     return FeedPost(
-      id: id,
-      userId: userId,
-      userName: userName,
-      userAvatar: userAvatar,
-      postType: postType,
-      bodyText: bodyText,
+      id: id, userId: userId, userName: userName, userAvatar: userAvatar,
+      postType: postType, bodyText: bodyText,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       isLikedByMe: isLikedByMe ?? this.isLikedByMe,
-      createdAt: createdAt,
-      refId: refId,
-      refType: refType,
+      createdAt: createdAt, refId: refId, refType: refType,
     );
   }
 
@@ -72,20 +79,19 @@ class FeedPost {
     );
   }
 
-  String getDisplayText() {
-    switch (postType) {
-      case 'discussion':
-        return '💬 Discussion';
-      case 'test_published':
-        return '📝 New Test Published';
-      case 'challenge_created':
-        return '🏆 Challenge Created';
-      case 'result_shared':
-        return '✅ Shared Score';
-      case 'achievement_unlocked':
-        return '🎉 Achievement';
+  String get typeLabel {
+    switch (contentType) {
+      case 'mcq': return '❓ MCQ';
+      case 'poll': return '📊 Poll';
+      case 'score': return '🏆 Score';
       default:
-        return '💬 Post';
+        switch (postType) {
+          case 'result_shared': return '✅ Score';
+          case 'challenge_created': return '⚔️ Battle';
+          case 'test_published': return '📝 Test';
+          case 'achievement_unlocked': return '🎉 Achievement';
+          default: return '💬 Post';
+        }
     }
   }
 }
@@ -99,12 +105,9 @@ class FeedComment {
   final DateTime createdAt;
 
   FeedComment({
-    required this.id,
-    required this.userId,
-    this.userName,
-    this.userAvatar,
-    required this.text,
-    required this.createdAt,
+    required this.id, required this.userId,
+    this.userName, this.userAvatar,
+    required this.text, required this.createdAt,
   });
 
   factory FeedComment.fromJson(Map<String, dynamic> json) {
@@ -119,6 +122,8 @@ class FeedComment {
   }
 }
 
+// ─── State ───────────────────────────────────────────────────────────────────
+
 class FeedState {
   final List<FeedPost> posts;
   final bool isLoading;
@@ -127,51 +132,44 @@ class FeedState {
   final int offset;
 
   FeedState({
-    this.posts = const [],
-    this.isLoading = false,
-    this.hasMore = true,
-    this.error,
-    this.offset = 0,
+    this.posts = const [], this.isLoading = false,
+    this.hasMore = true, this.error, this.offset = 0,
   });
 
   FeedState copyWith({
-    List<FeedPost>? posts,
-    bool? isLoading,
-    bool? hasMore,
-    String? error,
-    int? offset,
+    List<FeedPost>? posts, bool? isLoading,
+    bool? hasMore, String? error, int? offset,
   }) {
     return FeedState(
-      posts: posts ?? this.posts,
-      isLoading: isLoading ?? this.isLoading,
-      hasMore: hasMore ?? this.hasMore,
-      error: error ?? this.error,
+      posts: posts ?? this.posts, isLoading: isLoading ?? this.isLoading,
+      hasMore: hasMore ?? this.hasMore, error: error ?? this.error,
       offset: offset ?? this.offset,
     );
   }
 }
 
+// ─── Notifier ─────────────────────────────────────────────────────────────────
+
 class FeedNotifier extends StateNotifier<FeedState> {
   final String? token;
-
   FeedNotifier(this.token) : super(FeedState());
 
-  Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      };
+  Map<String, String> get _authHeaders => {
+    'Content-Type': 'application/json',
+    if (token != null) 'Authorization': 'Bearer $token',
+  };
 
   Future<void> loadFeed({bool refresh = false}) async {
     if (refresh) state = FeedState();
     state = state.copyWith(isLoading: true, error: null);
     try {
       final endpoint = token != null ? '/feed' : '/feed/global';
-      final response = await http.get(
+      final r = await http.get(
         Uri.parse('$_apiUrl$endpoint?limit=20&offset=${state.offset}'),
         headers: token != null ? {'Authorization': 'Bearer $token'} : {},
       );
-      if (response.statusCode != 200) throw Exception('Failed to load feed');
-      final data = jsonDecode(response.body);
+      if (r.statusCode != 200) throw Exception('Failed to load feed');
+      final data = jsonDecode(r.body);
       final newPosts = (data['posts'] as List)
           .map((p) => FeedPost.fromJson(p as Map<String, dynamic>))
           .toList();
@@ -188,33 +186,24 @@ class FeedNotifier extends StateNotifier<FeedState> {
 
   Future<void> likePost(String postId) async {
     if (token == null) return;
-    _updatePost(postId, (p) => p.copyWith(
-          likesCount: p.likesCount + 1, isLikedByMe: true));
+    _patch(postId, (p) => p.copyWith(likesCount: p.likesCount + 1, isLikedByMe: true));
     try {
       final r = await http.post(
-        Uri.parse('$_apiUrl/feed/posts/$postId/like'),
-        headers: _headers,
-      );
+        Uri.parse('$_apiUrl/feed/posts/$postId/like'), headers: _authHeaders);
       if (r.statusCode != 200) {
-        _updatePost(postId, (p) => p.copyWith(
-              likesCount: p.likesCount - 1, isLikedByMe: false));
+        _patch(postId, (p) => p.copyWith(likesCount: p.likesCount - 1, isLikedByMe: false));
       }
     } catch (_) {
-      _updatePost(postId, (p) => p.copyWith(
-            likesCount: p.likesCount - 1, isLikedByMe: false));
+      _patch(postId, (p) => p.copyWith(likesCount: p.likesCount - 1, isLikedByMe: false));
     }
   }
 
   Future<void> unlikePost(String postId) async {
     if (token == null) return;
-    _updatePost(postId, (p) => p.copyWith(
-          likesCount: (p.likesCount - 1).clamp(0, p.likesCount),
-          isLikedByMe: false));
+    _patch(postId, (p) => p.copyWith(
+        likesCount: (p.likesCount - 1).clamp(0, p.likesCount), isLikedByMe: false));
     try {
-      await http.post(
-        Uri.parse('$_apiUrl/feed/posts/$postId/unlike'),
-        headers: _headers,
-      );
+      await http.post(Uri.parse('$_apiUrl/feed/posts/$postId/unlike'), headers: _authHeaders);
     } catch (_) {}
   }
 
@@ -229,9 +218,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
       return (data['comments'] as List)
           .map((c) => FeedComment.fromJson(c as Map<String, dynamic>))
           .toList();
-    } catch (_) {
-      return [];
-    }
+    } catch (_) { return []; }
   }
 
   Future<bool> addComment(String postId, String text) async {
@@ -239,30 +226,24 @@ class FeedNotifier extends StateNotifier<FeedState> {
     try {
       final r = await http.post(
         Uri.parse('$_apiUrl/feed/posts/$postId/comments'),
-        headers: _headers,
+        headers: _authHeaders,
         body: jsonEncode({'text': text}),
       );
       if (r.statusCode == 201) {
-        _updatePost(postId, (p) => p.copyWith(
-              commentsCount: p.commentsCount + 1));
+        _patch(postId, (p) => p.copyWith(commentsCount: p.commentsCount + 1));
         return true;
       }
       return false;
-    } catch (_) {
-      return false;
-    }
+    } catch (_) { return false; }
   }
 
-  void _updatePost(String postId, FeedPost Function(FeedPost) update) {
+  void _patch(String postId, FeedPost Function(FeedPost) fn) {
     state = state.copyWith(
-      posts: state.posts
-          .map((p) => p.id == postId ? update(p) : p)
-          .toList(),
+      posts: state.posts.map((p) => p.id == postId ? fn(p) : p).toList(),
     );
   }
 }
 
 final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
-  final authState = ref.watch(authProvider);
-  return FeedNotifier(authState.token);
+  return FeedNotifier(ref.watch(authProvider).token);
 });
