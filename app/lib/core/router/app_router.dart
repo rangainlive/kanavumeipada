@@ -13,25 +13,46 @@ import '../../features/test_engine/screens/tests_screen.dart';
 import '../../features/challenge/screens/battle_screen.dart';
 import '../widgets/main_shell.dart';
 
+// ChangeNotifier that fires whenever auth state changes, used as GoRouter refreshListenable
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen<AuthState>(authProvider, (_, __) => notifyListeners());
+  }
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final auth = _ref.read(authProvider);
+    // Still loading — don't redirect yet
+    if (auth.isLoading) return null;
+
+    final isAuth = auth.isAuthenticated;
+    final isProfileComplete = auth.user?.isProfileComplete ?? false;
+    final loc = state.matchedLocation;
+    final isAuthRoute = loc.startsWith('/auth');
+
+    if (!isAuth && !isAuthRoute) return '/auth/login';
+    if (isAuth && !isProfileComplete && loc != '/auth/profile') {
+      return '/auth/profile';
+    }
+    if (isAuth && isProfileComplete && isAuthRoute) return '/feed';
+    return null;
+  }
+}
+
+final _routerNotifierProvider = ChangeNotifierProvider<RouterNotifier>(
+  (ref) => RouterNotifier(ref),
+);
+
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  // Use ref.read so the GoRouter instance is created only once.
+  // The refreshListenable handles re-evaluation of redirect on auth changes.
+  final notifier = ref.read(_routerNotifierProvider);
 
   return GoRouter(
-    initialLocation: authState.isAuthenticated
-        ? (authState.user?.isProfileComplete == true ? '/feed' : '/auth/profile')
-        : '/auth/login',
-    redirect: (context, state) {
-      final isAuth = authState.isAuthenticated;
-      final isProfileComplete = authState.user?.isProfileComplete ?? false;
-      final isAuthRoute = state.matchedLocation.startsWith('/auth');
-
-      if (!isAuth && !isAuthRoute) return '/auth/login';
-      if (isAuth && !isProfileComplete && state.matchedLocation != '/auth/profile') {
-        return '/auth/profile';
-      }
-      if (isAuth && isProfileComplete && isAuthRoute) return '/feed';
-      return null;
-    },
+    initialLocation: '/auth/login',
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
     routes: [
       GoRoute(
         path: '/auth/login',
