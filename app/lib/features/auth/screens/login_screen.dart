@@ -262,16 +262,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.g_mobiledata,
                                 size: 22, color: Colors.redAccent.shade700),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Continue with Google',
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary),
+                            const SizedBox(width: 6),
+                            const Flexible(
+                              child: Text(
+                                'Continue with Google',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimary),
+                              ),
                             ),
                           ],
                         ),

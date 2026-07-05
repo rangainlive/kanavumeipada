@@ -72,6 +72,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             delegate: _FeedHeaderDelegate(
               firstName: firstName,
               exams: exams,
+              topPadding: MediaQuery.of(context).padding.top,
               onRefresh: () =>
                   ref.read(feedProvider.notifier).loadFeed(refresh: true),
             ),
@@ -124,18 +125,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 class _FeedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String firstName;
   final List<String> exams;
+  final double topPadding;
   final VoidCallback onRefresh;
 
   const _FeedHeaderDelegate({
     required this.firstName,
     required this.exams,
+    required this.topPadding,
     required this.onRefresh,
   });
 
+  // minExtent / maxExtent must include the status-bar height (topPadding)
+  // so the delegate never returns a widget taller than paintExtent.
   @override
-  double get minExtent => kToolbarHeight + 24;
+  double get minExtent => kToolbarHeight + topPadding;
   @override
-  double get maxExtent => 130;
+  double get maxExtent => 130 + topPadding;
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
@@ -155,88 +160,89 @@ class _FeedHeaderDelegate extends SliverPersistentHeaderDelegate {
                 offset: const Offset(0, 4))]
             : null,
       ),
-      child: SafeArea(
-        bottom: false,
-        child: collapsed
-            // ── Collapsed: compact app bar ──────────────────────────
-            ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Row(children: [
-                  const Text('KanavuMeipada',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2)),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.refresh_rounded,
-                        color: Colors.white, size: 20),
-                    onPressed: onRefresh,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ]),
-              )
-            // ── Expanded: greeting + exam chips ─────────────────────
-            : Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 16, 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            firstName.isEmpty
-                                ? 'Good day! 👋'
-                                : 'Hey $firstName! 👋',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3),
-                          ),
-                          const SizedBox(height: 6),
-                          if (exams.isNotEmpty)
-                            Wrap(
-                              spacing: 6,
-                              children: exams.map((e) => Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 9, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.35)),
-                                ),
-                                child: Text(e,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600)),
-                              )).toList(),
-                            )
-                          else
-                            Text('What\'s on your mind today?',
-                                style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.75),
-                                    fontSize: 13)),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.refresh_rounded,
-                          color: Colors.white, size: 22),
-                      onPressed: onRefresh,
-                      tooltip: 'Refresh feed',
-                    ),
-                  ],
+      // No SafeArea — we compensate with manual topPadding in padding below.
+      child: collapsed
+          // ── Collapsed: compact app bar ──────────────────────────────
+          ? Padding(
+              padding: EdgeInsets.fromLTRB(20, topPadding + 10, 12, 10),
+              child: Row(children: [
+                const Text('KanavuMeipada',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2)),
+                const Spacer(),
+                GestureDetector(
+                  onTap: onRefresh,
+                  child: const Icon(Icons.refresh_rounded,
+                      color: Colors.white, size: 22),
                 ),
+              ]),
+            )
+          // ── Expanded: greeting + exam chips ─────────────────────────
+          : Padding(
+              padding: EdgeInsets.fromLTRB(20, topPadding + 14, 16, 14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          firstName.isEmpty
+                              ? 'Good day! 👋'
+                              : 'Hey $firstName! 👋',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3),
+                        ),
+                        const SizedBox(height: 6),
+                        if (exams.isNotEmpty)
+                          Wrap(
+                            spacing: 6,
+                            children: exams
+                                .map((e) => Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 9, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.35)),
+                                      ),
+                                      child: Text(e,
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600)),
+                                    ))
+                                .toList(),
+                          )
+                        else
+                          Text("What's on your mind today?",
+                              style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.75),
+                                  fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: onRefresh,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(Icons.refresh_rounded,
+                          color: Colors.white, size: 22),
+                    ),
+                  ),
+                ],
               ),
-      ),
+            ),
     );
   }
 
@@ -244,6 +250,7 @@ class _FeedHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant _FeedHeaderDelegate old) =>
       old.firstName != firstName ||
       old.exams.join() != exams.join() ||
+      old.topPadding != topPadding ||
       old.onRefresh != onRefresh;
 }
 
