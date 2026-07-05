@@ -47,7 +47,7 @@ class FeedService {
   }
 
   async getFeedForUser(userId: string, limit: number = 20, offset: number = 0): Promise<FeedPost[]> {
-    // Get posts from users the current user follows, plus global feed
+    // All posts, with isLikedByMe flag for this user
     const result = await this.pool.query(
       `SELECT fp.id, fp.user_id as "userId", fp.post_type as "postType",
               fp.ref_id as "refId", fp.ref_type as "refType", fp.body_text as "bodyText",
@@ -57,9 +57,6 @@ class FeedService {
        FROM feed_posts fp
        JOIN users u ON fp.user_id = u.id
        LEFT JOIN post_likes pl ON fp.id = pl.post_id AND pl.user_id = $1
-       WHERE fp.user_id IN (
-         SELECT followee_id FROM user_follows WHERE follower_id = $1
-       ) OR fp.user_id = $1
        ORDER BY fp.created_at DESC
        LIMIT $2 OFFSET $3`,
       [userId, limit, offset]
@@ -111,23 +108,18 @@ class FeedService {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-
-      // Insert like
-      await client.query(
+      const res = await client.query(
         `INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2)
-         ON CONFLICT DO NOTHING`,
+         ON CONFLICT (post_id, user_id) DO NOTHING`,
         [postId, userId]
       );
-
-      // Increment likes count
-      await client.query(
-        `UPDATE feed_posts SET likes_count = likes_count + 1
-         WHERE id = $1 AND NOT EXISTS (
-           SELECT 1 FROM post_likes WHERE post_id = $1 AND user_id = $2 AND created_at < CURRENT_TIMESTAMP - INTERVAL '1 second'
-         )`,
-        [postId, userId]
-      );
-
+      // Only increment if this was a new like (not a duplicate)
+      if ((res.rowCount ?? 0) > 0) {
+        await client.query(
+          `UPDATE feed_posts SET likes_count = likes_count + 1 WHERE id = $1`,
+          [postId]
+        );
+      }
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');

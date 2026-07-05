@@ -103,8 +103,8 @@ export async function feedRoutes(fastify: FastifyInstance, pool: Pool) {
 
         return reply.code(200).send({ message: 'Post liked' });
       } catch (error: any) {
-        if (error.message.includes('duplicate')) {
-          return reply.code(400).send({ error: 'Already liked' });
+        if (error.message?.includes('duplicate') || error.code === '23505') {
+          return reply.code(200).send({ message: 'Post liked' });
         }
         return reply.code(500).send({
           error: 'Failed to like post',

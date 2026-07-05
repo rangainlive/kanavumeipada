@@ -5,7 +5,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../providers/feed_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../features/auth/providers/auth_provider.dart';
 import 'post_detail_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -46,126 +45,79 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
+  Future<void> _onRefresh() =>
+      ref.read(feedProvider.notifier).loadFeed(refresh: true);
+
   @override
   Widget build(BuildContext context) {
     final feed = ref.watch(feedProvider);
-    final user = ref.watch(authProvider).user;
-
-    final firstName = (user?.name ?? '').trim().split(' ').first;
-    final exams = (user?.examTarget ?? '')
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       floatingActionButton: _PostFab(onTap: () => context.push('/feed/create')),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      body: CustomScrollView(
-        controller: _scroll,
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // ── Header ────────────────────────────────────────────────────
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 80,
-            backgroundColor: const Color(0xFF4338CA),
-            surfaceTintColor: Colors.transparent,
-            scrolledUnderElevation: 4,
-            shadowColor: Colors.black.withValues(alpha: 0.3),
-            leading: const SizedBox.shrink(),
-            leadingWidth: 0,
-            title: Text(
-              firstName.isEmpty ? 'KanavuMeipada' : 'Hey $firstName! 👋',
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                  letterSpacing: -0.2),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh_rounded,
-                    color: Colors.white, size: 22),
-                onPressed: () =>
-                    ref.read(feedProvider.notifier).loadFeed(refresh: true),
-                tooltip: 'Refresh',
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.pin,
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Align(
-                    alignment: Alignment.bottomLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 16, 14),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            firstName.isEmpty
-                                ? 'Good day! 👋'
-                                : 'Hey $firstName! 👋',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3),
-                          ),
-                          if (exams.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Wrap(
-                              spacing: 6,
-                              children: exams
-                                  .map((e) => Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 9, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.2),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          border: Border.all(
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.35)),
-                                        ),
-                                        child: Text(e,
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600)),
-                                      ))
-                                  .toList(),
-                            ),
-                          ] else ...[
-                            const SizedBox(height: 4),
-                            Text("What's on your mind today?",
-                                style: TextStyle(
-                                    color:
-                                        Colors.white.withValues(alpha: 0.75),
-                                    fontSize: 13)),
-                          ],
-                        ],
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        color: const Color(0xFF4338CA),
+        child: CustomScrollView(
+          controller: _scroll,
+          physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics()),
+          slivers: [
+            // ── Professional feed header ────────────────────────────────
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              scrolledUnderElevation: 1,
+              shadowColor: Colors.black.withValues(alpha: 0.08),
+              automaticallyImplyLeading: false,
+              title: Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: const Icon(Icons.auto_stories_rounded,
+                        color: Colors.white, size: 16),
                   ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'கனவு மெய்ப்பட',
+                    style: TextStyle(
+                        color: Color(0xFF1E293B),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                        letterSpacing: -0.3),
+                  ),
+                ],
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.search_rounded,
+                      color: Color(0xFF64748B), size: 22),
+                  onPressed: () {},
+                  tooltip: 'Search',
+                ),
+                const SizedBox(width: 4),
+              ],
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1),
+                child: Container(
+                  height: 1,
+                  color: const Color(0xFFE2E8F0),
                 ),
               ),
             ),
-          ),
 
-          if (feed.isLoading && feed.posts.isEmpty)
+            if (feed.isLoading && feed.posts.isEmpty)
             const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()))
           else if (feed.posts.isEmpty)
@@ -201,7 +153,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -249,15 +202,15 @@ class _PostFabState extends State<_PostFab>
       child: ScaleTransition(
         scale: _scale,
         child: Container(
+          width: 52,
           height: 52,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(26),
+            shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF4338CA).withValues(alpha: 0.45),
@@ -266,17 +219,8 @@ class _PostFabState extends State<_PostFab>
               ),
             ],
           ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.edit_rounded, color: Colors.white, size: 18),
-              SizedBox(width: 8),
-              Text('New Post',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14.5)),
-            ],
+          child: const Center(
+            child: Icon(Icons.edit_rounded, color: Colors.white, size: 22),
           ),
         ),
       ),
@@ -471,10 +415,16 @@ class _PostCardState extends State<_PostCard>
                                   fontSize: 14.5,
                                   color: AppTheme.textPrimary)),
                           Row(children: [
-                            Text(timeago.format(post.createdAt),
+                            Flexible(
+                              child: Text(
+                                timeago.format(post.createdAt),
                                 style: const TextStyle(
                                     fontSize: 11.5,
-                                    color: AppTheme.textHint)),
+                                    color: AppTheme.textHint),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
                             const SizedBox(width: 6),
                             Container(
                               width: 3, height: 3,
@@ -483,11 +433,17 @@ class _PostCardState extends State<_PostCard>
                                   shape: BoxShape.circle),
                             ),
                             const SizedBox(width: 6),
-                            Text(post.typeLabel,
+                            Flexible(
+                              child: Text(
+                                post.typeLabel,
                                 style: TextStyle(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w600,
-                                    color: _accent)),
+                                    color: _accent),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
                           ]),
                         ],
                       ),
