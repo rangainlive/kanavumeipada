@@ -7,6 +7,8 @@ import '../../features/auth/screens/profile_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/feed/screens/feed_screen.dart';
 import '../../features/feed/screens/create_post_screen.dart';
+import '../../features/feed/screens/post_detail_screen.dart';
+import '../../features/feed/providers/feed_provider.dart';
 import '../../features/content/screens/study_screen.dart';
 import '../../features/content/screens/subject_chapters_screen.dart';
 import '../../features/test_engine/screens/tests_screen.dart';
@@ -57,6 +59,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/feed/post/:id',
+        builder: (context, state) {
+          final post = state.extra as FeedPost?;
+          if (post == null) return const Scaffold(body: Center(child: Text('Post not found')));
+          return PostDetailScreen(post: post);
+        },
       ),
       GoRoute(
         path: '/auth/profile',

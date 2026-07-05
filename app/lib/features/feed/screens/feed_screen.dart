@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../providers/feed_provider.dart';
 import '../../../core/theme/app_theme.dart';
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  Feed Screen
-// ═══════════════════════════════════════════════════════════════════════════
+import 'post_detail_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
-  const FeedScreen({Key? key}) : super(key: key);
+  const FeedScreen({super.key});
 
   @override
   ConsumerState<FeedScreen> createState() => _FeedScreenState();
@@ -30,7 +27,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   void _onScroll() {
-    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 200) {
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 300) {
       final s = ref.read(feedProvider);
       if (s.hasMore && !s.isLoading) ref.read(feedProvider.notifier).loadFeed();
     }
@@ -42,20 +39,32 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     super.dispose();
   }
 
+  void _openPost(FeedPost post) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PostDetailScreen(post: post)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final feed = ref.watch(feedProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bgLight,
+      backgroundColor: const Color(0xFFF1F5F9),
       body: CustomScrollView(
         controller: _scroll,
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // ── Header ──────────────────────────────────────────────────────
-          SliverToBoxAdapter(child: _Header()),
+          // ── Sticky header ──────────────────────────────────────────────
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _FeedHeaderDelegate(
+              onRefresh: () =>
+                  ref.read(feedProvider.notifier).loadFeed(refresh: true),
+              onPost: () => context.push('/feed/create'),
+            ),
+          ),
 
-          // ── Body ────────────────────────────────────────────────────────
           if (feed.isLoading && feed.posts.isEmpty)
             const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()))
@@ -65,7 +74,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (ctx, i) {
@@ -77,17 +86,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           : const SizedBox.shrink();
                     }
                     final post = feed.posts[i];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: _PostCard(
-                        key: ValueKey(post.id),
-                        post: post,
-                        onLike: () =>
-                            ref.read(feedProvider.notifier).likePost(post.id),
-                        onUnlike: () =>
-                            ref.read(feedProvider.notifier).unlikePost(post.id),
-                        onComment: () => _openComments(ctx, post),
-                      ),
+                    return _PostCard(
+                      key: ValueKey(post.id),
+                      post: post,
+                      onTap: () => _openPost(post),
+                      onLike: () =>
+                          ref.read(feedProvider.notifier).likePost(post.id),
+                      onUnlike: () =>
+                          ref.read(feedProvider.notifier).unlikePost(post.id),
+                      onComment: () => _openPost(post),
                     );
                   },
                   childCount: feed.posts.length + (feed.isLoading ? 1 : 0),
@@ -98,86 +105,100 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       ),
     );
   }
-
-  void _openComments(BuildContext ctx, FeedPost post) {
-    showModalBottomSheet(
-      context: ctx,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      useSafeArea: true,
-      builder: (_) => _CommentsSheet(post: post),
-    );
-  }
 }
 
-// ── Header ──────────────────────────────────────────────────────────────────
+// ─── Header delegate ──────────────────────────────────────────────────────────
 
-class _Header extends ConsumerWidget {
+class _FeedHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final VoidCallback onRefresh, onPost;
+  const _FeedHeaderDelegate({required this.onRefresh, required this.onPost});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  double get minExtent => 0;
+  @override
+  double get maxExtent => 110;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final shrink = (shrinkOffset / maxExtent).clamp(0.0, 1.0);
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
+          colors: const [Color(0xFF4338CA), Color(0xFF3B82F6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        boxShadow: overlapsContent
+            ? [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4))
+              ]
+            : null,
       ),
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 16, 18),
+          padding: EdgeInsets.fromLTRB(20, 12 - shrink * 8, 12, 12),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Community',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3)),
-                  Text('Share • Discuss • Grow',
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.72),
-                          fontSize: 12.5)),
-                ],
+              Opacity(
+                opacity: (1 - shrink * 2).clamp(0.0, 1.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Community',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3)),
+                    Text('Share · Discuss · Grow',
+                        style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 12.5)),
+                  ],
+                ),
               ),
               const Spacer(),
-              // Refresh
               IconButton(
-                onPressed: () =>
-                    ref.read(feedProvider.notifier).loadFeed(refresh: true),
                 icon: const Icon(Icons.refresh_rounded,
                     color: Colors.white, size: 22),
+                onPressed: onRefresh,
+                tooltip: 'Refresh',
               ),
-              // Create post
               GestureDetector(
-                onTap: () => context.push('/feed/create'),
+                onTap: onPost,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 8),
+                      horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(22),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 8, offset: const Offset(0, 2),
-                      ),
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2)),
                     ],
                   ),
-                  child: const Row(children: [
-                    Icon(Icons.edit_rounded,
-                        color: AppTheme.primary, size: 15),
-                    SizedBox(width: 5),
-                    Text('Post',
-                        style: TextStyle(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13)),
-                  ]),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_rounded,
+                          color: AppTheme.primary, size: 18),
+                      SizedBox(width: 4),
+                      Text('Post',
+                          style: TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14)),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -186,9 +207,13 @@ class _Header extends ConsumerWidget {
       ),
     );
   }
+
+  @override
+  bool shouldRebuild(covariant _FeedHeaderDelegate old) =>
+      old.onRefresh != onRefresh || old.onPost != onPost;
 }
 
-// ── Empty state ──────────────────────────────────────────────────────────────
+// ─── Empty state ──────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
   final VoidCallback onPost;
@@ -198,987 +223,604 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 88, height: 88,
-              decoration: BoxDecoration(
-                gradient: AppTheme.brandGradient,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 20, offset: const Offset(0, 8)),
-                ],
-              ),
-              child: const Icon(Icons.people_rounded,
-                  color: Colors.white, size: 44),
+        padding: const EdgeInsets.all(36),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 90, height: 90,
+            decoration: BoxDecoration(
+              gradient: AppTheme.brandGradient,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8)),
+              ],
             ),
-            const SizedBox(height: 20),
-            const Text('No posts yet',
-                style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary)),
-            const SizedBox(height: 6),
-            Text('Be the first to share a study tip, MCQ,\nor poll with fellow aspirants!',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textHint, fontSize: 13.5)),
-            const SizedBox(height: 28),
-            GradientButton(label: 'Create First Post', onPressed: onPost),
-          ],
+            child: const Icon(Icons.people_rounded,
+                color: Colors.white, size: 46),
+          ),
+          const SizedBox(height: 24),
+          const Text('No posts yet',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary)),
+          const SizedBox(height: 8),
+          Text(
+            'Be the first to share a study tip,\nMCQ question, or poll!',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppTheme.textHint, fontSize: 14, height: 1.5),
+          ),
+          const SizedBox(height: 28),
+          GradientButton(label: 'Create First Post', onPressed: onPost),
+        ]),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Post Card — modern, clean, social-app feel
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _PostCard extends StatefulWidget {
+  final FeedPost post;
+  final VoidCallback onTap, onLike, onUnlike, onComment;
+
+  const _PostCard({
+    super.key,
+    required this.post,
+    required this.onTap,
+    required this.onLike,
+    required this.onUnlike,
+    required this.onComment,
+  });
+
+  @override
+  State<_PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<_PostCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _heartCtrl;
+  late Animation<double> _heartAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _heartCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
+    _heartAnim = TweenSequence([
+      TweenSequenceItem(
+          tween: Tween(begin: 1.0, end: 1.45)
+              .chain(CurveTween(curve: Curves.easeOut)),
+          weight: 35),
+      TweenSequenceItem(
+          tween: Tween(begin: 1.45, end: 0.82)
+              .chain(CurveTween(curve: Curves.easeIn)),
+          weight: 30),
+      TweenSequenceItem(
+          tween: Tween(begin: 0.82, end: 1.0)
+              .chain(CurveTween(curve: Curves.elasticOut)),
+          weight: 35),
+    ]).animate(_heartCtrl);
+  }
+
+  @override
+  void dispose() {
+    _heartCtrl.dispose();
+    super.dispose();
+  }
+
+  void _toggleLike() {
+    if (!widget.post.isLikedByMe) {
+      _heartCtrl.forward(from: 0);
+      widget.onLike();
+    } else {
+      widget.onUnlike();
+    }
+  }
+
+  void _share() {
+    final post = widget.post;
+    final content = post.parsedContent;
+    String text;
+    if (content != null) {
+      switch (content['_t']) {
+        case 'mcq':
+          final opts = (content['opts'] as List?)?.cast<String>() ?? [];
+          final ans = content['ans'] as int? ?? 0;
+          text = '❓ ${content['q']}\n\n'
+              '${List.generate(opts.length, (i) => '${['A', 'B', 'C', 'D'][i]}) ${opts[i]}').join('\n')}'
+              '\n\n✅ Answer: ${['A', 'B', 'C', 'D'][ans]}\n\nShared via KanavuMeipada';
+          break;
+        case 'poll':
+          final opts = (content['opts'] as List?)?.cast<String>() ?? [];
+          text = '📊 ${content['q']}\n\n'
+              '${opts.map((o) => '• $o').join('\n')}'
+              '\n\nShared via KanavuMeipada';
+          break;
+        case 'score':
+          text = '🏆 I scored ${content['marks']} in ${content['exam']}!'
+              '${content['note'] != null ? '\n${content['note']}' : ''}'
+              '\n\nShared via KanavuMeipada';
+          break;
+        default:
+          text = '${post.bodyText ?? ''}\n\nShared via KanavuMeipada';
+      }
+    } else {
+      text = '${post.bodyText ?? ''}\n\nShared via KanavuMeipada';
+    }
+    Share.share(text);
+  }
+
+  Color get _accent => _accentFor(widget.post);
+
+  @override
+  Widget build(BuildContext context) {
+    final post = widget.post;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Author row ──────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+                child: Row(
+                  children: [
+                    _Avatar(
+                        name: post.userName ?? '?',
+                        size: 42,
+                        color: _accent),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(post.userName ?? 'Anonymous',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14.5,
+                                  color: AppTheme.textPrimary)),
+                          Row(children: [
+                            Text(timeago.format(post.createdAt),
+                                style: const TextStyle(
+                                    fontSize: 11.5,
+                                    color: AppTheme.textHint)),
+                            const SizedBox(width: 6),
+                            Container(
+                              width: 3, height: 3,
+                              decoration: const BoxDecoration(
+                                  color: AppTheme.textHint,
+                                  shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(post.typeLabel,
+                                style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: _accent)),
+                          ]),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.more_horiz_rounded,
+                        size: 20, color: AppTheme.textHint),
+                  ],
+                ),
+              ),
+
+              // ── Content ─────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                child: _ContentWidget(post: post),
+              ),
+
+              const SizedBox(height: 12),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
+              // ── Actions ─────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                child: Row(children: [
+                  // Like
+                  _ActionBtn(
+                    onTap: _toggleLike,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ScaleTransition(
+                          scale: _heartAnim,
+                          child: Icon(
+                            post.isLikedByMe
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            size: 20,
+                            color: post.isLikedByMe
+                                ? Colors.redAccent
+                                : AppTheme.textSecondary,
+                          ),
+                        ),
+                        if (post.likesCount > 0) ...[
+                          const SizedBox(width: 4),
+                          Text('${post.likesCount}',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: post.isLikedByMe
+                                      ? Colors.redAccent
+                                      : AppTheme.textSecondary)),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  // Comment
+                  _ActionBtn(
+                    onTap: widget.onComment,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 19, color: AppTheme.textSecondary),
+                        if (post.commentsCount > 0) ...[
+                          const SizedBox(width: 4),
+                          Text('${post.commentsCount}',
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textSecondary)),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Share — opens native share sheet
+                  _ActionBtn(
+                    onTap: _share,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.ios_share_rounded,
+                            size: 18, color: AppTheme.textSecondary),
+                        SizedBox(width: 5),
+                        Text('Share',
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ]),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  Post Card
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _PostCard extends StatefulWidget {
-  final FeedPost post;
-  final VoidCallback? onLike, onUnlike, onComment;
-
-  const _PostCard({
-    Key? key,
-    required this.post,
-    this.onLike, this.onUnlike, this.onComment,
-  }) : super(key: key);
-
-  @override
-  State<_PostCard> createState() => _PostCardState();
-}
-
-class _PostCardState extends State<_PostCard> with SingleTickerProviderStateMixin {
-  late AnimationController _likeCtrl;
-  late Animation<double> _likeAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _likeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 350));
-    _likeAnim = TweenSequence([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.5)
-          .chain(CurveTween(curve: Curves.easeOut)), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 1.5, end: 0.85)
-          .chain(CurveTween(curve: Curves.easeIn)), weight: 30),
-      TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.0)
-          .chain(CurveTween(curve: Curves.elasticOut)), weight: 30),
-    ]).animate(_likeCtrl);
-  }
-
-  @override
-  void dispose() {
-    _likeCtrl.dispose();
-    super.dispose();
-  }
-
-  void _handleLike() {
-    if (!widget.post.isLikedByMe) {
-      _likeCtrl.forward(from: 0);
-      widget.onLike?.call();
-    } else {
-      widget.onUnlike?.call();
-    }
-  }
-
-  void _handleShare(BuildContext ctx) {
-    final post = widget.post;
-    final content = post.parsedContent;
-    String text;
-    if (content != null && content['q'] != null) {
-      text = content['q'] as String;
-    } else {
-      text = post.bodyText ?? post.typeLabel;
-    }
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-      content: const Row(children: [
-        Icon(Icons.check_circle_rounded, color: Colors.white, size: 16),
-        SizedBox(width: 8),
-        Text('Copied to clipboard!'),
-      ]),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: AppTheme.accent,
-      duration: const Duration(seconds: 2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ));
-  }
-
-  Color get _accentColor {
-    final t = widget.post.contentType;
-    switch (t) {
-      case 'mcq': return const Color(0xFF7C3AED);
-      case 'poll': return const Color(0xFF0EA5E9);
-      case 'score': return AppTheme.accent;
-      default: break;
-    }
-    switch (widget.post.postType) {
-      case 'result_shared': return AppTheme.accent;
-      case 'challenge_created': return const Color(0xFF7C3AED);
-      case 'test_published': return AppTheme.warning;
-      case 'achievement_unlocked': return const Color(0xFFD97706);
-      default: return AppTheme.primary;
-    }
-  }
+class _ActionBtn extends StatelessWidget {
+  final VoidCallback onTap;
+  final Widget child;
+  const _ActionBtn({required this.onTap, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final post = widget.post;
-    final initials = (post.userName ?? '?')[0].toUpperCase();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.055),
-            blurRadius: 16, offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Coloured top bar
-          Container(
-            height: 4,
-            decoration: BoxDecoration(
-              color: _accentColor,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-          ),
-
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-            child: Row(children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: _accentColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(initials,
-                      style: TextStyle(
-                          color: _accentColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16)),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(post.userName ?? 'Anonymous',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: AppTheme.textPrimary)),
-                    Text(timeago.format(post.createdAt),
-                        style: const TextStyle(
-                            fontSize: 11, color: AppTheme.textHint)),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(post.typeLabel,
-                    style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                        color: _accentColor)),
-              ),
-            ]),
-          ),
-
-          // Content
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-            child: _buildContent(post),
-          ),
-
-          // Stats
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-            child: Row(children: [
-              const Icon(Icons.favorite_rounded, size: 12, color: AppTheme.textHint),
-              const SizedBox(width: 3),
-              Text('${post.likesCount}',
-                  style: const TextStyle(fontSize: 11.5, color: AppTheme.textHint)),
-              const SizedBox(width: 10),
-              const Icon(Icons.chat_bubble_rounded, size: 12, color: AppTheme.textHint),
-              const SizedBox(width: 3),
-              Text('${post.commentsCount}',
-                  style: const TextStyle(fontSize: 11.5, color: AppTheme.textHint)),
-            ]),
-          ),
-
-          const Padding(
-            padding: EdgeInsets.fromLTRB(14, 8, 14, 0),
-            child: Divider(height: 1, color: Color(0xFFF1F5F9)),
-          ),
-
-          // Actions
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 2, 4, 10),
-            child: Row(children: [
-              // Like (animated)
-              Expanded(
-                child: GestureDetector(
-                  onTap: _handleLike,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ScaleTransition(
-                            scale: _likeAnim,
-                            child: Icon(
-                              post.isLikedByMe
-                                  ? Icons.favorite_rounded
-                                  : Icons.favorite_border_rounded,
-                              size: 18,
-                              color: post.isLikedByMe
-                                  ? Colors.redAccent
-                                  : AppTheme.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(post.isLikedByMe ? 'Liked' : 'Like',
-                              style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: post.isLikedByMe
-                                      ? Colors.redAccent
-                                      : AppTheme.textSecondary)),
-                        ]),
-                  ),
-                ),
-              ),
-              // Comment
-              Expanded(
-                child: InkWell(
-                  onTap: widget.onComment,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.chat_bubble_outline_rounded,
-                              size: 17, color: AppTheme.textSecondary),
-                          SizedBox(width: 5),
-                          Text('Comment',
-                              style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textSecondary)),
-                        ]),
-                  ),
-                ),
-              ),
-              // Share
-              Expanded(
-                child: InkWell(
-                  onTap: () => _handleShare(context),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.ios_share_rounded,
-                              size: 17, color: AppTheme.textSecondary),
-                          SizedBox(width: 5),
-                          Text('Share',
-                              style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textSecondary)),
-                        ]),
-                  ),
-                ),
-              ),
-            ]),
-          ),
-        ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        child: child,
       ),
     );
   }
+}
 
-  Widget _buildContent(FeedPost post) {
+// ─── Content widget (feed card — truncated preview) ───────────────────────────
+
+class _ContentWidget extends StatefulWidget {
+  final FeedPost post;
+  const _ContentWidget({required this.post});
+
+  @override
+  State<_ContentWidget> createState() => _ContentWidgetState();
+}
+
+class _ContentWidgetState extends State<_ContentWidget> {
+  @override
+  Widget build(BuildContext context) {
+    final post = widget.post;
     final content = post.parsedContent;
     if (content == null) {
-      // Plain text post
       return Text(
         post.bodyText ?? '',
         style: const TextStyle(
-            fontSize: 15, color: AppTheme.textPrimary, height: 1.55),
+            fontSize: 15.5,
+            color: AppTheme.textPrimary,
+            height: 1.6,
+            letterSpacing: 0.1),
         maxLines: 6,
         overflow: TextOverflow.ellipsis,
       );
     }
-
-    final type = content['_t'] as String?;
-    switch (type) {
+    final color = _accentFor(post);
+    switch (content['_t'] as String?) {
       case 'mcq':
-        return _MCQContent(content: content, accentColor: _accentColor);
+        return _MCQPreview(content: content, color: color);
       case 'poll':
-        return _PollContent(content: content, accentColor: _accentColor);
+        return _PollPreview(content: content, color: color);
       case 'score':
-        return _ScoreContent(content: content);
+        return _ScorePreview(content: content);
       default:
         return Text(post.bodyText ?? '',
             style: const TextStyle(
-                fontSize: 15, color: AppTheme.textPrimary, height: 1.55),
-            maxLines: 6, overflow: TextOverflow.ellipsis);
+                fontSize: 15.5,
+                color: AppTheme.textPrimary,
+                height: 1.6),
+            maxLines: 6,
+            overflow: TextOverflow.ellipsis);
     }
   }
 }
 
-// ─── MCQ Content ──────────────────────────────────────────────────────────────
-
-class _MCQContent extends StatefulWidget {
+// MCQ — tap to reveal inline in feed
+class _MCQPreview extends StatefulWidget {
   final Map<String, dynamic> content;
-  final Color accentColor;
-  const _MCQContent({required this.content, required this.accentColor});
+  final Color color;
+  const _MCQPreview({required this.content, required this.color});
 
   @override
-  State<_MCQContent> createState() => _MCQContentState();
+  State<_MCQPreview> createState() => _MCQPreviewState();
 }
 
-class _MCQContentState extends State<_MCQContent> {
+class _MCQPreviewState extends State<_MCQPreview> {
   int? _selected;
-  bool _revealed = false;
 
   @override
   Widget build(BuildContext context) {
     final q = widget.content['q'] as String? ?? '';
     final opts = (widget.content['opts'] as List?)?.cast<String>() ?? [];
     final ans = widget.content['ans'] as int? ?? 0;
-    final color = widget.accentColor;
+    final revealed = _selected != null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(q,
-            style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-                height: 1.4)),
-        const SizedBox(height: 12),
-        ...List.generate(opts.length, (i) {
-          final isCorrect = i == ans;
-          final isSelected = _selected == i;
-          final showResult = _revealed;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(q,
+          style: const TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+              height: 1.4)),
+      const SizedBox(height: 12),
+      ...List.generate(opts.length, (i) {
+        final isCorrect = i == ans;
+        final isSelected = _selected == i;
+        Color bg, border;
+        Color textC = AppTheme.textPrimary;
+        if (revealed) {
+          if (isCorrect) { bg = const Color(0xFFD1FAE5); border = AppTheme.accent; textC = const Color(0xFF065F46); }
+          else if (isSelected) { bg = const Color(0xFFFEE2E2); border = AppTheme.error; textC = AppTheme.error; }
+          else { bg = const Color(0xFFF8FAFC); border = const Color(0xFFE2E8F0); textC = AppTheme.textHint; }
+        } else { bg = const Color(0xFFF8FAFC); border = const Color(0xFFE2E8F0); }
 
-          Color bg = AppTheme.bgLight;
-          Color border = const Color(0xFFE2E8F0);
-          Color textC = AppTheme.textPrimary;
-
-          if (showResult) {
-            if (isCorrect) {
-              bg = AppTheme.accent.withValues(alpha: 0.1);
-              border = AppTheme.accent;
-              textC = const Color(0xFF065F46);
-            } else if (isSelected && !isCorrect) {
-              bg = AppTheme.error.withValues(alpha: 0.08);
-              border = AppTheme.error.withValues(alpha: 0.4);
-              textC = AppTheme.error;
-            }
-          } else if (isSelected) {
-            bg = color.withValues(alpha: 0.1);
-            border = color.withValues(alpha: 0.5);
-          }
-
-          return GestureDetector(
-            onTap: _revealed
-                ? null
-                : () => setState(() {
-                      _selected = i;
-                      _revealed = true;
-                    }),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: border),
+        return GestureDetector(
+          onTap: revealed ? null : () => setState(() => _selected = i),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.only(bottom: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: border, width: 1.5),
+            ),
+            child: Row(children: [
+              Container(
+                width: 24, height: 24,
+                decoration: BoxDecoration(
+                  color: revealed && isCorrect ? AppTheme.accent : revealed && isSelected ? AppTheme.error : Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: border),
+                ),
+                child: Center(child: Text(['A','B','C','D'][i],
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+                        color: revealed && (isCorrect || isSelected) ? Colors.white : AppTheme.textHint))),
               ),
-              child: Row(children: [
-                Container(
-                  width: 22, height: 22,
-                  decoration: BoxDecoration(
-                    color: showResult && isCorrect ? AppTheme.accent : (isSelected ? color : Colors.white),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                        color: showResult && isCorrect ? AppTheme.accent : border),
-                  ),
-                  child: Center(
-                    child: Text(['A', 'B', 'C', 'D'][i],
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: (isSelected || (showResult && isCorrect))
-                                ? Colors.white
-                                : AppTheme.textSecondary)),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(opts[i],
-                      style: TextStyle(
-                          fontSize: 13.5,
-                          color: textC,
-                          fontWeight: isSelected || (showResult && isCorrect)
-                              ? FontWeight.w600
-                              : FontWeight.normal)),
-                ),
-                if (showResult && isCorrect)
-                  const Icon(Icons.check_circle_rounded,
-                      color: AppTheme.accent, size: 18),
-                if (showResult && isSelected && !isCorrect)
-                  Icon(Icons.cancel_rounded,
-                      color: AppTheme.error.withValues(alpha: 0.7), size: 18),
-              ]),
-            ),
-          );
-        }),
-        if (!_revealed)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text('Tap an option to reveal the answer',
-                style: TextStyle(
-                    fontSize: 11.5,
-                    color: AppTheme.textHint,
-                    fontStyle: FontStyle.italic)),
+              const SizedBox(width: 10),
+              Expanded(child: Text(opts[i],
+                  style: TextStyle(fontSize: 13.5, color: textC,
+                      fontWeight: revealed && isCorrect ? FontWeight.w700 : FontWeight.normal))),
+              if (revealed && isCorrect) const Icon(Icons.check_circle_rounded, color: AppTheme.accent, size: 16),
+              if (revealed && isSelected && !isCorrect) Icon(Icons.cancel_rounded, color: AppTheme.error, size: 16),
+            ]),
           ),
-        if (_revealed)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              'Correct answer: ${['A', 'B', 'C', 'D'][ans]}',
-              style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.accent),
-            ),
-          ),
-      ],
-    );
+        );
+      }),
+      if (!revealed)
+        Text('Tap an option to reveal answer',
+            style: TextStyle(fontSize: 11.5, color: AppTheme.textHint, fontStyle: FontStyle.italic)),
+      if (revealed)
+        Text('Answer: ${['A','B','C','D'][ans]}',
+            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppTheme.accent)),
+    ]);
   }
 }
 
-// ─── Poll Content ─────────────────────────────────────────────────────────────
-
-class _PollContent extends StatefulWidget {
+// Poll — tap to vote inline
+class _PollPreview extends StatefulWidget {
   final Map<String, dynamic> content;
-  final Color accentColor;
-  const _PollContent({required this.content, required this.accentColor});
+  final Color color;
+  const _PollPreview({required this.content, required this.color});
 
   @override
-  State<_PollContent> createState() => _PollContentState();
+  State<_PollPreview> createState() => _PollPreviewState();
 }
 
-class _PollContentState extends State<_PollContent> {
+class _PollPreviewState extends State<_PollPreview> {
   int? _voted;
 
   @override
   Widget build(BuildContext context) {
     final q = widget.content['q'] as String? ?? '';
     final opts = (widget.content['opts'] as List?)?.cast<String>() ?? [];
-    final color = widget.accentColor;
-    // Simulate vote counts (no backend vote storage yet)
-    final fakeCounts = List.generate(opts.length, (i) => i == 0 ? 3 : (i == 1 ? 5 : 2));
+    final fakeCounts = List.generate(opts.length, (i) => [3,5,2,1][i % 4]);
     final total = fakeCounts.fold(0, (a, b) => a + b);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(q,
-            style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-                height: 1.4)),
-        const SizedBox(height: 12),
-        ...List.generate(opts.length, (i) {
-          final pct = _voted != null ? fakeCounts[i] / total : 0.0;
-          final isVoted = _voted == i;
-          return GestureDetector(
-            onTap: _voted != null ? null : () => setState(() => _voted = i),
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isVoted
-                      ? color.withValues(alpha: 0.1)
-                      : AppTheme.bgLight,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: isVoted
-                          ? color.withValues(alpha: 0.5)
-                          : const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Expanded(
-                        child: Text(opts[i],
-                            style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: isVoted
-                                    ? FontWeight.w700
-                                    : FontWeight.normal,
-                                color: isVoted ? color : AppTheme.textPrimary)),
-                      ),
-                      if (_voted != null)
-                        Text('${(pct * 100).round()}%',
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: isVoted ? color : AppTheme.textHint)),
-                    ]),
-                    if (_voted != null) ...[
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: pct),
-                          duration: const Duration(milliseconds: 600),
-                          curve: Curves.easeOut,
-                          builder: (_, v, _w) => LinearProgressIndicator(
-                            value: v,
-                            minHeight: 5,
-                            backgroundColor: Colors.transparent,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                isVoted
-                                    ? color
-                                    : color.withValues(alpha: 0.35)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(q, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: AppTheme.textPrimary, height: 1.4)),
+      const SizedBox(height: 12),
+      ...List.generate(opts.length, (i) {
+        final pct = _voted != null ? fakeCounts[i] / total : 0.0;
+        final isVoted = _voted == i;
+        return GestureDetector(
+          onTap: _voted != null ? null : () => setState(() => _voted = i),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 240),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              decoration: BoxDecoration(
+                color: isVoted ? widget.color.withValues(alpha: 0.08) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: isVoted ? widget.color : const Color(0xFFE2E8F0), width: isVoted ? 1.5 : 1),
               ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Expanded(child: Text(opts[i], style: TextStyle(fontSize: 13.5, fontWeight: isVoted ? FontWeight.w700 : FontWeight.normal, color: isVoted ? widget.color : AppTheme.textPrimary))),
+                  if (_voted != null) Text('${(pct * 100).round()}%', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: isVoted ? widget.color : AppTheme.textHint)),
+                ]),
+                if (_voted != null) ...[
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: pct),
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeOut,
+                      builder: (_, v, child) => LinearProgressIndicator(
+                        value: v, minHeight: 5,
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(isVoted ? widget.color : widget.color.withValues(alpha: 0.3)),
+                      ),
+                    ),
+                  ),
+                ],
+              ]),
             ),
-          );
-        }),
-        if (_voted == null)
-          Text('Tap to vote',
-              style: TextStyle(
-                  fontSize: 11.5,
-                  color: AppTheme.textHint,
-                  fontStyle: FontStyle.italic)),
-        if (_voted != null)
-          Text('${fakeCounts.fold(0, (a, b) => a + b)} votes',
-              style: const TextStyle(
-                  fontSize: 11.5, color: AppTheme.textHint)),
-      ],
-    );
+          ),
+        );
+      }),
+      if (_voted == null) Text('Tap to vote', style: TextStyle(fontSize: 11.5, color: AppTheme.textHint, fontStyle: FontStyle.italic)),
+      if (_voted != null) Text('${fakeCounts.fold(0,(a,b)=>a+b)} votes', style: const TextStyle(fontSize: 11.5, color: AppTheme.textHint)),
+    ]);
   }
 }
 
-// ─── Score Content ────────────────────────────────────────────────────────────
-
-class _ScoreContent extends StatelessWidget {
+// Score — clean gradient display
+class _ScorePreview extends StatelessWidget {
   final Map<String, dynamic> content;
-  const _ScoreContent({required this.content});
+  const _ScorePreview({required this.content});
 
   @override
   Widget build(BuildContext context) {
     final exam = content['exam'] as String? ?? '';
     final marks = content['marks'] as String? ?? '';
     final note = content['note'] as String?;
-
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF059669), Color(0xFF0EA5E9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(14),
       ),
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            const Text('🏆', style: TextStyle(fontSize: 28)),
-            const SizedBox(width: 12),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(exam,
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
-              Text(marks,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5)),
-            ]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Text('🏆', style: TextStyle(fontSize: 30)),
+          const SizedBox(width: 12),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(exam, style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12.5, fontWeight: FontWeight.w600)),
+            Text(marks, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
           ]),
-          if (note != null && note.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(note,
-                  style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 13,
-                      height: 1.4)),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  Comments Sheet (animated)
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _CommentsSheet extends ConsumerStatefulWidget {
-  final FeedPost post;
-  const _CommentsSheet({required this.post});
-
-  @override
-  ConsumerState<_CommentsSheet> createState() => _CommentsSheetState();
-}
-
-class _CommentsSheetState extends ConsumerState<_CommentsSheet>
-    with SingleTickerProviderStateMixin {
-  final _ctrl = TextEditingController();
-  final _listKey = GlobalKey<AnimatedListState>();
-  final List<FeedComment> _comments = [];
-  bool _loading = true;
-  bool _submitting = false;
-  late AnimationController _sendAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _sendAnim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 250));
-    _ctrl.addListener(() => setState(() {}));
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _sendAnim.dispose();
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    final list =
-        await ref.read(feedProvider.notifier).fetchComments(widget.post.id);
-    if (!mounted) return;
-    setState(() { _loading = false; });
-    for (final c in list) {
-      _comments.add(c);
-      _listKey.currentState?.insertItem(
-        _comments.length - 1,
-        duration: const Duration(milliseconds: 300),
-      );
-    }
-  }
-
-  Future<void> _submit() async {
-    final text = _ctrl.text.trim();
-    if (text.isEmpty || _submitting) return;
-
-    setState(() => _submitting = true);
-    _sendAnim.forward(from: 0);
-
-    final ok =
-        await ref.read(feedProvider.notifier).addComment(widget.post.id, text);
-    if (ok && mounted) {
-      _ctrl.clear();
-      // Re-fetch to get the server-generated comment with proper ID
-      final all = await ref
-          .read(feedProvider.notifier)
-          .fetchComments(widget.post.id);
-      if (mounted) {
-        // Add only the newest comment
-        final newComment = all.lastOrNull;
-        if (newComment != null &&
-            (_comments.isEmpty || _comments.last.id != newComment.id)) {
-          _comments.add(newComment);
-          _listKey.currentState?.insertItem(
-            _comments.length - 1,
-            duration: const Duration(milliseconds: 400),
-          );
-        }
-      }
-    }
-    if (mounted) setState(() => _submitting = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
-    final hasText = _ctrl.text.trim().isNotEmpty;
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.only(bottom: bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          Container(
-            width: 40, height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
-                borderRadius: BorderRadius.circular(2)),
-          ),
-
-          // Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(children: [
-              const Text('Comments',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary)),
-              const Spacer(),
-              if (_comments.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 9, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text('${_comments.length}',
-                      style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12)),
-                ),
-            ]),
-          ),
+        ]),
+        if (note != null && note.isNotEmpty) ...[
           const SizedBox(height: 10),
-          const Divider(height: 1),
-
-          // Comment list
-          ConstrainedBox(
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.46),
-            child: _loading
-                ? const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Center(child: CircularProgressIndicator()))
-                : _comments.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(36),
-                        child: Column(mainAxisSize: MainAxisSize.min, children: [
-                          Icon(Icons.chat_bubble_outline_rounded,
-                              size: 48, color: AppTheme.textHint),
-                          const SizedBox(height: 12),
-                          const Text('No comments yet',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  color: AppTheme.textPrimary)),
-                          const SizedBox(height: 4),
-                          Text('Be the first to comment!',
-                              style: TextStyle(
-                                  color: AppTheme.textHint, fontSize: 13)),
-                        ]),
-                      )
-                    : AnimatedList(
-                        key: _listKey,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shrinkWrap: true,
-                        initialItemCount: _comments.length,
-                        itemBuilder: (_, i, animation) =>
-                            _CommentItem(_comments[i], animation),
-                      ),
-          ),
-
-          const Divider(height: 1),
-
-          // Input
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-            child: Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _ctrl,
-                  maxLength: 280,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _submit(),
-                  decoration: InputDecoration(
-                    hintText: 'Write a comment…',
-                    counterText: '',
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 11),
-                    fillColor: AppTheme.bgLight,
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: const BorderSide(
-                          color: AppTheme.primary, width: 1.5),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              ScaleTransition(
-                scale: Tween(begin: 1.0, end: 1.2).animate(CurvedAnimation(
-                    parent: _sendAnim, curve: Curves.elasticOut)),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(
-                    gradient: hasText ? AppTheme.brandGradient : null,
-                    color: hasText ? null : const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: hasText
-                        ? [BoxShadow(
-                            color: AppTheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 8, offset: const Offset(0, 2))]
-                        : null,
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: hasText ? _submit : null,
-                      borderRadius: BorderRadius.circular(22),
-                      child: Center(
-                        child: _submitting
-                            ? const SizedBox(
-                                width: 18, height: 18,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
-                            : Icon(Icons.send_rounded,
-                                color: hasText ? Colors.white : AppTheme.textHint,
-                                size: 18),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ]),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+            child: Text(note, style: TextStyle(color: Colors.white.withValues(alpha: 0.95), fontSize: 13, height: 1.45)),
           ),
         ],
-      ),
+      ]),
     );
   }
 }
 
-// ─── Comment item with slide+fade animation ───────────────────────────────────
+// ─── Shared helpers ───────────────────────────────────────────────────────────
 
-class _CommentItem extends StatelessWidget {
-  final FeedComment comment;
-  final Animation<double> animation;
-  const _CommentItem(this.comment, this.animation);
+Color _accentFor(FeedPost post) {
+  switch (post.contentType) {
+    case 'mcq': return const Color(0xFF7C3AED);
+    case 'poll': return const Color(0xFF0EA5E9);
+    case 'score': return AppTheme.accent;
+    default: break;
+  }
+  switch (post.postType) {
+    case 'result_shared': return AppTheme.accent;
+    case 'challenge_created': return const Color(0xFF7C3AED);
+    case 'test_published': return AppTheme.warning;
+    default: return AppTheme.primary;
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  final String name;
+  final double size;
+  final Color color;
+  const _Avatar({required this.name, required this.size, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return SizeTransition(
-      sizeFactor: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-      child: FadeTransition(
-        opacity: animation,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-                child: Text(
-                  (comment.userName ?? '?')[0].toUpperCase(),
-                  style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primary),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
-                  decoration: BoxDecoration(
-                    color: AppTheme.bgLight,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(14),
-                      bottomLeft: Radius.circular(14),
-                      bottomRight: Radius.circular(14),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(children: [
-                        Text(comment.userName ?? 'Anonymous',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12.5,
-                                color: AppTheme.textPrimary)),
-                        const SizedBox(width: 6),
-                        Text(timeago.format(comment.createdAt),
-                            style: const TextStyle(
-                                fontSize: 10.5, color: AppTheme.textHint)),
-                      ]),
-                      const SizedBox(height: 3),
-                      Text(comment.text,
-                          style: const TextStyle(
-                              fontSize: 13.5,
-                              color: AppTheme.textSecondary,
-                              height: 1.4)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+    final letter = name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+    return Container(
+      width: size, height: size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.65)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(letter,
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: size * 0.38)),
       ),
     );
   }
