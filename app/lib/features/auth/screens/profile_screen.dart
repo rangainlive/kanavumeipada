@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../../../core/theme/app_theme.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -11,126 +12,293 @@ class ProfileScreen extends ConsumerWidget {
     if (user == null) return const SizedBox.shrink();
 
     final initials = _initials(user.name ?? user.phone ?? '?');
-    final primary = Theme.of(context).colorScheme.primary;
+    final exams = (user.examTarget ?? '').split(',').where((e) => e.isNotEmpty).toList();
 
     return Scaffold(
+      backgroundColor: AppTheme.bgLight,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            title: const Text('My Profile'),
-            floating: true,
-            snap: true,
-          ),
-
+          // Gradient hero
           SliverToBoxAdapter(
-            child: Column(
-              children: [
-                const SizedBox(height: 24),
-
-                // Avatar
-                CircleAvatar(
-                  radius: 44,
-                  backgroundColor: primary,
-                  child: Text(
-                    initials,
-                    style: const TextStyle(
-                        fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF312E81), Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+                  child: Column(
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 80, height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.4), width: 2),
+                        ),
+                        child: Center(
+                          child: Text(initials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                              )),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(user.name ?? 'Welcome!',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          )),
+                      const SizedBox(height: 4),
+                      if (user.phone != null)
+                        Text(user.phone!,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 13,
+                            )),
+                      const SizedBox(height: 12),
+                      // Exam tags
+                      if (exams.isNotEmpty)
+                        Wrap(
+                          spacing: 6, runSpacing: 6,
+                          alignment: WrapAlignment.center,
+                          children: exams.map((e) => Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                            child: Text(e.trim(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                )),
+                          )).toList(),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                Text(user.name ?? 'No name',
-                    style: Theme.of(context).textTheme.headlineSmall),
-                if (user.phone != null)
-                  Text(user.phone!,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: Colors.grey)),
-                const SizedBox(height: 8),
-                if (user.examTarget != null)
-                  Chip(
-                    label: Text(user.examTarget!),
-                    avatar: const Icon(Icons.school_rounded, size: 16),
+              ),
+            ),
+          ),
+
+          // Stats row
+          SliverToBoxAdapter(
+            child: Transform.translate(
+              offset: const Offset(0, -20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-
-                const SizedBox(height: 24),
-
-                // Stats row
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
                   child: Row(
                     children: [
-                      _StatCard(
-                        icon: Icons.monetization_on_rounded,
-                        color: Colors.orange,
+                      _StatItem(
+                        icon: '🪙',
                         value: '${user.coinsBalance}',
                         label: 'Coins',
+                        color: AppTheme.warning,
                       ),
-                      const SizedBox(width: 12),
-                      _StatCard(
-                        icon: Icons.bolt_rounded,
-                        color: const Color(0xFF6366F1),
+                      _vDiv(),
+                      _StatItem(
+                        icon: '⚡',
                         value: '${user.xp}',
                         label: 'XP',
+                        color: AppTheme.primary,
                       ),
-                      const SizedBox(width: 12),
-                      _StatCard(
-                        icon: Icons.local_fire_department_rounded,
-                        color: Colors.red,
+                      _vDiv(),
+                      _StatItem(
+                        icon: '🔥',
                         value: '—',
                         label: 'Streak',
+                        color: Colors.deepOrange,
                       ),
                     ],
                   ),
                 ),
+              ),
+            ),
+          ),
 
-                const SizedBox(height: 24),
-
-                // XP Progress bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _XpBar(xp: user.xp),
-                ),
-
-                const SizedBox(height: 24),
-
-                // How to earn coins info card
-                _InfoCard(
-                  icon: Icons.info_outline_rounded,
-                  title: 'How to earn coins',
-                  body:
-                      'Complete daily quizzes (+50), join battles (+prize), share achievements (+10), complete streaks (+20/day).',
-                ),
-
-                const SizedBox(height: 12),
-
-                _InfoCard(
-                  icon: Icons.emoji_events_outlined,
-                  title: 'Your exam',
-                  body:
-                      '${user.examTarget ?? "Not set"} · ${user.userState ?? "State not set"}\n\nYour feed and tests are personalized for your exam.',
-                ),
-
-                const SizedBox(height: 32),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.logout_rounded),
-                      label: const Text('Logout'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
-                        side: BorderSide(color: Theme.of(context).colorScheme.error.withOpacity(0.4)),
-                      ),
-                      onPressed: () => _confirmLogout(context, ref),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // XP level card
+                  _SectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          const Text('⚡',
+                              style: TextStyle(fontSize: 18)),
+                          const SizedBox(width: 8),
+                          Text('Level ${(user.xp ~/ 100) + 1}',
+                              style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textPrimary)),
+                          const Spacer(),
+                          Text('${user.xp % 100} / 100 XP',
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textHint)),
+                        ]),
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: (user.xp % 100) / 100.0,
+                            minHeight: 10,
+                            backgroundColor: AppTheme.bgLight,
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppTheme.primary),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Complete daily quizzes and battles to level up!',
+                          style: TextStyle(
+                              fontSize: 12, color: AppTheme.textHint),
+                        ),
+                      ],
                     ),
                   ),
-                ),
+                  const SizedBox(height: 12),
 
-                const SizedBox(height: 32),
-              ],
+                  // How to earn
+                  _SectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(children: [
+                          Text('💰', style: TextStyle(fontSize: 18)),
+                          SizedBox(width: 8),
+                          Text('How to Earn Coins',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textPrimary)),
+                        ]),
+                        const SizedBox(height: 12),
+                        _EarnRow('🎯', 'Complete daily quiz', '+50 🪙'),
+                        _EarnRow('⚔️', 'Win a battle', 'Prize pool 🪙'),
+                        _EarnRow('🔥', 'Daily streak bonus', '+20 🪙/day'),
+                        _EarnRow('🎉', 'Share achievement', '+10 🪙'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Your exams
+                  if (exams.isNotEmpty)
+                    _SectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(children: [
+                            Text('🎓', style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 8),
+                            Text('Your Exams',
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.textPrimary)),
+                          ]),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8, runSpacing: 8,
+                            children: exams.map((e) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.brandGradient,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(e.trim(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                  )),
+                            )).toList(),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tamil Nadu region · Feed and tests are personalized for your exams.',
+                            style: TextStyle(
+                                fontSize: 12, color: AppTheme.textHint),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  const SizedBox(height: 24),
+
+                  // Logout
+                  SizedBox(
+                    width: double.infinity,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppTheme.error.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: AppTheme.error.withValues(alpha: 0.2)),
+                      ),
+                      child: TextButton.icon(
+                        onPressed: () => _confirmLogout(context, ref),
+                        icon: const Icon(Icons.logout_rounded,
+                            color: AppTheme.error, size: 18),
+                        label: const Text('Sign Out',
+                            style: TextStyle(
+                                color: AppTheme.error,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15)),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  Center(
+                    child: Text('KanavuMeipada v1.0.0',
+                        style: TextStyle(
+                            color: AppTheme.textHint, fontSize: 11)),
+                  ),
+                  const SizedBox(height: 80),
+                ],
+              ),
             ),
           ),
         ],
@@ -141,133 +309,155 @@ class ProfileScreen extends ConsumerWidget {
   String _initials(String name) {
     final parts = name.trim().split(' ');
     if (parts.isEmpty) return '?';
-    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    if (parts.length == 1) return parts[0][0].toUpperCase();
     return (parts[0][0] + parts.last[0]).toUpperCase();
   }
 
   void _confirmLogout(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Logout?'),
-        content: const Text('You will be signed out of your account.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(authProvider.notifier).logout();
-            },
-            child: const Text('Logout'),
-          ),
-        ],
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Icon(Icons.logout_rounded,
+                size: 44, color: AppTheme.error),
+            const SizedBox(height: 12),
+            const Text('Sign Out?',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary)),
+            const SizedBox(height: 8),
+            const Text(
+              'You\'ll need to sign in again to access your account.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13.5),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ref.read(authProvider.notifier).logout();
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: AppTheme.error,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('Yes, Sign Out',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel',
+                  style: TextStyle(
+                      color: AppTheme.textSecondary, fontSize: 15)),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final IconData icon;
+Widget _vDiv() => Container(
+    width: 1, height: 40, color: const Color(0xFFE2E8F0));
+
+class _StatItem extends StatelessWidget {
+  final String icon, value, label;
   final Color color;
-  final String value, label;
-  const _StatCard({required this.icon, required this.color, required this.value, required this.label});
+  const _StatItem({required this.icon, required this.value,
+      required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: color.withOpacity(0.2)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(value,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold)),
-            Text(label, style: Theme.of(context).textTheme.labelSmall),
-          ]),
-        ),
-      ),
+      child: Column(children: [
+        Text(icon, style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 4),
+        Text(value,
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: color)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 11, color: AppTheme.textHint)),
+      ]),
     );
   }
 }
 
-class _XpBar extends StatelessWidget {
-  final int xp;
-  const _XpBar({required this.xp});
+class _SectionCard extends StatelessWidget {
+  final Widget child;
+  const _SectionCard({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final level = (xp ~/ 100) + 1;
-    final progress = (xp % 100) / 100.0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Level $level', style: Theme.of(context).textTheme.titleLarge),
-            Text('${xp % 100} / 100 XP',
-                style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 8,
-            backgroundColor: Colors.grey.withOpacity(0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).colorScheme.primary),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
-        ),
-      ],
+        ],
+      ),
+      padding: const EdgeInsets.all(18),
+      child: child,
     );
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String title, body;
-  const _InfoCard({required this.icon, required this.title, required this.body});
+class _EarnRow extends StatelessWidget {
+  final String emoji, label, reward;
+  const _EarnRow(this.emoji, this.label, this.reward);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(children: [
+        Text(emoji, style: const TextStyle(fontSize: 15)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(label,
+              style: const TextStyle(
+                  fontSize: 13, color: AppTheme.textSecondary)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15)),
-              ]),
-              const SizedBox(height: 8),
-              Text(body, style: Theme.of(context).textTheme.bodyMedium),
-            ],
-          ),
-        ),
-      ),
+        Text(reward,
+            style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.accent)),
+      ]),
     );
   }
 }
