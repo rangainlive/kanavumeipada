@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../auth/providers/auth_provider.dart';
@@ -108,11 +109,26 @@ class SubjectChaptersScreen extends ConsumerWidget {
                   subtitle: ch.contentText != null
                       ? Text(ch.contentText!, maxLines: 1, overflow: TextOverflow.ellipsis)
                       : null,
-                  trailing: Icon(
-                    ch.contentText != null || ch.contentUrl != null
-                        ? Icons.chevron_right
-                        : Icons.lock_outline,
-                    color: Colors.grey,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.auto_awesome, size: 20),
+                        color: const Color(0xFF4338CA),
+                        tooltip: 'Generate Questions with AI',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => context.push(
+                          '/study/chapter/${ch.id}/generate',
+                          extra: ch.title,
+                        ),
+                      ),
+                      Icon(
+                        ch.contentText != null || ch.contentUrl != null
+                            ? Icons.chevron_right
+                            : Icons.lock_outline,
+                        color: Colors.grey,
+                      ),
+                    ],
                   ),
                   onTap: ch.contentText != null
                       ? () => _showContent(context, ch)

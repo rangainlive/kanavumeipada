@@ -13,6 +13,7 @@ import '../../features/content/screens/study_screen.dart';
 import '../../features/content/screens/subject_chapters_screen.dart';
 import '../../features/test_engine/screens/tests_screen.dart';
 import '../../features/challenge/screens/battle_screen.dart';
+import '../../features/ai_generator/screens/generate_screen.dart';
 import '../widgets/main_shell.dart';
 
 // ChangeNotifier that fires whenever auth state changes, used as GoRouter refreshListenable
@@ -92,6 +93,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => SubjectChaptersScreen(
               subjectId: state.pathParameters['id']!,
               subjectName: state.extra as String?,
+            ),
+          ),
+          GoRoute(
+            path: '/study/chapter/:id/generate',
+            builder: (context, state) => GenerateScreen(
+              chapterId: state.pathParameters['id']!,
+              chapterTitle: state.extra as String?,
             ),
           ),
           GoRoute(

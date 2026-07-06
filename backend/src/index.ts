@@ -12,6 +12,7 @@ import { contentRoutes } from './routes/content.routes';
 import { testRoutes } from './routes/test.routes';
 import { walletRoutes } from './routes/wallet.routes';
 import { challengeRoutes } from './routes/challenge.routes';
+import { aiContentRoutes } from './routes/ai-content.routes';
 
 dotenv.config();
 
@@ -110,6 +111,7 @@ fastify.register((fastify) => contentRoutes(fastify, pool));
 fastify.register((fastify) => testRoutes(fastify, pool));
 fastify.register((fastify) => walletRoutes(fastify, pool));
 fastify.register((fastify) => challengeRoutes(fastify, pool));
+fastify.register((fastify) => aiContentRoutes(fastify, pool));
 
 const runMigrations = async () => {
   try {
