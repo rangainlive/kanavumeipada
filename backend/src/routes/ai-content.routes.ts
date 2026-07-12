@@ -7,6 +7,7 @@ const generateSchema = z.object({
   count: z.number().int().min(3).max(20).default(10),
   difficulty: z.number().int().min(1).max(3).default(2),
   bloomLevel: z.enum(['remember', 'understand', 'apply', 'analyze']).default('understand'),
+  language: z.enum(['tamil', 'english']).default('english'),
 });
 
 const uploadContentSchema = z.object({
@@ -32,6 +33,7 @@ export async function aiContentRoutes(fastify: FastifyInstance, pool: Pool) {
           count: body.count,
           difficulty: body.difficulty,
           bloomLevel: body.bloomLevel,
+          language: body.language,
         });
 
         return reply.code(200).send({

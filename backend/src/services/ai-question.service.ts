@@ -30,11 +30,16 @@ function buildPrompt(
   chapterTitle: string,
   count: number,
   difficulty: number,
-  bloomLevel: string
+  bloomLevel: string,
+  language: 'tamil' | 'english'
 ): string {
   const difficultyLabel = ['', 'recall a fact', 'understand a concept', 'apply or compare concepts'][difficulty];
+  const isTamil = language === 'tamil';
+  const langLine = isTamil
+    ? '\nLANGUAGE REQUIREMENT: Write EVERY word — question, all 4 options, and explanation — in Tamil (தமிழ்). No English words except proper nouns and numbers.'
+    : '';
   return `You are an expert MCQ question setter for Indian competitive exams (TNPSC, UPSC, SSC, Banking).
-Using ONLY the content below about "${chapterTitle}", generate exactly ${count} multiple-choice questions.
+Using ONLY the content below about "${chapterTitle}", generate exactly ${count} multiple-choice questions.${langLine}
 
 RULES — follow strictly:
 1. All 4 options must be plausible terms from the SAME topic (never random, unrelated words).
@@ -44,6 +49,7 @@ RULES — follow strictly:
 5. Explanation must directly quote or reference a sentence from the content.
 6. No duplicate questions.
 7. Question text must be at least 15 words.
+${isTamil ? '8. MANDATORY: ALL text in the JSON (question, every option, explanation) must be in Tamil script.' : ''}
 
 CONTENT:
 ---
@@ -53,10 +59,10 @@ ${chunkText.slice(0, 6000)}
 Respond with ONLY a valid JSON array — no markdown, no code fences, no extra text:
 [
   {
-    "question": "string (the MCQ question text)",
+    "question": "string (the MCQ question text${isTamil ? ' — தமிழில்' : ''})",
     "options": ["option A", "option B", "option C", "option D"],
     "correctIndex": 0,
-    "explanation": "string (cite the relevant sentence from the content)",
+    "explanation": "string (cite the relevant sentence from the content${isTamil ? ' — தமிழில்' : ''})",
     "difficulty": ${difficulty},
     "bloomLevel": "${bloomLevel}"
   }
@@ -97,10 +103,10 @@ export class AiQuestionService {
 
   async generateFromChapter(
     chapterId: string,
-    opts: { count: number; difficulty: number; bloomLevel: string }
+    opts: { count: number; difficulty: number; bloomLevel: string; language?: string }
   ): Promise<GeneratedQuestion[]> {
     if (!this.genAI) throw new Error('AI generation is disabled: GEMINI_API_KEY is not configured');
-    const { count, difficulty, bloomLevel } = opts;
+    const { count, difficulty, bloomLevel, language = 'english' } = opts;
 
     // Fetch chapter
     const chapterResult = await this.pool.query(
@@ -114,7 +120,7 @@ export class AiQuestionService {
     }
 
     // Call Gemini
-    const raw = await this.callGemini(chapter.content_text, chapter.title, count, difficulty, bloomLevel);
+    const raw = await this.callGemini(chapter.content_text, chapter.title, count, difficulty, bloomLevel, language as 'tamil' | 'english');
 
     // Save valid questions to DB
     const saved: GeneratedQuestion[] = [];
@@ -134,10 +140,11 @@ export class AiQuestionService {
     chapterTitle: string,
     count: number,
     difficulty: number,
-    bloomLevel: string
+    bloomLevel: string,
+    language: 'tamil' | 'english' = 'english'
   ): Promise<RawGenerated[]> {
     const model = this.genAI!.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const prompt = buildPrompt(contentText, chapterTitle, count, difficulty, bloomLevel);
+    const prompt = buildPrompt(contentText, chapterTitle, count, difficulty, bloomLevel, language);
 
     let responseText = '';
     try {

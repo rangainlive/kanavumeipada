@@ -271,6 +271,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
                 count: _count,
                 difficulty: _difficulty,
                 bloomLevel: _bloomLevel,
+                isTamil: isTamil,
               ),
             ),
           ),
@@ -503,9 +504,9 @@ class _QuestionCard extends StatelessWidget {
               children: [
                 _badge('Q${index + 1}', _primary.withOpacity(0.1), _primary),
                 const SizedBox(width: 6),
-                _DifficultyBadge(question.difficulty),
+                _DifficultyBadge(question.difficulty, isTamil: isTamil),
                 const SizedBox(width: 6),
-                _BloomBadge(question.bloomLevel),
+                _BloomBadge(question.bloomLevel, isTamil: isTamil),
                 const Spacer(),
                 if (approved)
                   const Icon(Icons.check_circle, color: Colors.green, size: 20)
@@ -664,12 +665,14 @@ class _QuestionCard extends StatelessWidget {
 
 class _DifficultyBadge extends StatelessWidget {
   final int difficulty;
-  const _DifficultyBadge(this.difficulty);
+  final bool isTamil;
+  const _DifficultyBadge(this.difficulty, {this.isTamil = false});
 
   @override
   Widget build(BuildContext context) {
-    final label =
-        difficulty == 1 ? 'Easy' : difficulty == 3 ? 'Hard' : 'Medium';
+    final label = isTamil
+        ? (difficulty == 1 ? 'எளிதானது' : difficulty == 3 ? 'கடினம்' : 'நடுத்தரம்')
+        : (difficulty == 1 ? 'Easy' : difficulty == 3 ? 'Hard' : 'Medium');
     final color =
         difficulty == 1 ? Colors.green : difficulty == 3 ? Colors.red : Colors.orange;
     return Container(
@@ -690,17 +693,26 @@ class _DifficultyBadge extends StatelessWidget {
 
 class _BloomBadge extends StatelessWidget {
   final String bloomLevel;
-  const _BloomBadge(this.bloomLevel);
+  final bool isTamil;
+  const _BloomBadge(this.bloomLevel, {this.isTamil = false});
 
   @override
   Widget build(BuildContext context) {
-    final label = switch (bloomLevel) {
-      'remember' => 'Recall',
-      'understand' => 'Understand',
-      'apply' => 'Apply',
-      'analyze' => 'Analyze',
-      _ => bloomLevel,
-    };
+    final label = isTamil
+        ? switch (bloomLevel) {
+            'remember' => 'நினைவு',
+            'understand' => 'புரிதல்',
+            'apply' => 'பயன்பாடு',
+            'analyze' => 'பகுப்பாய்வு',
+            _ => bloomLevel,
+          }
+        : switch (bloomLevel) {
+            'remember' => 'Recall',
+            'understand' => 'Understand',
+            'apply' => 'Apply',
+            'analyze' => 'Analyze',
+            _ => bloomLevel,
+          };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(

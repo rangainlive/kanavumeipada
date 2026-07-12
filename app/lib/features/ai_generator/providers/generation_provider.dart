@@ -111,6 +111,7 @@ class GenerationNotifier extends StateNotifier<GenerationState> {
     required int count,
     required int difficulty,
     required String bloomLevel,
+    required bool isTamil,
   }) async {
     state = const GenerationState(isLoading: true);
     try {
@@ -121,6 +122,7 @@ class GenerationNotifier extends StateNotifier<GenerationState> {
           'count': count,
           'difficulty': difficulty,
           'bloomLevel': bloomLevel,
+          'language': isTamil ? 'tamil' : 'english',
         }),
       );
       if (!mounted) return;
