@@ -57,7 +57,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
           ],
         ),
         actions: [
-          const LangToggleButton(),
+          const LangToggleButton(onLight: true),
           const SizedBox(width: 4),
           if (state.hasResults)
             Padding(

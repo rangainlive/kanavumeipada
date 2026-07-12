@@ -74,7 +74,7 @@ class SubjectChaptersScreen extends ConsumerWidget {
           ],
         ),
         actions: const [
-          LangToggleButton(),
+          LangToggleButton(onLight: true),
           SizedBox(width: 8),
         ],
       ),
@@ -119,7 +119,7 @@ class SubjectChaptersScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: chapters.length,
-            separatorBuilder: (_, _2) => const SizedBox(height: 8),
+            separatorBuilder: (_, index) => const SizedBox(height: 8),
             itemBuilder: (ctx, i) {
               final ch = chapters[i];
               return Card(

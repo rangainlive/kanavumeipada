@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../content/models/subject_model.dart';
+import '../../content/widgets/lang_toggle_button.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -11,6 +13,7 @@ class ProfileScreen extends ConsumerWidget {
     final user = ref.watch(authProvider).user;
     if (user == null) return const SizedBox.shrink();
 
+    final isTamil = ref.watch(studyLangProvider);
     final initials = _initials(user.name ?? user.phone ?? '?');
     final exams = (user.examTarget ?? '').split(',').where((e) => e.isNotEmpty).toList();
 
@@ -34,6 +37,12 @@ class ProfileScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
                   child: Column(
                     children: [
+                      // Toggle row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [const LangToggleButton()],
+                      ),
+                      const SizedBox(height: 8),
                       // Avatar
                       Container(
                         width: 80, height: 80,
@@ -120,7 +129,7 @@ class ProfileScreen extends ConsumerWidget {
                       _StatItem(
                         icon: '🪙',
                         value: '${user.coinsBalance}',
-                        label: 'Coins',
+                        label: isTamil ? 'நாணயங்கள்' : 'Coins',
                         color: AppTheme.warning,
                       ),
                       _vDiv(),
@@ -134,7 +143,7 @@ class ProfileScreen extends ConsumerWidget {
                       _StatItem(
                         icon: '🔥',
                         value: '—',
-                        label: 'Streak',
+                        label: isTamil ? 'தொடர்ச்சி' : 'Streak',
                         color: Colors.deepOrange,
                       ),
                     ],
@@ -159,7 +168,7 @@ class ProfileScreen extends ConsumerWidget {
                           const Text('⚡',
                               style: TextStyle(fontSize: 18)),
                           const SizedBox(width: 8),
-                          Text('Level ${(user.xp ~/ 100) + 1}',
+                          Text(isTamil ? 'நிலை ${(user.xp ~/ 100) + 1}' : 'Level ${(user.xp ~/ 100) + 1}',
                               style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
@@ -183,7 +192,9 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Complete daily quizzes and battles to level up!',
+                          isTamil
+                              ? 'தினசரி வினாடி வினா மற்றும் போர்களை முடித்து நிலை உயர்த்துங்கள்!'
+                              : 'Complete daily quizzes and battles to level up!',
                           style: TextStyle(
                               fontSize: 12, color: AppTheme.textHint),
                         ),
@@ -197,20 +208,20 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(children: [
-                          Text('💰', style: TextStyle(fontSize: 18)),
-                          SizedBox(width: 8),
-                          Text('How to Earn Coins',
-                              style: TextStyle(
+                        Row(children: [
+                          const Text('💰', style: TextStyle(fontSize: 18)),
+                          const SizedBox(width: 8),
+                          Text(isTamil ? 'நாணயங்கள் எப்படி சம்பாதிப்பது' : 'How to Earn Coins',
+                              style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.textPrimary)),
                         ]),
                         const SizedBox(height: 12),
-                        _EarnRow('🎯', 'Complete daily quiz', '+50 🪙'),
-                        _EarnRow('⚔️', 'Win a battle', 'Prize pool 🪙'),
-                        _EarnRow('🔥', 'Daily streak bonus', '+20 🪙/day'),
-                        _EarnRow('🎉', 'Share achievement', '+10 🪙'),
+                        _EarnRow('🎯', isTamil ? 'தினசரி வினாடி வினா முடிக்கவும்' : 'Complete daily quiz', '+50 🪙'),
+                        _EarnRow('⚔️', isTamil ? 'ஒரு போரில் வெற்றி' : 'Win a battle', 'Prize pool 🪙'),
+                        _EarnRow('🔥', isTamil ? 'தினசரி தொடர்ச்சி போனஸ்' : 'Daily streak bonus', '+20 🪙/day'),
+                        _EarnRow('🎉', isTamil ? 'சாதனையை பகிர்' : 'Share achievement', '+10 🪙'),
                       ],
                     ),
                   ),
@@ -222,11 +233,11 @@ class ProfileScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(children: [
-                            Text('🎓', style: TextStyle(fontSize: 18)),
-                            SizedBox(width: 8),
-                            Text('Your Exams',
-                                style: TextStyle(
+                          Row(children: [
+                            const Text('🎓', style: TextStyle(fontSize: 18)),
+                            const SizedBox(width: 8),
+                            Text(isTamil ? 'உங்கள் தேர்வுகள்' : 'Your Exams',
+                                style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     color: AppTheme.textPrimary)),
@@ -251,7 +262,9 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Tamil Nadu region · Feed and tests are personalized for your exams.',
+                            isTamil
+                                ? 'தமிழ்நாடு பகுதி · ஊட்டம் மற்றும் தேர்வுகள் உங்கள் தேர்வுகளுக்கு ஏற்ப தனிப்பயனாக்கப்பட்டுள்ளன.'
+                                : 'Tamil Nadu region · Feed and tests are personalized for your exams.',
                             style: TextStyle(
                                 fontSize: 12, color: AppTheme.textHint),
                           ),
@@ -272,11 +285,11 @@ class ProfileScreen extends ConsumerWidget {
                             color: AppTheme.error.withValues(alpha: 0.2)),
                       ),
                       child: TextButton.icon(
-                        onPressed: () => _confirmLogout(context, ref),
+                        onPressed: () => _confirmLogout(context, ref, isTamil),
                         icon: const Icon(Icons.logout_rounded,
                             color: AppTheme.error, size: 18),
-                        label: const Text('Sign Out',
-                            style: TextStyle(
+                        label: Text(isTamil ? 'வெளியேறு' : 'Sign Out',
+                            style: const TextStyle(
                                 color: AppTheme.error,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 15)),
@@ -313,7 +326,7 @@ class ProfileScreen extends ConsumerWidget {
     return (parts[0][0] + parts.last[0]).toUpperCase();
   }
 
-  void _confirmLogout(BuildContext context, WidgetRef ref) {
+  void _confirmLogout(BuildContext context, WidgetRef ref, bool isTamil) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -337,16 +350,18 @@ class ProfileScreen extends ConsumerWidget {
             const Icon(Icons.logout_rounded,
                 size: 44, color: AppTheme.error),
             const SizedBox(height: 12),
-            const Text('Sign Out?',
-                style: TextStyle(
+            Text(isTamil ? 'வெளியேற வேண்டுமா?' : 'Sign Out?',
+                style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.textPrimary)),
             const SizedBox(height: 8),
-            const Text(
-              'You\'ll need to sign in again to access your account.',
+            Text(
+              isTamil
+                  ? 'உங்கள் கணக்கை அணுக மீண்டும் உள்நுழைய வேண்டும்.'
+                  : 'You\'ll need to sign in again to access your account.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13.5),
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13.5),
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -362,8 +377,8 @@ class ProfileScreen extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Yes, Sign Out',
-                    style: TextStyle(
+                child: Text(isTamil ? 'ஆம், வெளியேறு' : 'Yes, Sign Out',
+                    style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: 15)),
@@ -372,8 +387,8 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 10),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel',
-                  style: TextStyle(
+              child: Text(isTamil ? 'ரத்து செய்' : 'Cancel',
+                  style: const TextStyle(
                       color: AppTheme.textSecondary, fontSize: 15)),
             ),
             const SizedBox(height: 8),

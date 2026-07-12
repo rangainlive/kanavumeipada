@@ -5,6 +5,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../providers/feed_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../content/models/subject_model.dart';
+import '../../content/widgets/lang_toggle_button.dart';
 import 'post_detail_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -51,6 +53,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final feed = ref.watch(feedProvider);
+    final isTamil = ref.watch(studyLangProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
@@ -64,7 +67,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           physics: const AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics()),
           slivers: [
-            // ── Professional feed header ────────────────────────────────
+            // ── Feed header ─────────────────────────────────────────────
             SliverAppBar(
               pinned: true,
               backgroundColor: Colors.white,
@@ -100,6 +103,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 ],
               ),
               actions: [
+                const LangToggleButton(onLight: true),
+                const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.search_rounded,
                       color: Color(0xFF64748B), size: 22),
@@ -122,7 +127,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 child: Center(child: CircularProgressIndicator()))
           else if (feed.posts.isEmpty)
             SliverFillRemaining(
-              child: _EmptyState(onPost: () => context.push('/feed/create')),
+              child: _EmptyState(
+                onPost: () => context.push('/feed/create'),
+                isTamil: isTamil,
+              ),
             )
           else
             SliverPadding(
@@ -232,7 +240,8 @@ class _PostFabState extends State<_PostFab>
 
 class _EmptyState extends StatelessWidget {
   final VoidCallback onPost;
-  const _EmptyState({required this.onPost});
+  final bool isTamil;
+  const _EmptyState({required this.onPost, required this.isTamil});
 
   @override
   Widget build(BuildContext context) {
@@ -256,19 +265,24 @@ class _EmptyState extends StatelessWidget {
                 color: Colors.white, size: 46),
           ),
           const SizedBox(height: 24),
-          const Text('No posts yet',
-              style: TextStyle(
+          Text(isTamil ? 'இன்னும் பதிவுகள் இல்லை' : 'No posts yet',
+              style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textPrimary)),
           const SizedBox(height: 8),
           Text(
-            'Be the first to share a study tip,\nMCQ question, or poll!',
+            isTamil
+                ? 'ஒரு படிப்பு குறிப்பு,\nMCQ வினா, அல்லது கருத்து வாக்கெடுப்பை முதலில் பகிரவும்!'
+                : 'Be the first to share a study tip,\nMCQ question, or poll!',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppTheme.textHint, fontSize: 14, height: 1.5),
           ),
           const SizedBox(height: 28),
-          GradientButton(label: 'Create First Post', onPressed: onPost),
+          GradientButton(
+            label: isTamil ? 'முதல் பதிவை உருவாக்கு' : 'Create First Post',
+            onPressed: onPost,
+          ),
         ]),
       ),
     );
@@ -279,7 +293,7 @@ class _EmptyState extends StatelessWidget {
 //  Post Card — modern, clean, social-app feel
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _PostCard extends StatefulWidget {
+class _PostCard extends ConsumerStatefulWidget {
   final FeedPost post;
   final VoidCallback onTap, onLike, onUnlike, onComment;
 
@@ -293,10 +307,10 @@ class _PostCard extends StatefulWidget {
   });
 
   @override
-  State<_PostCard> createState() => _PostCardState();
+  ConsumerState<_PostCard> createState() => _PostCardState();
 }
 
-class _PostCardState extends State<_PostCard>
+class _PostCardState extends ConsumerState<_PostCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _heartCtrl;
   late Animation<double> _heartAnim;
@@ -375,6 +389,7 @@ class _PostCardState extends State<_PostCard>
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
+    final isTamil = ref.watch(studyLangProvider);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -526,12 +541,12 @@ class _PostCardState extends State<_PostCard>
                     onTap: _share,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.ios_share_rounded,
+                      children: [
+                        const Icon(Icons.ios_share_rounded,
                             size: 18, color: AppTheme.textSecondary),
-                        SizedBox(width: 5),
-                        Text('Share',
-                            style: TextStyle(
+                        const SizedBox(width: 5),
+                        Text(isTamil ? 'பகிர்' : 'Share',
+                            style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.textSecondary)),
@@ -614,20 +629,21 @@ class _ContentWidgetState extends State<_ContentWidget> {
 }
 
 // MCQ — tap to reveal inline in feed
-class _MCQPreview extends StatefulWidget {
+class _MCQPreview extends ConsumerStatefulWidget {
   final Map<String, dynamic> content;
   final Color color;
   const _MCQPreview({required this.content, required this.color});
 
   @override
-  State<_MCQPreview> createState() => _MCQPreviewState();
+  ConsumerState<_MCQPreview> createState() => _MCQPreviewState();
 }
 
-class _MCQPreviewState extends State<_MCQPreview> {
+class _MCQPreviewState extends ConsumerState<_MCQPreview> {
   int? _selected;
 
   @override
   Widget build(BuildContext context) {
+    final isTamil = ref.watch(studyLangProvider);
     final q = widget.content['q'] as String? ?? '';
     final opts = (widget.content['opts'] as List?)?.cast<String>() ?? [];
     final ans = widget.content['ans'] as int? ?? 0;
@@ -686,30 +702,35 @@ class _MCQPreviewState extends State<_MCQPreview> {
         );
       }),
       if (!revealed)
-        Text('Tap an option to reveal answer',
-            style: TextStyle(fontSize: 11.5, color: AppTheme.textHint, fontStyle: FontStyle.italic)),
+        Text(
+          isTamil ? 'விடையை காண ஒரு விருப்பத்தை தட்டவும்' : 'Tap an option to reveal answer',
+          style: TextStyle(fontSize: 11.5, color: AppTheme.textHint, fontStyle: FontStyle.italic),
+        ),
       if (revealed)
-        Text('Answer: ${['A','B','C','D'][ans]}',
-            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppTheme.accent)),
+        Text(
+          '${isTamil ? 'விடை' : 'Answer'}: ${['A','B','C','D'][ans]}',
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppTheme.accent),
+        ),
     ]);
   }
 }
 
 // Poll — tap to vote inline
-class _PollPreview extends StatefulWidget {
+class _PollPreview extends ConsumerStatefulWidget {
   final Map<String, dynamic> content;
   final Color color;
   const _PollPreview({required this.content, required this.color});
 
   @override
-  State<_PollPreview> createState() => _PollPreviewState();
+  ConsumerState<_PollPreview> createState() => _PollPreviewState();
 }
 
-class _PollPreviewState extends State<_PollPreview> {
+class _PollPreviewState extends ConsumerState<_PollPreview> {
   int? _voted;
 
   @override
   Widget build(BuildContext context) {
+    final isTamil = ref.watch(studyLangProvider);
     final q = widget.content['q'] as String? ?? '';
     final opts = (widget.content['opts'] as List?)?.cast<String>() ?? [];
     final fakeCounts = List.generate(opts.length, (i) => [3,5,2,1][i % 4]);
@@ -759,8 +780,16 @@ class _PollPreviewState extends State<_PollPreview> {
           ),
         );
       }),
-      if (_voted == null) Text('Tap to vote', style: TextStyle(fontSize: 11.5, color: AppTheme.textHint, fontStyle: FontStyle.italic)),
-      if (_voted != null) Text('${fakeCounts.fold(0,(a,b)=>a+b)} votes', style: const TextStyle(fontSize: 11.5, color: AppTheme.textHint)),
+      if (_voted == null)
+        Text(
+          isTamil ? 'வாக்களிக்க தட்டவும்' : 'Tap to vote',
+          style: TextStyle(fontSize: 11.5, color: AppTheme.textHint, fontStyle: FontStyle.italic),
+        ),
+      if (_voted != null)
+        Text(
+          '${fakeCounts.fold(0,(a,b)=>a+b)} ${isTamil ? 'வாக்குகள்' : 'votes'}',
+          style: const TextStyle(fontSize: 11.5, color: AppTheme.textHint),
+        ),
     ]);
   }
 }

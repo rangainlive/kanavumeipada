@@ -1,26 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../content/models/subject_model.dart';
+import '../../content/widgets/lang_toggle_button.dart';
 
-class TestsScreen extends StatelessWidget {
+class _Exam {
+  final String name, emoji, subtitle, subtitleTamil;
+  final List<Color> colors;
+  const _Exam(this.name, this.emoji, this.colors, this.subtitle, this.subtitleTamil);
+}
+
+const _exams = [
+  _Exam('UPSC',    '🏛️', [Color(0xFF4F46E5), Color(0xFF7C3AED)], 'Civil Services',        'சிவில் சேவைகள்'),
+  _Exam('TNPSC',   '🌴', [Color(0xFF059669), Color(0xFF0EA5E9)], 'State Services',         'மாநில சேவைகள்'),
+  _Exam('SSC',     '⚖️', [Color(0xFFD97706), Color(0xFFF59E0B)], 'Combined Exams',         'ஒருங்கிணைந்த தேர்வுகள்'),
+  _Exam('Banking', '🏦', [Color(0xFF0EA5E9), Color(0xFF4F46E5)], 'PO / Clerk / SO',        'PO / குமாஸ்தா / SO'),
+  _Exam('NEET',    '🩺', [Color(0xFFDC2626), Color(0xFFEC4899)], 'Medical Entrance',       'மருத்துவ நுழைவு'),
+  _Exam('JEE',     '🔬', [Color(0xFF7C3AED), Color(0xFFEC4899)], 'Engineering Entrance',   'பொறியியல் நுழைவு'),
+];
+
+class TestsScreen extends ConsumerWidget {
   const TestsScreen({Key? key}) : super(key: key);
 
-  static const _exams = [
-    _Exam('UPSC', '🏛️', [Color(0xFF4F46E5), Color(0xFF7C3AED)],
-        'Civil Services'),
-    _Exam('TNPSC', '🌴', [Color(0xFF059669), Color(0xFF0EA5E9)],
-        'State Services'),
-    _Exam('SSC', '⚖️', [Color(0xFFD97706), Color(0xFFF59E0B)],
-        'Combined Exams'),
-    _Exam('Banking', '🏦', [Color(0xFF0EA5E9), Color(0xFF4F46E5)],
-        'PO / Clerk / SO'),
-    _Exam('NEET', '🩺', [Color(0xFFDC2626), Color(0xFFEC4899)],
-        'Medical Entrance'),
-    _Exam('JEE', '🔬', [Color(0xFF7C3AED), Color(0xFFEC4899)],
-        'Engineering Entrance'),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isTamil = ref.watch(studyLangProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.bgLight,
       body: CustomScrollView(
@@ -42,19 +47,27 @@ class TestsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Test Arena 🎯',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                          )),
+                      Row(children: [
+                        Text(isTamil ? 'தேர்வு அரங்கம் 🎯' : 'Test Arena 🎯',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                            )),
+                        const Spacer(),
+                        const LangToggleButton(),
+                      ]),
                       const SizedBox(height: 4),
-                      Text('Practice • Compete • Rank nationally',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.75),
-                            fontSize: 13,
-                          )),
+                      Text(
+                        isTamil
+                            ? 'பயிற்சி • போட்டி • தேசிய தரவரிசை'
+                            : 'Practice • Compete • Rank nationally',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(height: 20),
 
                       // Daily quiz card
@@ -73,24 +86,30 @@ class TestsScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Daily Challenge',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                    )),
-                                Text('10 questions · Earn 50 🪙',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.75),
-                                      fontSize: 12.5,
-                                    )),
+                                Text(
+                                  isTamil ? 'தினசரி சவால்' : 'Daily Challenge',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  isTamil ? '10 வினாக்கள் · 50 🪙 பெறுங்கள்' : '10 questions · Earn 50 🪙',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.75),
+                                    fontSize: 12.5,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           GestureDetector(
                             onTap: () => ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(
-                              content: Text('Daily quiz launching soon!'),
+                                .showSnackBar(SnackBar(
+                              content: Text(isTamil
+                                  ? 'தினசரி வினாடி வினா விரைவில் வருகிறது!'
+                                  : 'Daily quiz launching soon!'),
                               behavior: SnackBarBehavior.floating,
                             )),
                             child: Container(
@@ -100,12 +119,14 @@ class TestsScreen extends StatelessWidget {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Text('Start',
-                                  style: TextStyle(
-                                    color: Color(0xFFD97706),
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                  )),
+                              child: Text(
+                                isTamil ? 'தொடங்கு' : 'Start',
+                                style: const TextStyle(
+                                  color: Color(0xFFD97706),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
                           ),
                         ]),
@@ -125,11 +146,11 @@ class TestsScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _QuickStat('0', 'Tests Taken', Icons.assignment_turned_in_rounded),
+                  _QuickStat('0',  isTamil ? 'எடுத்த தேர்வுகள்' : 'Tests Taken',  Icons.assignment_turned_in_rounded),
                   _vDivider(),
-                  _QuickStat('0%', 'Avg Score', Icons.bar_chart_rounded),
+                  _QuickStat('0%', isTamil ? 'சராசரி மதிப்பெண்' : 'Avg Score',    Icons.bar_chart_rounded),
                   _vDivider(),
-                  _QuickStat('—', 'Rank', Icons.leaderboard_rounded),
+                  _QuickStat('—',  isTamil ? 'தரவரிசை' : 'Rank',                  Icons.leaderboard_rounded),
                 ],
               ),
             ),
@@ -139,12 +160,14 @@ class TestsScreen extends StatelessWidget {
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             sliver: SliverToBoxAdapter(
-              child: const Text('Choose by Exam',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
-                  )),
+              child: Text(
+                isTamil ? 'தேர்வின் படி தேர்வு செய்யுங்கள்' : 'Choose by Exam',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
             ),
           ),
 
@@ -161,8 +184,9 @@ class TestsScreen extends StatelessWidget {
               delegate: SliverChildBuilderDelegate(
                 (ctx, i) => _ExamCard(
                   exam: _exams[i],
+                  isTamil: isTamil,
                   onTap: () => ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                    content: Text('${_exams[i].name} tests coming soon!'),
+                    content: Text('${_exams[i].name} ${isTamil ? 'தேர்வுகள் விரைவில் வருகிறது!' : 'tests coming soon!'}'),
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
@@ -193,20 +217,24 @@ class TestsScreen extends StatelessWidget {
                 child: Row(children: [
                   const Text('🚀', style: TextStyle(fontSize: 36)),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Full Mock Tests Coming',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            )),
-                        SizedBox(height: 3),
                         Text(
-                          'National rankings, detailed analysis, and AI-powered feedback.',
-                          style: TextStyle(
+                          isTamil ? 'முழு மாதிரி தேர்வுகள் வருகின்றன' : 'Full Mock Tests Coming',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          isTamil
+                              ? 'தேசிய தரவரிசை, விரிவான பகுப்பாய்வு மற்றும் AI கருத்துரை.'
+                              : 'National rankings, detailed analysis, and AI-powered feedback.',
+                          style: const TextStyle(
                               fontSize: 12.5, color: AppTheme.textSecondary),
                         ),
                       ],
@@ -246,16 +274,11 @@ class _QuickStat extends StatelessWidget {
   }
 }
 
-class _Exam {
-  final String name, emoji, subtitle;
-  final List<Color> colors;
-  const _Exam(this.name, this.emoji, this.colors, this.subtitle);
-}
-
 class _ExamCard extends StatelessWidget {
   final _Exam exam;
+  final bool isTamil;
   final VoidCallback onTap;
-  const _ExamCard({required this.exam, required this.onTap});
+  const _ExamCard({required this.exam, required this.isTamil, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -302,7 +325,7 @@ class _ExamCard extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   )),
-              Text(exam.subtitle,
+              Text(isTamil ? exam.subtitleTamil : exam.subtitle,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.75),
                     fontSize: 11,
