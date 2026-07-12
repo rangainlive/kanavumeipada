@@ -9,8 +9,12 @@ import '../../features/feed/screens/feed_screen.dart';
 import '../../features/feed/screens/create_post_screen.dart';
 import '../../features/feed/screens/post_detail_screen.dart';
 import '../../features/feed/providers/feed_provider.dart';
+import '../../features/content/models/subject_model.dart';
 import '../../features/content/screens/study_screen.dart';
+import '../../features/content/screens/category_screen.dart';
+import '../../features/content/screens/subject_hub_screen.dart';
 import '../../features/content/screens/subject_chapters_screen.dart';
+import '../../features/content/screens/syllabus_screen.dart';
 import '../../features/test_engine/screens/tests_screen.dart';
 import '../../features/challenge/screens/battle_screen.dart';
 import '../../features/ai_generator/screens/generate_screen.dart';
@@ -89,6 +93,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const StudyScreen(),
           ),
           GoRoute(
+            path: '/study/category/:category',
+            builder: (context, state) => CategoryScreen(
+              category: state.pathParameters['category']!,
+            ),
+          ),
+          GoRoute(
+            path: '/study/subject/:id/hub',
+            builder: (context, state) => SubjectHubScreen(
+              subjectId: state.pathParameters['id']!,
+              subject: state.extra as Subject?,
+            ),
+          ),
+          GoRoute(
             path: '/study/subject/:id',
             builder: (context, state) => SubjectChaptersScreen(
               subjectId: state.pathParameters['id']!,
@@ -101,6 +118,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               chapterId: state.pathParameters['id']!,
               chapterTitle: state.extra as String?,
             ),
+          ),
+          GoRoute(
+            path: '/study/syllabus',
+            builder: (context, state) => const SyllabusScreen(),
           ),
           GoRoute(
             path: '/tests',

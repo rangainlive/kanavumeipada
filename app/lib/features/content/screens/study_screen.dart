@@ -1,48 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../auth/providers/auth_provider.dart';
+import '../models/subject_model.dart';
 import '../../../core/theme/app_theme.dart';
-
-const _apiUrl = 'https://kanavumeipada-production.up.railway.app/api';
-
-class Subject {
-  final String id;
-  final String name;
-  final String? icon;
-  final String? examCategory;
-  Subject({required this.id, required this.name, this.icon, this.examCategory});
-  factory Subject.fromJson(Map<String, dynamic> j) => Subject(
-        id: j['id'], name: j['name'],
-        icon: j['icon'], examCategory: j['examCategory'],
-      );
-}
-
-final subjectsProvider = FutureProvider.autoDispose<List<Subject>>((ref) async {
-  final token = ref.watch(authProvider).token;
-  final response = await http.get(
-    Uri.parse('$_apiUrl/subjects'),
-    headers: token != null ? {'Authorization': 'Bearer $token'} : {},
-  );
-  if (response.statusCode != 200) throw Exception('Failed to load subjects');
-  final data = jsonDecode(response.body);
-  final list = data is List ? data : (data['subjects'] as List? ?? []);
-  return list.map((j) => Subject.fromJson(j as Map<String, dynamic>)).toList();
-});
-
-const _catColors = {
-  'UPSC':    [Color(0xFF4F46E5), Color(0xFF7C3AED)],
-  'TNPSC':   [Color(0xFF059669), Color(0xFF0EA5E9)],
-  'SSC':     [Color(0xFFD97706), Color(0xFFF59E0B)],
-  'Banking': [Color(0xFF0EA5E9), Color(0xFF6366F1)],
-  'NEET':    [Color(0xFFDC2626), Color(0xFFEC4899)],
-  'JEE':     [Color(0xFF7C3AED), Color(0xFFEC4899)],
-};
-
-List<Color> _colorsFor(String? cat) =>
-    _catColors[cat] ?? [AppTheme.primary, AppTheme.secondary];
 
 class StudyScreen extends ConsumerWidget {
   const StudyScreen({Key? key}) : super(key: key);
@@ -169,7 +129,7 @@ class StudyScreen extends ConsumerWidget {
             sliver: SliverToBoxAdapter(
               child: Row(
                 children: [
-                  const Text('All Subjects',
+                  const Text('Exam Categories',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -177,9 +137,12 @@ class StudyScreen extends ConsumerWidget {
                       )),
                   const Spacer(),
                   subjectsAsync.whenOrNull(
-                        data: (s) => Text('${s.length} subjects',
-                            style: const TextStyle(
-                                fontSize: 12.5, color: AppTheme.textHint)),
+                        data: (s) {
+                          final cats = s.map((x) => x.examCategory ?? 'Other').toSet();
+                          return Text('${cats.length} categories',
+                              style: const TextStyle(
+                                  fontSize: 12.5, color: AppTheme.textHint));
+                        },
                       ) ??
                       const SizedBox.shrink(),
                 ],
@@ -187,7 +150,7 @@ class StudyScreen extends ConsumerWidget {
             ),
           ),
 
-          // Subjects grid
+          // Category cards grid
           subjectsAsync.when(
             loading: () => const SliverToBoxAdapter(
               child: Padding(
@@ -201,9 +164,17 @@ class StudyScreen extends ConsumerWidget {
               ),
             ),
             data: (subjects) {
-              if (subjects.isEmpty) {
-                return const SliverToBoxAdapter(child: _EmptySubjects());
+              // Group by examCategory — but always include TNPSC even if DB empty
+              final Map<String, List<Subject>> byCategory = {};
+              for (final s in subjects) {
+                final cat = s.examCategory ?? 'Other';
+                byCategory.putIfAbsent(cat, () => []).add(s);
               }
+              // TNPSC is always present regardless of API data
+              byCategory.putIfAbsent('TNPSC', () => []);
+              final categories = byCategory.entries.toList()
+                ..sort((a, b) => a.key == 'TNPSC' ? -1 : (b.key == 'TNPSC' ? 1 : a.key.compareTo(b.key)));
+
               return SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverGrid(
@@ -214,14 +185,16 @@ class StudyScreen extends ConsumerWidget {
                     mainAxisSpacing: 12,
                   ),
                   delegate: SliverChildBuilderDelegate(
-                    (ctx, i) => _SubjectCard(
-                      subject: subjects[i],
-                      index: i,
-                      onTap: () => ctx.push(
-                          '/study/subject/${subjects[i].id}',
-                          extra: subjects[i].name),
-                    ),
-                    childCount: subjects.length,
+                    (ctx, i) {
+                      final cat = categories[i].key;
+                      final subs = categories[i].value;
+                      return _CategoryCard(
+                        category: cat,
+                        subjects: subs,
+                        onTap: () => ctx.push('/study/category/$cat'),
+                      );
+                    },
+                    childCount: categories.length,
                   ),
                 ),
               );
@@ -235,15 +208,21 @@ class StudyScreen extends ConsumerWidget {
   }
 }
 
-class _SubjectCard extends StatelessWidget {
-  final Subject subject;
-  final int index;
+class _CategoryCard extends StatelessWidget {
+  final String category;
+  final List<Subject> subjects;
   final VoidCallback onTap;
-  const _SubjectCard({required this.subject, required this.index, required this.onTap});
+  const _CategoryCard({
+    required this.category,
+    required this.subjects,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colors = _colorsFor(subject.examCategory);
+    final colors = colorsFor(category);
+    final icon = subjects.isNotEmpty ? (subjects.first.icon ?? '📖') : '📋';
+    final examCount = subjects.length;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -268,8 +247,7 @@ class _SubjectCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(children: [
-              Text(subject.icon ?? '📖',
-                  style: const TextStyle(fontSize: 28)),
+              Text(icon, style: const TextStyle(fontSize: 28)),
               const Spacer(),
               Icon(Icons.arrow_forward_ios_rounded,
                   color: Colors.white.withValues(alpha: 0.6), size: 13),
@@ -277,31 +255,29 @@ class _SubjectCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(subject.name,
+                Text(category,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis),
-                if (subject.examCategory != null) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(subject.examCategory!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        )),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                    )),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
+                  child: Text(
+                    examCount > 0 ? '$examCount exam${examCount > 1 ? "s" : ""}' : 'Tap to explore',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
           ],

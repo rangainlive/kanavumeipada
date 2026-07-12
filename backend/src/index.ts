@@ -41,6 +41,11 @@ fastify.register(helmet, {
 const corsOriginConfig = (requestOrigin: string | undefined, cb: (err: Error | null, allow: boolean) => void) => {
   if (!requestOrigin) return cb(null, true);
 
+  // Always allow localhost and 127.0.0.1 for local development
+  if (requestOrigin.startsWith('http://localhost') || requestOrigin.startsWith('http://127.0.0.1')) {
+    return cb(null, true);
+  }
+
   const allowedOrigins = (process.env.CORS_ORIGIN || '*').split(',').map(o => o.trim());
 
   if (allowedOrigins.includes('*')) return cb(null, true);

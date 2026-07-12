@@ -82,18 +82,24 @@ function validateRaw(raw: unknown): RawGenerated | null {
 }
 
 export class AiQuestionService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenerativeAI | null = null;
 
   constructor(private pool: Pool) {
     const key = process.env.GEMINI_API_KEY;
-    if (!key) throw new Error('GEMINI_API_KEY environment variable is not set');
-    this.genAI = new GoogleGenerativeAI(key);
+    if (key) {
+      this.genAI = new GoogleGenerativeAI(key);
+    } else {
+      console.warn('⚠️  GEMINI_API_KEY not set — AI question generation disabled');
+    }
   }
+
+  get isEnabled() { return this.genAI !== null; }
 
   async generateFromChapter(
     chapterId: string,
     opts: { count: number; difficulty: number; bloomLevel: string }
   ): Promise<GeneratedQuestion[]> {
+    if (!this.genAI) throw new Error('AI generation is disabled: GEMINI_API_KEY is not configured');
     const { count, difficulty, bloomLevel } = opts;
 
     // Fetch chapter
@@ -130,7 +136,7 @@ export class AiQuestionService {
     difficulty: number,
     bloomLevel: string
   ): Promise<RawGenerated[]> {
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = this.genAI!.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const prompt = buildPrompt(contentText, chapterTitle, count, difficulty, bloomLevel);
 
     let responseText = '';

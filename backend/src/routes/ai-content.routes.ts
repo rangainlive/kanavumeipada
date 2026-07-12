@@ -21,6 +21,9 @@ export async function aiContentRoutes(fastify: FastifyInstance, pool: Pool) {
     '/api/chapters/:chapterId/generate-questions',
     { onRequest: [fastify.authenticate] },
     async (request: any, reply) => {
+      if (!svc.isEnabled) {
+        return reply.status(503).send({ error: 'AI generation is not configured. Add GEMINI_API_KEY to Railway environment variables.' });
+      }
       try {
         const { chapterId } = request.params;
         const body = generateSchema.parse(request.body);
