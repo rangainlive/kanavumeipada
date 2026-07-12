@@ -4,18 +4,22 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../auth/providers/auth_provider.dart';
+import '../models/subject_model.dart';
+import '../widgets/lang_toggle_button.dart';
 
 const _apiUrl = 'https://kanavumeipada-production.up.railway.app/api';
 
 class Chapter {
   final String id;
   final String title;
+  final String? titleTamil;
   final String? contentText;
   final String? contentUrl;
   final int orderIndex;
   Chapter({
     required this.id,
     required this.title,
+    this.titleTamil,
     this.contentText,
     this.contentUrl,
     required this.orderIndex,
@@ -23,6 +27,7 @@ class Chapter {
   factory Chapter.fromJson(Map<String, dynamic> j) => Chapter(
         id: j['id'],
         title: j['title'],
+        titleTamil: j['titleTamil'],
         contentText: j['contentText'],
         contentUrl: j['contentUrl'],
         orderIndex: j['orderIndex'] ?? 0,
@@ -46,17 +51,33 @@ class SubjectChaptersScreen extends ConsumerWidget {
   final String subjectId;
   final String? subjectName;
   const SubjectChaptersScreen({
-    Key? key,
+    super.key,
     required this.subjectId,
     this.subjectName,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final chaptersAsync = ref.watch(_chaptersProvider(subjectId));
+    final isTamil = ref.watch(studyLangProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(subjectName ?? 'Chapters')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(isTamil ? 'அத்தியாயங்கள்' : 'Chapters',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            if (subjectName != null)
+              Text(subjectName!,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+          ],
+        ),
+        actions: const [
+          LangToggleButton(),
+          SizedBox(width: 8),
+        ],
+      ),
       body: chaptersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
@@ -65,24 +86,32 @@ class SubjectChaptersScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.grey),
               const SizedBox(height: 12),
-              Text('Could not load chapters', style: Theme.of(context).textTheme.bodyLarge),
+              Text(
+                isTamil ? 'அத்தியாயங்களை ஏற்ற முடியவில்லை' : 'Could not load chapters',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               const SizedBox(height: 8),
               FilledButton(
                 onPressed: () => ref.refresh(_chaptersProvider(subjectId)),
-                child: const Text('Retry'),
+                child: Text(isTamil ? 'மீண்டும் முயற்சி' : 'Retry'),
               ),
             ],
           ),
         ),
         data: (chapters) {
           if (chapters.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.article_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 12),
-                  Text('No chapters yet.\nContent coming soon!', textAlign: TextAlign.center),
+                  const Icon(Icons.article_outlined, size: 64, color: Colors.grey),
+                  const SizedBox(height: 12),
+                  Text(
+                    isTamil
+                        ? 'இன்னும் அத்தியாயங்கள் இல்லை.\nஉள்ளடக்கம் விரைவில் வருகிறது!'
+                        : 'No chapters yet.\nContent coming soon!',
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             );
@@ -90,14 +119,14 @@ class SubjectChaptersScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: chapters.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, _2) => const SizedBox(height: 8),
             itemBuilder: (ctx, i) {
               final ch = chapters[i];
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                     child: Text(
                       '${ch.orderIndex + 1}',
                       style: TextStyle(
@@ -105,7 +134,7 @@ class SubjectChaptersScreen extends ConsumerWidget {
                           fontWeight: FontWeight.bold),
                     ),
                   ),
-                  title: Text(ch.title),
+                  title: Text(isTamil ? (ch.titleTamil ?? ch.title) : ch.title),
                   subtitle: ch.contentText != null
                       ? Text(ch.contentText!, maxLines: 1, overflow: TextOverflow.ellipsis)
                       : null,
@@ -115,7 +144,7 @@ class SubjectChaptersScreen extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.auto_awesome, size: 20),
                         color: const Color(0xFF4338CA),
-                        tooltip: 'Generate Questions with AI',
+                        tooltip: isTamil ? 'AI மூலம் வினாக்கள் உருவாக்கு' : 'Generate Questions with AI',
                         visualDensity: VisualDensity.compact,
                         onPressed: () => context.push(
                           '/study/chapter/${ch.id}/generate',
@@ -131,8 +160,9 @@ class SubjectChaptersScreen extends ConsumerWidget {
                     ],
                   ),
                   onTap: ch.contentText != null
-                      ? () => _showContent(context, ch)
+                      ? () => _showContent(context, ch, isTamil)
                       : null,
+
                 ),
               );
             },
@@ -142,7 +172,7 @@ class SubjectChaptersScreen extends ConsumerWidget {
     );
   }
 
-  void _showContent(BuildContext context, Chapter chapter) {
+  void _showContent(BuildContext context, Chapter chapter, bool isTamil) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -154,7 +184,7 @@ class SubjectChaptersScreen extends ConsumerWidget {
         builder: (_, controller) => Padding(
           padding: const EdgeInsets.all(16),
           child: ListView(controller: controller, children: [
-            Text(chapter.title,
+            Text(isTamil ? (chapter.titleTamil ?? chapter.title) : chapter.title,
                 style: Theme.of(context)
                     .textTheme
                     .headlineSmall

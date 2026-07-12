@@ -44,3 +44,6 @@ const catColors = {
 
 List<Color> colorsFor(String? cat) =>
     catColors[cat] ?? [AppTheme.primary, AppTheme.secondary];
+
+// Global study-section language toggle: false = English, true = Tamil
+final studyLangProvider = StateProvider<bool>((ref) => false);

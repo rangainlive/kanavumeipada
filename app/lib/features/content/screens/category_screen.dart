@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/subject_model.dart';
+import '../widgets/lang_toggle_button.dart';
 
 class CategoryScreen extends ConsumerWidget {
   final String category;
@@ -10,6 +11,7 @@ class CategoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final subjectsAsync = ref.watch(subjectsProvider);
+    final isTamil = ref.watch(studyLangProvider);
     final colors = colorsFor(category);
 
     return Scaffold(
@@ -21,6 +23,10 @@ class CategoryScreen extends ConsumerWidget {
             expandedHeight: 160,
             pinned: true,
             iconTheme: const IconThemeData(color: Colors.white),
+            actions: const [
+              LangToggleButton(),
+              SizedBox(width: 12),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
@@ -45,11 +51,13 @@ class CategoryScreen extends ConsumerWidget {
                               letterSpacing: -0.5,
                             )),
                         const SizedBox(height: 4),
-                        Text('Choose your exam group',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.75),
-                              fontSize: 14,
-                            )),
+                        Text(
+                          isTamil ? 'உங்கள் தேர்வு குழுவை தேர்ந்தெடுக்கவும்' : 'Choose your exam group',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -197,7 +205,7 @@ class _GroupItem {
   });
 }
 
-class _GroupCard extends StatelessWidget {
+class _GroupCard extends ConsumerWidget {
   final _GroupItem item;
   final Color accentColor;
   final VoidCallback? onTap;
@@ -208,7 +216,8 @@ class _GroupCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isTamil = ref.watch(studyLangProvider);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedOpacity(
@@ -270,7 +279,9 @@ class _GroupCard extends StatelessWidget {
                           )),
                       const SizedBox(height: 3),
                       Text(
-                        item.isLocked ? 'Coming soon' : 'Tap to explore',
+                        item.isLocked
+                            ? (isTamil ? 'விரைவில் வருகிறது' : 'Coming soon')
+                            : (isTamil ? 'தொட்டு ஆராயுங்கள்' : 'Tap to explore'),
                         style: TextStyle(
                           fontSize: 12.5,
                           color: item.isLocked

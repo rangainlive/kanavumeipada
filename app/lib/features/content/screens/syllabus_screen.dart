@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/subject_model.dart';
+import '../widgets/lang_toggle_button.dart';
 
 // ─── Data Models ──────────────────────────────────────────────────────────────
 
@@ -498,18 +501,12 @@ final _mainPapers = <_Paper>[
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-class SyllabusScreen extends StatefulWidget {
+class SyllabusScreen extends ConsumerWidget {
   const SyllabusScreen({super.key});
 
   @override
-  State<SyllabusScreen> createState() => _SyllabusScreenState();
-}
-
-class _SyllabusScreenState extends State<SyllabusScreen> {
-  bool _isTamil = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isTamil = ref.watch(studyLangProvider);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -537,47 +534,14 @@ class _SyllabusScreenState extends State<SyllabusScreen> {
                       fontWeight: FontWeight.w800,
                       fontSize: 18,
                       letterSpacing: -0.3)),
-              Text(_isTamil ? 'தேர்வு பாடத்திட்டம்' : 'Exam Syllabus',
+              Text(isTamil ? 'தேர்வு பாடத்திட்டம்' : 'Exam Syllabus',
                   style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.75), fontSize: 11)),
             ],
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: GestureDetector(
-                onTap: () => setState(() => _isTamil = !_isTamil),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _isTamil
-                        ? Colors.white.withValues(alpha: 0.3)
-                        : Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _isTamil ? Icons.language : Icons.translate_rounded,
-                        color: Colors.white,
-                        size: 15,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        _isTamil ? 'EN' : 'தமிழ்',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          actions: const [
+            LangToggleButton(),
+            SizedBox(width: 10),
           ],
           bottom: const TabBar(
             tabs: [
@@ -594,8 +558,8 @@ class _SyllabusScreenState extends State<SyllabusScreen> {
         ),
         body: TabBarView(
           children: [
-            _PrelimTab(isTamil: _isTamil),
-            _MainExamTab(isTamil: _isTamil),
+            _PrelimTab(isTamil: isTamil),
+            _MainExamTab(isTamil: isTamil),
           ],
         ),
       ),

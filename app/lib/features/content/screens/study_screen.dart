@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/subject_model.dart';
+import '../widgets/lang_toggle_button.dart';
 import '../../../core/theme/app_theme.dart';
 
 class StudyScreen extends ConsumerWidget {
@@ -10,6 +11,7 @@ class StudyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final subjectsAsync = ref.watch(subjectsProvider);
+    final isTamil = ref.watch(studyLangProvider);
     final now = DateTime.now();
     final months = ['', 'Jan','Feb','Mar','Apr','May','Jun',
                     'Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -37,14 +39,16 @@ class StudyScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
-                        const Text('Study Hub 📚',
-                            style: TextStyle(
+                        Text(isTamil ? 'படிப்பு மையம் 📚' : 'Study Hub 📚',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.3,
                             )),
                         const Spacer(),
+                        const LangToggleButton(),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 5),
@@ -61,11 +65,15 @@ class StudyScreen extends ConsumerWidget {
                         ),
                       ]),
                       const SizedBox(height: 4),
-                      Text('Master every topic, ace every exam',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.75),
-                            fontSize: 13,
-                          )),
+                      Text(
+                        isTamil
+                            ? 'ஒவ்வொரு தலைப்பையும் தேர்ச்சி பெறுங்கள்'
+                            : 'Master every topic, ace every exam',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(height: 20),
 
                       // Current affairs card
@@ -129,8 +137,8 @@ class StudyScreen extends ConsumerWidget {
             sliver: SliverToBoxAdapter(
               child: Row(
                 children: [
-                  const Text('Exam Categories',
-                      style: TextStyle(
+                  Text(isTamil ? 'தேர்வு வகைகள்' : 'Exam Categories',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.textPrimary,
@@ -139,9 +147,11 @@ class StudyScreen extends ConsumerWidget {
                   subjectsAsync.whenOrNull(
                         data: (s) {
                           final cats = s.map((x) => x.examCategory ?? 'Other').toSet();
-                          return Text('${cats.length} categories',
-                              style: const TextStyle(
-                                  fontSize: 12.5, color: AppTheme.textHint));
+                          final n = cats.isEmpty ? 1 : cats.length;
+                          return Text(
+                            isTamil ? '$n வகைகள்' : '$n categories',
+                            style: const TextStyle(fontSize: 12.5, color: AppTheme.textHint),
+                          );
                         },
                       ) ??
                       const SizedBox.shrink(),
@@ -270,7 +280,7 @@ class _CategoryCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    examCount > 0 ? '$examCount exam${examCount > 1 ? "s" : ""}' : 'Tap to explore',
+                    examCount > 0 ? '$examCount exam${examCount > 1 ? "s" : ""}' : '',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -287,28 +297,6 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-class _EmptySubjects extends StatelessWidget {
-  const _EmptySubjects();
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Text('📖', style: TextStyle(fontSize: 56)),
-        const SizedBox(height: 12),
-        const Text('Subjects coming soon!',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary)),
-        const SizedBox(height: 6),
-        Text('We\'re adding quality content — check back soon.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.textHint, fontSize: 13)),
-      ]),
-    );
-  }
-}
 
 class _ErrorState extends StatelessWidget {
   final VoidCallback onRetry;

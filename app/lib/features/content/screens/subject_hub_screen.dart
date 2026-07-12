@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/subject_model.dart';
+import '../widgets/lang_toggle_button.dart';
 
-class SubjectHubScreen extends StatelessWidget {
+class SubjectHubScreen extends ConsumerWidget {
   final String subjectId;
   final Subject? subject;
   const SubjectHubScreen({
@@ -12,7 +14,8 @@ class SubjectHubScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isTamil = ref.watch(studyLangProvider);
     final category = subject?.examCategory ?? '';
     final fullName = subject?.name ?? 'Exam';
     final displayName = fullName.replaceFirst('$category ', '').trim();
@@ -28,6 +31,10 @@ class SubjectHubScreen extends StatelessWidget {
             expandedHeight: 150,
             pinned: true,
             iconTheme: const IconThemeData(color: Colors.white),
+            actions: const [
+              LangToggleButton(),
+              SizedBox(width: 12),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
@@ -71,60 +78,59 @@ class SubjectHubScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 100),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 14),
-                  child: Text('What would you like to do?',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF374151),
-                      )),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Text(
+                    isTamil ? 'நீங்கள் என்ன செய்ய விரும்புகிறீர்கள்?' : 'What would you like to do?',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF374151),
+                    ),
+                  ),
                 ),
 
                 // Syllabus
                 _FeatureCard(
                   emoji: '📋',
-                  title: 'Syllabus',
-                  subtitle: 'Full topic list — Preliminary & Main',
+                  title: isTamil ? 'பாடத்திட்டம்' : 'Syllabus',
+                  subtitle: isTamil
+                      ? 'முழு பாடப்பட்டியல் — முன்னோட்ட & முதன்மை'
+                      : 'Full topic list — Preliminary & Main',
                   accentColor: colors[0],
                   isLocked: !hasSyllabus,
-                  onTap: hasSyllabus
-                      ? () => context.push('/study/syllabus')
-                      : null,
+                  onTap: hasSyllabus ? () => context.push('/study/syllabus') : null,
                 ),
 
                 // Chapters & Questions
                 _FeatureCard(
                   emoji: '📚',
-                  title: 'Chapters & Questions',
+                  title: isTamil ? 'அத்தியாயங்கள் & வினாக்கள்' : 'Chapters & Questions',
                   subtitle: hasDbSubject
-                      ? 'Browse chapters and practice MCQs'
-                      : 'Content loading — check back soon',
+                      ? (isTamil ? 'அத்தியாயங்களை பாருங்கள், MCQ பயிற்சி' : 'Browse chapters and practice MCQs')
+                      : (isTamil ? 'விரைவில் வருகிறது' : 'Content loading — check back soon'),
                   accentColor: colors[0],
                   isLocked: !hasDbSubject,
                   onTap: hasDbSubject
-                      ? () => context.push(
-                            '/study/subject/${subject!.id}',
-                            extra: fullName,
-                          )
+                      ? () => context.push('/study/subject/${subject!.id}', extra: fullName)
                       : null,
                 ),
 
                 // Practice Tests
-                const _FeatureCard(
+                _FeatureCard(
                   emoji: '🎯',
-                  title: 'Practice Tests',
-                  subtitle: 'Timed mock tests coming soon',
-                  accentColor: Color(0xFF9CA3AF),
+                  title: isTamil ? 'பயிற்சி தேர்வுகள்' : 'Practice Tests',
+                  subtitle: isTamil ? 'நேரமிட்ட மாதிரி தேர்வுகள் விரைவில்' : 'Timed mock tests coming soon',
+                  accentColor: const Color(0xFF9CA3AF),
                   isLocked: true,
                 ),
 
                 // AI Generate
-                const _FeatureCard(
+                _FeatureCard(
                   emoji: '🤖',
-                  title: 'AI Question Generator',
-                  subtitle: 'Auto-generate MCQs from content',
-                  accentColor: Color(0xFF9CA3AF),
+                  title: isTamil ? 'AI வினா உருவாக்கி' : 'AI Question Generator',
+                  subtitle: isTamil ? 'உள்ளடக்கத்திலிருந்து MCQ தானாக உருவாக்கம்' : 'Auto-generate MCQs from content',
+                  accentColor: const Color(0xFF9CA3AF),
                   isLocked: true,
                 ),
               ]),
@@ -136,7 +142,7 @@ class SubjectHubScreen extends StatelessWidget {
   }
 }
 
-class _FeatureCard extends StatelessWidget {
+class _FeatureCard extends ConsumerWidget {
   final String emoji;
   final String title;
   final String subtitle;
@@ -153,7 +159,8 @@ class _FeatureCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isTamil = ref.watch(studyLangProvider);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedOpacity(
@@ -213,7 +220,9 @@ class _FeatureCard extends StatelessWidget {
                           )),
                       const SizedBox(height: 3),
                       Text(
-                        isLocked ? 'Coming soon' : subtitle,
+                        isLocked
+                            ? (isTamil ? 'விரைவில் வருகிறது' : 'Coming soon')
+                            : subtitle,
                         style: const TextStyle(
                           fontSize: 12.5,
                           color: Color(0xFF6B7280),

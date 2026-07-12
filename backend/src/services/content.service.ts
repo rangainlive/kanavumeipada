@@ -11,6 +11,7 @@ export interface Chapter {
   id: string;
   subjectId: string;
   title: string;
+  titleTamil?: string;
   orderIndex: number;
   contentText?: string;
   contentUrl?: string;
@@ -65,7 +66,8 @@ class ContentService {
   // Chapters
   async getChaptersBySubject(subjectId: string): Promise<Chapter[]> {
     const result = await this.pool.query(
-      `SELECT id, subject_id as "subjectId", title, order_index as "orderIndex",
+      `SELECT id, subject_id as "subjectId", title, title_tamil as "titleTamil",
+              order_index as "orderIndex",
               content_text as "contentText", content_url as "contentUrl",
               is_approved as "isApproved", created_by as "createdBy", created_at as "createdAt"
        FROM chapters
@@ -78,7 +80,8 @@ class ContentService {
 
   async getChapterById(id: string): Promise<Chapter | null> {
     const result = await this.pool.query(
-      `SELECT id, subject_id as "subjectId", title, order_index as "orderIndex",
+      `SELECT id, subject_id as "subjectId", title, title_tamil as "titleTamil",
+              order_index as "orderIndex",
               content_text as "contentText", content_url as "contentUrl",
               is_approved as "isApproved", created_by as "createdBy", created_at as "createdAt"
        FROM chapters WHERE id = $1`,
@@ -253,7 +256,8 @@ class ContentService {
 
   async searchChapters(query: string, limit: number = 20): Promise<Chapter[]> {
     const result = await this.pool.query(
-      `SELECT id, subject_id as "subjectId", title, order_index as "orderIndex",
+      `SELECT id, subject_id as "subjectId", title, title_tamil as "titleTamil",
+              order_index as "orderIndex",
               content_text as "contentText", content_url as "contentUrl",
               is_approved as "isApproved", created_by as "createdBy", created_at as "createdAt"
        FROM chapters

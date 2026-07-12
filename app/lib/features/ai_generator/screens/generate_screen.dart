@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/generation_provider.dart';
+import '../../content/models/subject_model.dart';
+import '../../content/widgets/lang_toggle_button.dart';
 
 class GenerateScreen extends ConsumerStatefulWidget {
   final String chapterId;
@@ -27,6 +29,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(generationProvider(widget.chapterId));
     final notifier = ref.read(generationProvider(widget.chapterId).notifier);
+    final isTamil = ref.watch(studyLangProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
@@ -37,9 +40,9 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'AI Question Generator',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            Text(
+              isTamil ? 'AI வினா உருவாக்கி' : 'AI Question Generator',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             if (widget.chapterTitle != null)
               Text(
@@ -54,6 +57,8 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
           ],
         ),
         actions: [
+          const LangToggleButton(),
+          const SizedBox(width: 4),
           if (state.hasResults)
             Padding(
               padding: const EdgeInsets.only(right: 12),
@@ -80,32 +85,32 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
         ],
       ),
       body: state.isLoading
-          ? _buildLoading()
+          ? _buildLoading(isTamil)
           : state.hasResults
-              ? _buildReview(state, notifier)
-              : _buildConfigure(context, state, notifier),
+              ? _buildReview(state, notifier, isTamil)
+              : _buildConfigure(context, state, notifier, isTamil),
     );
   }
 
-  Widget _buildLoading() {
-    return const Center(
+  Widget _buildLoading(bool isTamil) {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
+          const SizedBox(
             width: 52,
             height: 52,
             child: CircularProgressIndicator(strokeWidth: 3, color: _primary),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Text(
-            'Generating questions with AI...',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            isTamil ? 'AI மூலம் வினாக்கள் உருவாக்கப்படுகின்றன...' : 'Generating questions with AI...',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            'This may take 10–30 seconds',
-            style: TextStyle(color: Colors.grey, fontSize: 13),
+            isTamil ? 'இது 10–30 வினாடிகள் ஆகலாம்' : 'This may take 10–30 seconds',
+            style: const TextStyle(color: Colors.grey, fontSize: 13),
           ),
         ],
       ),
@@ -116,6 +121,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     BuildContext context,
     GenerationState state,
     GenerationNotifier notifier,
+    bool isTamil,
   ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -124,23 +130,25 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
         children: [
           const Center(child: Icon(Icons.auto_awesome, size: 52, color: _primary)),
           const SizedBox(height: 12),
-          const Center(
+          Center(
             child: Text(
-              'Generate with AI',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              isTamil ? 'AI மூலம் உருவாக்கு' : 'Generate with AI',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 4),
           Center(
             child: Text(
-              'Creates MCQs from chapter content using Gemini',
+              isTamil
+                  ? 'Gemini மூலம் அத்தியாய உள்ளடக்கத்திலிருந்து MCQ உருவாக்கும்'
+                  : 'Creates MCQs from chapter content using Gemini',
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 32),
 
-          _label('Questions to generate'),
+          _label(isTamil ? 'உருவாக்க வேண்டிய வினாக்கள்' : 'Questions to generate'),
           Row(
             children: [
               Expanded(
@@ -176,29 +184,29 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
           ),
           const SizedBox(height: 20),
 
-          _label('Difficulty'),
+          _label(isTamil ? 'கடினத்தன்மை' : 'Difficulty'),
           Wrap(
             spacing: 8,
             children: [
-              _chip('Easy', _difficulty == 1, () => setState(() => _difficulty = 1)),
-              _chip('Medium', _difficulty == 2, () => setState(() => _difficulty = 2)),
-              _chip('Hard', _difficulty == 3, () => setState(() => _difficulty = 3)),
+              _chip(isTamil ? 'எளிதானது' : 'Easy', _difficulty == 1, () => setState(() => _difficulty = 1)),
+              _chip(isTamil ? 'நடுத்தரம்' : 'Medium', _difficulty == 2, () => setState(() => _difficulty = 2)),
+              _chip(isTamil ? 'கடினம்' : 'Hard', _difficulty == 3, () => setState(() => _difficulty = 3)),
             ],
           ),
           const SizedBox(height: 20),
 
-          _label('Cognitive Level'),
+          _label(isTamil ? 'அறிவு நிலை' : 'Cognitive Level'),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _chip('Recall', _bloomLevel == 'remember',
+              _chip(isTamil ? 'நினைவு' : 'Recall', _bloomLevel == 'remember',
                   () => setState(() => _bloomLevel = 'remember')),
-              _chip('Understand', _bloomLevel == 'understand',
+              _chip(isTamil ? 'புரிதல்' : 'Understand', _bloomLevel == 'understand',
                   () => setState(() => _bloomLevel = 'understand')),
-              _chip('Apply', _bloomLevel == 'apply',
+              _chip(isTamil ? 'பயன்பாடு' : 'Apply', _bloomLevel == 'apply',
                   () => setState(() => _bloomLevel = 'apply')),
-              _chip('Analyze', _bloomLevel == 'analyze',
+              _chip(isTamil ? 'பகுப்பாய்வு' : 'Analyze', _bloomLevel == 'analyze',
                   () => setState(() => _bloomLevel = 'analyze')),
             ],
           ),
@@ -234,13 +242,13 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
                     const SizedBox(height: 8),
                     TextButton.icon(
                       icon: const Icon(Icons.upload_outlined, size: 16),
-                      label: const Text('Add Chapter Content'),
+                      label: Text(isTamil ? 'அத்தியாய உள்ளடக்கம் சேர்க்கவும்' : 'Add Chapter Content'),
                       style: TextButton.styleFrom(
                         foregroundColor: _primary,
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
                       ),
-                      onPressed: () => _showContentDialog(context),
+                      onPressed: () => _showContentDialog(context, isTamil),
                     ),
                   ],
                 ],
@@ -254,9 +262,9 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
             height: 52,
             child: FilledButton.icon(
               icon: const Icon(Icons.auto_awesome),
-              label: const Text(
-                'Generate Questions',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              label: Text(
+                isTamil ? 'வினாக்கள் உருவாக்கு' : 'Generate Questions',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               style: FilledButton.styleFrom(backgroundColor: _primary),
               onPressed: () => notifier.generate(
@@ -278,7 +286,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     );
   }
 
-  Widget _buildReview(GenerationState state, GenerationNotifier notifier) {
+  Widget _buildReview(GenerationState state, GenerationNotifier notifier, bool isTamil) {
     return Column(
       children: [
         Container(
@@ -288,14 +296,20 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
             children: [
               Expanded(
                 child: Text(
-                  '${state.questions.length} questions generated',
+                  isTamil
+                      ? '${state.questions.length} வினாக்கள் உருவாக்கப்பட்டன'
+                      : '${state.questions.length} questions generated',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
               if (state.pendingCount > 0)
                 TextButton.icon(
                   icon: const Icon(Icons.check_circle_outline, size: 16),
-                  label: Text('Approve all (${state.pendingCount})'),
+                  label: Text(
+                    isTamil
+                        ? 'அனைத்தையும் அனுமதி (${state.pendingCount})'
+                        : 'Approve all (${state.pendingCount})',
+                  ),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.green.shade700,
                     visualDensity: VisualDensity.compact,
@@ -304,10 +318,12 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
                 )
               else
                 Text(
-                  '${state.approvedCount} approved · '
-                  '${state.questions.length - state.approvedCount} rejected',
-                  style:
-                      TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  isTamil
+                      ? '${state.approvedCount} அனுமதிக்கப்பட்டவை · '
+                          '${state.questions.length - state.approvedCount} நிராகரிக்கப்பட்டவை'
+                      : '${state.approvedCount} approved · '
+                          '${state.questions.length - state.approvedCount} rejected',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
             ],
           ),
@@ -321,6 +337,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
               return _QuestionCard(
                 question: q,
                 index: i,
+                isTamil: isTamil,
                 onApprove: () => notifier.approve(q.id),
                 onReject: () => notifier.reject(q.id),
               );
@@ -331,28 +348,29 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     );
   }
 
-  void _showContentDialog(BuildContext context) {
+  void _showContentDialog(BuildContext context, bool isTamil) {
     final ctrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Chapter Content'),
+        title: Text(isTamil ? 'அத்தியாய உள்ளடக்கம் சேர்க்கவும்' : 'Add Chapter Content'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Paste the chapter text (min 100 chars). '
-              'This will be used to generate MCQs.',
+              isTamil
+                  ? 'அத்தியாய உரையை ஒட்டவும் (குறைந்தது 100 எழுத்துகள்). MCQ உருவாக்க பயன்படும்.'
+                  : 'Paste the chapter text (min 100 chars). This will be used to generate MCQs.',
               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: ctrl,
               maxLines: 8,
-              decoration: const InputDecoration(
-                hintText: 'Paste chapter content here...',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: isTamil ? 'அத்தியாய உள்ளடக்கத்தை இங்கே ஒட்டவும்...' : 'Paste chapter content here...',
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -360,16 +378,20 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(isTamil ? 'ரத்து செய்' : 'Cancel'),
           ),
           FilledButton(
             onPressed: () async {
               final text = ctrl.text.trim();
               if (text.length < 100) {
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('Content must be at least 100 characters')),
+                  SnackBar(
+                    content: Text(
+                      isTamil
+                          ? 'உள்ளடக்கம் குறைந்தது 100 எழுத்துகள் இருக்க வேண்டும்'
+                          : 'Content must be at least 100 characters',
+                    ),
+                  ),
                 );
                 return;
               }
@@ -382,16 +404,16 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
               messenger.showSnackBar(
                 error != null
                     ? SnackBar(
-                        content: Text('Upload failed: $error'),
+                        content: Text(isTamil ? 'பதிவேற்றம் தோல்வி: $error' : 'Upload failed: $error'),
                         backgroundColor: Colors.red,
                       )
-                    : const SnackBar(
-                        content: Text('Content saved! Now tap Generate.'),
+                    : SnackBar(
+                        content: Text(isTamil ? 'உள்ளடக்கம் சேமிக்கப்பட்டது! இப்போது உருவாக்கு தட்டவும்.' : 'Content saved! Now tap Generate.'),
                         backgroundColor: Colors.green,
                       ),
               );
             },
-            child: const Text('Save Content'),
+            child: Text(isTamil ? 'உள்ளடக்கம் சேமி' : 'Save Content'),
           ),
         ],
       ),
@@ -426,12 +448,14 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
 class _QuestionCard extends StatelessWidget {
   final AiQuestion question;
   final int index;
+  final bool isTamil;
   final VoidCallback onApprove;
   final VoidCallback onReject;
 
   const _QuestionCard({
     required this.question,
     required this.index,
+    required this.isTamil,
     required this.onApprove,
     required this.onReject,
   });
@@ -592,7 +616,7 @@ class _QuestionCard extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.close, size: 16),
-                      label: const Text('Reject'),
+                      label: Text(isTamil ? 'நிராகரி' : 'Reject'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red.shade600,
                         side: BorderSide(color: Colors.red.shade300),
@@ -606,7 +630,7 @@ class _QuestionCard extends StatelessWidget {
                   Expanded(
                     child: FilledButton.icon(
                       icon: const Icon(Icons.check, size: 16),
-                      label: const Text('Approve'),
+                      label: Text(isTamil ? 'அனுமதி' : 'Approve'),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.green.shade600,
                         visualDensity: VisualDensity.compact,

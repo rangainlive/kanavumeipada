@@ -29,6 +29,7 @@ ALTER TABLE IF EXISTS users ALTER COLUMN phone DROP NOT NULL;
 ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS explanation TEXT;
 ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS bloom_level VARCHAR(20) DEFAULT 'remember';
 ALTER TABLE IF EXISTS chapters ADD COLUMN IF NOT EXISTS content_text TEXT;
+ALTER TABLE IF EXISTS chapters ADD COLUMN IF NOT EXISTS title_tamil VARCHAR(255);
 
 -- User Streaks table
 CREATE TABLE IF NOT EXISTS user_streaks (
@@ -296,8 +297,7 @@ BEGIN
   SELECT id INTO v_subject_id FROM subjects WHERE name = 'TNPSC Group 1';
 
   INSERT INTO chapters (subject_id, title, order_index, content_text, is_approved)
-  SELECT v_subject_id, t.title, t.ord, t.content_text, true
-  FROM (VALUES
+  SELECT v_subject_id, t.title, t.ord, t.content_text, true FROM (VALUES
     (1,  'Prelim — Unit I: General Science',
      'Scientific Knowledge and Scientific Temper. Power of Reasoning. Rote Learning vs Conceptual Learning. Science as a tool to understand the past, present and future. Nature of Universe, General Scientific Laws, Mechanics, Properties of Matter, Force, Motion and Energy. Everyday application of Mechanics, Electricity and Magnetism, Light, Sound, Heat, Nuclear Physics, Laser, Electronics and Communications. Elements and Compounds, Acids, Bases, Salts, Petroleum Products, Fertilisers, Pesticides. Main concepts of Life Science, Classification of Living Organisms, Evolution, Genetics, Physiology, Nutrition, Health and Hygiene, Human Diseases. Environment and Ecology.'),
     (2,  'Prelim — Unit II: Current Events',
@@ -342,5 +342,31 @@ BEGIN
   WHERE NOT EXISTS (
     SELECT 1 FROM chapters WHERE subject_id = v_subject_id AND title = t.title
   );
+
+  -- Backfill Tamil titles (idempotent: only sets where NULL)
+  UPDATE chapters c SET title_tamil = t.title_tamil
+  FROM (VALUES
+    ('Prelim — Unit I: General Science',                                        'முன்னோட்ட — அலகு I: பொது அறிவியல்'),
+    ('Prelim — Unit II: Current Events',                                        'முன்னோட்ட — அலகு II: நடப்பு நிகழ்வுகள்'),
+    ('Prelim — Unit III: Geography of India',                                   'முன்னோட்ட — அலகு III: இந்திய புவியியல்'),
+    ('Prelim — Unit IV: History and Culture of India',                          'முன்னோட்ட — அலகு IV: இந்திய வரலாறும் கலாச்சாரமும்'),
+    ('Prelim — Unit V: Indian Polity',                                          'முன்னோட்ட — அலகு V: இந்திய அரசியல்'),
+    ('Prelim — Unit VI: Indian Economy',                                        'முன்னோட்ட — அலகு VI: இந்திய பொருளாதாரம்'),
+    ('Prelim — Unit VII: Indian National Movement',                             'முன்னோட்ட — அலகு VII: இந்திய தேசிய இயக்கம்'),
+    ('Prelim — Unit VIII: History, Culture & Socio-Political Movements in Tamil Nadu', 'முன்னோட்ட — அலகு VIII: தமிழ்நாட்டின் வரலாறு, கலாச்சாரம் & சமூக-அரசியல் இயக்கங்கள்'),
+    ('Prelim — Unit IX: Development Administration in Tamil Nadu',              'முன்னோட்ட — அலகு IX: தமிழ்நாட்டில் வளர்ச்சி நிர்வாகம்'),
+    ('Prelim — Unit X: Aptitude & Mental Ability',                             'முன்னோட்ட — அலகு X: திறன் மற்றும் மனவலிமை'),
+    ('Main — Paper I: Compulsory Tamil Language (SSLC Standard)',               'முதன்மை — தாள் I: கட்டாய தமிழ் மொழி (SSLC தரம்)'),
+    ('Main — Paper II, Unit I: Modern History of India and Indian Culture',     'முதன்மை — தாள் II, அலகு I: இந்தியாவின் நவீன வரலாறும் இந்திய கலாச்சாரமும்'),
+    ('Main — Paper II, Unit II: Social Issues in India and Tamil Nadu',         'முதன்மை — தாள் II, அலகு II: இந்தியா மற்றும் தமிழ்நாட்டில் சமூக பிரச்சினைகள்'),
+    ('Main — Paper II, Unit III: General Aptitude & Mental Ability (SSLC Standard)', 'முதன்மை — தாள் II, அலகு III: பொது திறன் மற்றும் மனவலிமை (SSLC தரம்)'),
+    ('Main — Paper III, Unit I: Indian Polity and Emerging Political Trends',   'முதன்மை — தாள் III, அலகு I: இந்திய அரசியல் மற்றும் வளர்ந்து வரும் அரசியல் போக்குகள்'),
+    ('Main — Paper III, Unit II: Role and Impact of Science and Technology',    'முதன்மை — தாள் III, அலகு II: அறிவியல் மற்றும் தொழில்நுட்பத்தின் பங்கும் தாக்கமும்'),
+    ('Main — Paper III, Unit III: Tamil Society — Its Culture and Heritage',    'முதன்மை — தாள் III, அலகு III: தமிழ் சமூகம் — அதன் கலாச்சாரமும் பாரம்பரியமும்'),
+    ('Main — Paper IV, Unit I: Geography of India with Special Reference to Tamil Nadu', 'முதன்மை — தாள் IV, அலகு I: தமிழ்நாட்டை மையமாகக் கொண்ட இந்திய புவியியல்'),
+    ('Main — Paper IV, Unit II: Environment, Biodiversity and Disaster Management', 'முதன்மை — தாள் IV, அலகு II: சுற்றுச்சூழல், உயிரியல் பன்முகத்தன்மை மற்றும் பேரிடர் மேலாண்மை'),
+    ('Main — Paper IV, Unit III: Indian Economy — Current Economic Trends',     'முதன்மை — தாள் IV, அலகு III: இந்திய பொருளாதாரம் — நடப்பு பொருளாதார போக்குகள்')
+  ) AS t(en_title, title_tamil)
+  WHERE c.subject_id = v_subject_id AND c.title = t.en_title AND c.title_tamil IS NULL;
 END;
 $$;
