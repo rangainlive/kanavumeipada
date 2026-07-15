@@ -14,6 +14,7 @@ class Chapter {
   final String title;
   final String? titleTamil;
   final String? contentText;
+  final String? contentTextTamil;
   final String? contentUrl;
   final int orderIndex;
   Chapter({
@@ -21,6 +22,7 @@ class Chapter {
     required this.title,
     this.titleTamil,
     this.contentText,
+    this.contentTextTamil,
     this.contentUrl,
     required this.orderIndex,
   });
@@ -29,6 +31,7 @@ class Chapter {
         title: j['title'],
         titleTamil: j['titleTamil'],
         contentText: j['contentText'],
+        contentTextTamil: j['contentTextTamil'],
         contentUrl: j['contentUrl'],
         orderIndex: j['orderIndex'] ?? 0,
       );
@@ -135,8 +138,14 @@ class SubjectChaptersScreen extends ConsumerWidget {
                     ),
                   ),
                   title: Text(isTamil ? (ch.titleTamil ?? ch.title) : ch.title),
-                  subtitle: ch.contentText != null
-                      ? Text(ch.contentText!, maxLines: 1, overflow: TextOverflow.ellipsis)
+                  subtitle: (ch.contentText != null || ch.contentTextTamil != null)
+                      ? Text(
+                          isTamil
+                              ? (ch.contentTextTamil ?? ch.contentText ?? '')
+                              : (ch.contentText ?? ''),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        )
                       : null,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -159,7 +168,7 @@ class SubjectChaptersScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  onTap: ch.contentText != null
+                  onTap: (ch.contentText != null || ch.contentTextTamil != null)
                       ? () => _showContent(context, ch, isTamil)
                       : null,
 
@@ -190,7 +199,12 @@ class SubjectChaptersScreen extends ConsumerWidget {
                     .headlineSmall
                     ?.copyWith(fontWeight: FontWeight.bold)),
             const Divider(height: 24),
-            Text(chapter.contentText ?? '', style: Theme.of(context).textTheme.bodyLarge),
+            Text(
+              isTamil
+                  ? (chapter.contentTextTamil ?? chapter.contentText ?? '')
+                  : (chapter.contentText ?? ''),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
           ]),
         ),
       ),

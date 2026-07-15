@@ -14,6 +14,7 @@ export interface Chapter {
   titleTamil?: string;
   orderIndex: number;
   contentText?: string;
+  contentTextTamil?: string;
   contentUrl?: string;
   isApproved: boolean;
   createdBy?: string;
@@ -68,7 +69,8 @@ class ContentService {
     const result = await this.pool.query(
       `SELECT id, subject_id as "subjectId", title, title_tamil as "titleTamil",
               order_index as "orderIndex",
-              content_text as "contentText", content_url as "contentUrl",
+              content_text as "contentText", content_text_tamil as "contentTextTamil",
+              content_url as "contentUrl",
               is_approved as "isApproved", created_by as "createdBy", created_at as "createdAt"
        FROM chapters
        WHERE subject_id = $1 AND is_approved = true
@@ -82,7 +84,8 @@ class ContentService {
     const result = await this.pool.query(
       `SELECT id, subject_id as "subjectId", title, title_tamil as "titleTamil",
               order_index as "orderIndex",
-              content_text as "contentText", content_url as "contentUrl",
+              content_text as "contentText", content_text_tamil as "contentTextTamil",
+              content_url as "contentUrl",
               is_approved as "isApproved", created_by as "createdBy", created_at as "createdAt"
        FROM chapters WHERE id = $1`,
       [id]
@@ -258,7 +261,8 @@ class ContentService {
     const result = await this.pool.query(
       `SELECT id, subject_id as "subjectId", title, title_tamil as "titleTamil",
               order_index as "orderIndex",
-              content_text as "contentText", content_url as "contentUrl",
+              content_text as "contentText", content_text_tamil as "contentTextTamil",
+              content_url as "contentUrl",
               is_approved as "isApproved", created_by as "createdBy", created_at as "createdAt"
        FROM chapters
        WHERE is_approved = true AND (title ILIKE $1 OR content_text ILIKE $1)
