@@ -10,6 +10,7 @@ COPY backend/ ./
 RUN npm run build
 
 RUN cp src/db/init.sql dist/db/init.sql
+RUN cp src/db/pyq_data.json dist/db/pyq_data.json
 
 EXPOSE 3000
 
