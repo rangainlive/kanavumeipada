@@ -13,6 +13,8 @@ import { testRoutes } from './routes/test.routes';
 import { walletRoutes } from './routes/wallet.routes';
 import { challengeRoutes } from './routes/challenge.routes';
 import { aiContentRoutes } from './routes/ai-content.routes';
+import { pyqRoutes } from './routes/pyq.routes';
+import { importPyqData } from './db/import_pyq';
 
 dotenv.config();
 
@@ -117,6 +119,7 @@ fastify.register((fastify) => testRoutes(fastify, pool));
 fastify.register((fastify) => walletRoutes(fastify, pool));
 fastify.register((fastify) => challengeRoutes(fastify, pool));
 fastify.register((fastify) => aiContentRoutes(fastify, pool));
+fastify.register((fastify) => pyqRoutes(fastify, pool));
 
 const runMigrations = async () => {
   try {
@@ -126,6 +129,12 @@ const runMigrations = async () => {
   } catch (err) {
     console.error('❌ Migration failed:', (err as Error).message);
     throw err;
+  }
+
+  try {
+    await importPyqData(pool);
+  } catch (err) {
+    console.error('⚠️  PYQ data import failed (non-fatal):', (err as Error).message);
   }
 };
 

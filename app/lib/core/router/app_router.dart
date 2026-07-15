@@ -18,6 +18,8 @@ import '../../features/content/screens/syllabus_screen.dart';
 import '../../features/test_engine/screens/tests_screen.dart';
 import '../../features/challenge/screens/battle_screen.dart';
 import '../../features/ai_generator/screens/generate_screen.dart';
+import '../../features/pyq/screens/pyq_screen.dart';
+import '../../features/pyq/screens/pyq_admin_screen.dart';
 import '../widgets/main_shell.dart';
 
 // ChangeNotifier that fires whenever auth state changes, used as GoRouter refreshListenable
@@ -122,6 +124,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/study/syllabus',
             builder: (context, state) => const SyllabusScreen(),
+          ),
+          GoRoute(
+            path: '/pyq/:subjectId',
+            builder: (context, state) => PyqScreen(
+              subjectId: state.pathParameters['subjectId']!,
+            ),
+          ),
+          GoRoute(
+            path: '/pyq/:subjectId/admin',
+            builder: (context, state) => PyqAdminScreen(
+              subjectId: state.pathParameters['subjectId']!,
+            ),
           ),
           GoRoute(
             path: '/tests',

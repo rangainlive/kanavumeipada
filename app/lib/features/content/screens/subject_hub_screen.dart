@@ -116,6 +116,20 @@ class SubjectHubScreen extends ConsumerWidget {
                       : null,
                 ),
 
+                // Previous Year Questions
+                _FeatureCard(
+                  emoji: '🗂️',
+                  title: isTamil ? 'முந்தைய ஆண்டு வினாக்கள்' : 'Previous Year Questions',
+                  subtitle: hasDbSubject
+                      ? (isTamil ? 'உண்மையான தேர்வு வினாக்கள் — தமிழ் & ஆங்கிலம்' : 'Real exam questions — Tamil & English')
+                      : (isTamil ? 'விரைவில் வருகிறது' : 'Content loading — check back soon'),
+                  accentColor: colors[0],
+                  isLocked: !hasDbSubject,
+                  onTap: hasDbSubject
+                      ? () => context.push('/pyq/${subject!.id}')
+                      : null,
+                ),
+
                 // Practice Tests
                 _FeatureCard(
                   emoji: '🎯',

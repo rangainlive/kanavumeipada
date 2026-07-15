@@ -31,6 +31,17 @@ ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS bloom_level VARCHAR(20)
 ALTER TABLE IF EXISTS chapters ADD COLUMN IF NOT EXISTS content_text TEXT;
 ALTER TABLE IF EXISTS chapters ADD COLUMN IF NOT EXISTS title_tamil VARCHAR(255);
 
+-- Previous Year Questions (PYQ) + bilingual question/option text
+ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS text_tamil TEXT;
+ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS is_pyq BOOLEAN DEFAULT false;
+ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS topic VARCHAR(255);
+ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS exam_name VARCHAR(255);
+ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS exam_year INT;
+ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS answer_marked BOOLEAN DEFAULT false;
+ALTER TABLE IF EXISTS question_options ADD COLUMN IF NOT EXISTS text_tamil TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_questions_is_pyq ON questions(is_pyq) WHERE is_pyq = true;
+
 -- User Streaks table
 CREATE TABLE IF NOT EXISTS user_streaks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
