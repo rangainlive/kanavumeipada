@@ -113,6 +113,17 @@ class CategoryScreen extends ConsumerWidget {
                       icon: '📋', examCategory: 'TNPSC',
                     ),
                   );
+                  // Previous Year Questions — common across every TNPSC group, so it
+                  // lives at the category level rather than inside a single group.
+                  items.add(_GroupItem(
+                    label: isTamil ? 'முந்தைய ஆண்டு வினாக்கள்' : 'Previous Year Questions',
+                    subtitle: isTamil
+                        ? 'அனைத்து TNPSC தேர்வுகளுக்கும் பொதுவானது'
+                        : 'Common to all TNPSC exams',
+                    icon: '🗂️',
+                    isLocked: g1.id.isEmpty,
+                    customRoute: g1.id.isNotEmpty ? '/pyq/${g1.id}' : null,
+                  ));
                   items.add(_GroupItem(
                     label: 'Group 1',
                     subtitle: 'TNPSC Group 1',
@@ -171,12 +182,16 @@ class CategoryScreen extends ConsumerWidget {
                     (ctx, i) => _GroupCard(
                       item: items[i],
                       accentColor: colors[0],
-                      onTap: items[i].isLocked || items[i].subject == null
+                      onTap: items[i].isLocked
                           ? null
-                          : () => ctx.push(
-                                '/study/subject/${items[i].subject!.id}/hub',
-                                extra: items[i].subject,
-                              ),
+                          : items[i].customRoute != null
+                              ? () => ctx.push(items[i].customRoute!)
+                              : items[i].subject != null
+                                  ? () => ctx.push(
+                                        '/study/subject/${items[i].subject!.id}/hub',
+                                        extra: items[i].subject,
+                                      )
+                                  : null,
                     ),
                     childCount: items.length,
                   ),
@@ -196,12 +211,14 @@ class _GroupItem {
   final String icon;
   final bool isLocked;
   final Subject? subject;
+  final String? customRoute;
   const _GroupItem({
     required this.label,
     required this.subtitle,
     required this.icon,
     required this.isLocked,
     this.subject,
+    this.customRoute,
   });
 }
 
