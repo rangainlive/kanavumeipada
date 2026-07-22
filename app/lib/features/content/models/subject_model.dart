@@ -33,17 +33,19 @@ final subjectsProvider = FutureProvider.autoDispose<List<Subject>>((ref) async {
   return list.map((j) => Subject.fromJson(j as Map<String, dynamic>)).toList();
 });
 
+// Dark-mode tuned category gradients. TNPSC uses the brand teal; the other
+// exams (currently "coming soon") use muted, desaturated dark gradients.
 const catColors = {
-  'UPSC':    [Color(0xFF4F46E5), Color(0xFF7C3AED)],
-  'TNPSC':   [Color(0xFF059669), Color(0xFF0EA5E9)],
-  'SSC':     [Color(0xFFD97706), Color(0xFFF59E0B)],
-  'Banking': [Color(0xFF0EA5E9), Color(0xFF6366F1)],
-  'NEET':    [Color(0xFFDC2626), Color(0xFFEC4899)],
-  'JEE':     [Color(0xFF7C3AED), Color(0xFFEC4899)],
+  'TNPSC':   [Color(0xFF0D9488), Color(0xFF14B8A6)],
+  'UPSC':    [Color(0xFF3B3172), Color(0xFF5B4B9E)],
+  'SSC':     [Color(0xFF7A5320), Color(0xFF9C6F2A)],
+  'Banking': [Color(0xFF23507A), Color(0xFF356A99)],
+  'NEET':    [Color(0xFF7A2E3E), Color(0xFF9C4457)],
+  'JEE':     [Color(0xFF5B3172), Color(0xFF7A459E)],
 };
 
 List<Color> colorsFor(String? cat) =>
-    catColors[cat] ?? [AppTheme.primary, AppTheme.secondary];
+    catColors[cat] ?? [AppTheme.primaryDim, AppTheme.primary];
 
 // Global study-section language toggle: false = English, true = Tamil
 final studyLangProvider = StateProvider<bool>((ref) => false);

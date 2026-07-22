@@ -24,10 +24,11 @@ class MainShell extends StatelessWidget {
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
+          border: const Border(top: BorderSide(color: AppTheme.border)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.07),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -113,17 +114,26 @@ class _NavItemState extends State<_NavItem>
             scale: _scaleAnim,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 40, height: 30,
+              width: 42, height: 30,
               decoration: BoxDecoration(
                 color: active
-                    ? AppTheme.primary.withValues(alpha: 0.12)
+                    ? AppTheme.primary.withValues(alpha: 0.16)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
+                boxShadow: active
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
               child: Icon(
                 active ? widget.dest.icon : widget.dest.outlineIcon,
                 size: 22,
-                color: active ? AppTheme.primary : AppTheme.textHint,
+                color: active ? AppTheme.primaryGlow : AppTheme.textHint,
               ),
             ),
           ),
@@ -133,7 +143,7 @@ class _NavItemState extends State<_NavItem>
             style: TextStyle(
               fontSize: 10.5,
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color: active ? AppTheme.primary : AppTheme.textHint,
+              color: active ? AppTheme.primaryGlow : AppTheme.textHint,
             ),
             child: Text(widget.dest.label),
           ),

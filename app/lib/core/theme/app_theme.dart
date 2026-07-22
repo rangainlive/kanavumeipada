@@ -1,91 +1,146 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+/// KanavuMeipada design system — Premium Dark (Deep Teal + Gold).
+///
+/// The whole app runs on a single dark [ThemeData]. All colors below are dark-mode
+/// tokens; screens should reference these rather than hardcoding hex literals so a
+/// future retheme is a one-file change.
 class AppTheme {
-  // Brand palette
-  static const Color primary = Color(0xFF4F46E5);
-  static const Color primaryLight = Color(0xFF818CF8);
-  static const Color primaryDark = Color(0xFF3730A3);
-  static const Color secondary = Color(0xFF0EA5E9);
-  static const Color accent = Color(0xFF10B981);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color error = Color(0xFFEF4444);
-  static const Color surface = Colors.white;
-  static const Color bgLight = Color(0xFFF1F5F9);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF475569);
-  static const Color textHint = Color(0xFF94A3B8);
+  // ── Surfaces / background ────────────────────────────────────────────────
+  static const Color bg = Color(0xFF0A1413); // scaffold — deep teal-black
+  static const Color surface = Color(0xFF11201E); // cards, app bars
+  static const Color surface2 = Color(0xFF172B28); // elevated cards, sheets, inputs
+  static const Color border = Color(0xFF23403B); // hairline borders / dividers
 
+  // ── Brand ────────────────────────────────────────────────────────────────
+  static const Color primary = Color(0xFF14B8A6); // brand teal
+  static const Color primaryDim = Color(0xFF0D9488); // gradient partner / pressed
+  static const Color primaryGlow = Color(0xFF2DD4BF); // bright teal for glows + active
+  static const Color gold = Color(0xFFF5C451); // accent — coins, achievements, highlights
+  static const Color goldDim = Color(0xFFD9A441);
+
+  // ── Text ─────────────────────────────────────────────────────────────────
+  static const Color textPrimary = Color(0xFFEAF2F0);
+  static const Color textSecondary = Color(0xFF9DB2AD);
+  static const Color textHint = Color(0xFF5F736F);
+
+  // ── Semantic ─────────────────────────────────────────────────────────────
+  static const Color success = Color(0xFF34D399);
+  static const Color error = Color(0xFFF87171);
+  static const Color warning = gold;
+
+  // Back-compat aliases (older screens referenced these names).
+  static const Color secondary = primaryGlow;
+  static const Color accent = gold;
+  static const Color bgLight = bg;
+
+  // ── Gradients ────────────────────────────────────────────────────────────
   static const Gradient brandGradient = LinearGradient(
-    colors: [Color(0xFF4338CA), Color(0xFF3B82F6)],
+    colors: [primaryDim, primary],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const Gradient accentGradient = LinearGradient(
-    colors: [Color(0xFF10B981), Color(0xFF0EA5E9)],
+  static const Gradient brandGradientDeep = LinearGradient(
+    colors: [Color(0xFF0B3B37), primary],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static ThemeData get lightTheme {
-    const colorScheme = ColorScheme.light(
+  static const Gradient goldGradient = LinearGradient(
+    colors: [gold, goldDim],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const Gradient accentGradient = goldGradient;
+
+  // ── Shadows ──────────────────────────────────────────────────────────────
+  /// Neutral drop shadow for standard cards on the dark background.
+  static List<BoxShadow> get cardShadow => [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.35),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
+        ),
+      ];
+
+  /// Teal "glow" for hero cards and primary CTAs.
+  static List<BoxShadow> glow([Color? color]) => [
+        BoxShadow(
+          color: (color ?? primary).withValues(alpha: 0.28),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+        ),
+      ];
+
+  // ── Typography ───────────────────────────────────────────────────────────
+  // Plus Jakarta Sans for Latin, Noto Sans Tamil as a fallback so bilingual
+  // (English / தமிழ்) text renders consistently on every device.
+  static List<String> get _tamilFallback => [GoogleFonts.notoSansTamil().fontFamily!];
+
+  static TextStyle _font({
+    required double size,
+    FontWeight weight = FontWeight.w500,
+    Color color = textPrimary,
+    double? letterSpacing,
+    double? height,
+  }) =>
+      GoogleFonts.plusJakartaSans(
+        fontSize: size,
+        fontWeight: weight,
+        color: color,
+        letterSpacing: letterSpacing,
+        height: height,
+      ).copyWith(fontFamilyFallback: _tamilFallback);
+
+  static TextTheme get _textTheme => TextTheme(
+        displayLarge: _font(size: 40, weight: FontWeight.w800, letterSpacing: -1),
+        headlineLarge: _font(size: 30, weight: FontWeight.w800, letterSpacing: -0.5),
+        headlineMedium: _font(size: 24, weight: FontWeight.w700, letterSpacing: -0.3),
+        headlineSmall: _font(size: 20, weight: FontWeight.w700),
+        titleLarge: _font(size: 17, weight: FontWeight.w600),
+        titleMedium: _font(size: 15, weight: FontWeight.w600),
+        bodyLarge: _font(size: 16, color: textPrimary, height: 1.5),
+        bodyMedium: _font(size: 14, color: textSecondary, height: 1.4),
+        labelSmall: _font(size: 11, weight: FontWeight.w500, color: textHint, letterSpacing: 0.3),
+      );
+
+  // ── Theme ────────────────────────────────────────────────────────────────
+  static ThemeData get darkTheme {
+    const colorScheme = ColorScheme.dark(
       primary: primary,
-      onPrimary: Colors.white,
-      secondary: secondary,
-      onSecondary: Colors.white,
+      onPrimary: Color(0xFF04120F),
+      secondary: gold,
+      onSecondary: Color(0xFF231A05),
       error: error,
-      onError: Colors.white,
+      onError: Color(0xFF2A0A0A),
       surface: surface,
       onSurface: textPrimary,
     );
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: bgLight,
+      scaffoldBackgroundColor: bg,
+      textTheme: _textTheme,
 
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: surface,
         foregroundColor: textPrimary,
         elevation: 0,
-        scrolledUnderElevation: 1,
+        scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: textPrimary,
-          letterSpacing: -0.3,
-        ),
-        systemOverlayStyle: SystemUiOverlayStyle(
+        titleTextStyle: _font(size: 18, weight: FontWeight.w700, letterSpacing: -0.3),
+        iconTheme: const IconThemeData(color: textPrimary),
+        systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
         ),
-      ),
-
-      navigationBarTheme: NavigationBarThemeData(
-        height: 68,
-        backgroundColor: surface,
-        elevation: 8,
-        shadowColor: Colors.black12,
-        indicatorColor: primary.withValues(alpha: 0.12),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w700, color: primary,
-            );
-          }
-          return const TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w500, color: textSecondary,
-          );
-        }),
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: primary, size: 24);
-          }
-          return const IconThemeData(color: textHint, size: 22);
-        }),
       ),
 
       cardTheme: CardThemeData(
@@ -93,87 +148,101 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
+          side: const BorderSide(color: border),
         ),
         margin: EdgeInsets.zero,
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: bgLight,
+        fillColor: surface2,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: primary, width: 1.5),
         ),
-        hintStyle: const TextStyle(color: textHint, fontSize: 14),
+        hintStyle: _font(size: 14, color: textHint),
         prefixIconColor: textHint,
       ),
 
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor: const Color(0xFF04120F),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: _font(size: 15, weight: FontWeight.w700),
           elevation: 0,
         ),
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          foregroundColor: textPrimary,
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          side: const BorderSide(color: Color(0xFFE2E8F0)),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          side: const BorderSide(color: border),
+          textStyle: _font(size: 15, weight: FontWeight.w600),
         ),
       ),
 
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: primaryGlow),
+      ),
+
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor: surface2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        side: const BorderSide(color: border),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        labelStyle: _font(size: 13, weight: FontWeight.w600),
       ),
 
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: textPrimary, letterSpacing: -1),
-        headlineLarge: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: textPrimary, letterSpacing: -0.5),
-        headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: textPrimary, letterSpacing: -0.3),
-        headlineSmall: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary),
-        titleLarge: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: textPrimary),
-        titleMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: textPrimary),
-        bodyLarge: TextStyle(fontSize: 16, color: textPrimary, height: 1.5),
-        bodyMedium: TextStyle(fontSize: 14, color: textSecondary, height: 1.4),
-        labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: textHint, letterSpacing: 0.3),
+      dividerTheme: const DividerThemeData(color: border, thickness: 1, space: 1),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: surface2,
+        contentTextStyle: _font(size: 14, color: textPrimary),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titleTextStyle: _font(size: 18, weight: FontWeight.w700),
+        contentTextStyle: _font(size: 14, color: textSecondary, height: 1.4),
+      ),
+
+      progressIndicatorTheme: const ProgressIndicatorThemeData(color: primary),
+      iconTheme: const IconThemeData(color: textSecondary),
     );
   }
 
-  static ThemeData get darkTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
-        primary: primaryLight,
-        onPrimary: Color(0xFF1E1B4B),
-        secondary: secondary,
-        surface: Color(0xFF1E293B),
-        onSurface: Colors.white,
-      ),
-      scaffoldBackgroundColor: const Color(0xFF0F172A),
-    );
-  }
+  // Back-compat: some code may still reference lightTheme; return the dark theme
+  // so the app is uniformly dark regardless of which getter is wired up.
+  static ThemeData get lightTheme => darkTheme;
 }
 
-// Reusable gradient button widget
+/// Full-width gradient CTA button. Defaults to the brand teal gradient; pass
+/// [gradient] = [AppTheme.goldGradient] for a gold "premium" variant.
 class GradientButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -182,30 +251,33 @@ class GradientButton extends StatelessWidget {
   final IconData? icon;
 
   const GradientButton({
-    Key? key,
+    super.key,
     required this.label,
     this.onPressed,
     this.isLoading = false,
     this.gradient = AppTheme.brandGradient,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onPressed != null && !isLoading;
+    final bool isGold = gradient == AppTheme.goldGradient;
+    final Color fg = isGold ? const Color(0xFF231A05) : const Color(0xFF04120F);
     return SizedBox(
       width: double.infinity,
-      height: 52,
+      height: 54,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: onPressed != null ? gradient : null,
-          color: onPressed == null ? Colors.grey[300] : null,
+          gradient: enabled ? gradient : null,
+          color: enabled ? null : AppTheme.surface2,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: onPressed != null
+          boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: 0.35),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: (isGold ? AppTheme.gold : AppTheme.primary).withValues(alpha: 0.35),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
                   ),
                 ]
               : null,
@@ -213,15 +285,14 @@ class GradientButton extends StatelessWidget {
         child: TextButton(
           onPressed: isLoading ? null : onPressed,
           style: TextButton.styleFrom(
-            foregroundColor: Colors.white,
+            foregroundColor: enabled ? fg : AppTheme.textHint,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           child: isLoading
-              ? const SizedBox(
-                  width: 22, height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5, color: Colors.white,
-                  ),
+              ? SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5, color: fg),
                 )
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -230,12 +301,14 @@ class GradientButton extends StatelessWidget {
                       Icon(icon, size: 18),
                       const SizedBox(width: 8),
                     ],
-                    Text(label,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
-                        )),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
                   ],
                 ),
         ),

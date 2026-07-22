@@ -22,7 +22,7 @@ void main() async {
 }
 
 class KanavuMeipada extends ConsumerWidget {
-  const KanavuMeipada({Key? key}) : super(key: key);
+  const KanavuMeipada({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,9 +30,9 @@ class KanavuMeipada extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'KanavuMeipada',
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: ThemeMode.dark,
       routerConfig: goRouter,
       debugShowCheckedModeBanner: false,
     );

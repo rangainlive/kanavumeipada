@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/subject_model.dart';
+import '../../../core/theme/app_theme.dart';
 
-/// Language toggle button. Use [onLight] = true when placed inside a white /
-/// light AppBar. Default (false) is white text for dark/gradient backgrounds.
+/// EN / தமிழ் language toggle. [onLight] is kept for call-site compatibility;
+/// in the dark theme it selects a teal-tinted style for solid surface app bars,
+/// while the default is a translucent "glass" style for gradient heroes.
 class LangToggleButton extends ConsumerWidget {
   final bool onLight;
   const LangToggleButton({super.key, this.onLight = false});
@@ -12,11 +14,16 @@ class LangToggleButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isTamil = ref.watch(studyLangProvider);
 
-    final fg = onLight ? const Color(0xFF374151) : Colors.white;
-    final activeBg = onLight
-        ? const Color(0xFF059669).withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.3);
-    final inactiveBg = onLight ? Colors.transparent : Colors.white.withValues(alpha: 0.15);
+    final Color fg = onLight ? AppTheme.textPrimary : Colors.white;
+    final Color activeBg = onLight
+        ? AppTheme.primary.withValues(alpha: 0.18)
+        : Colors.white.withValues(alpha: 0.22);
+    final Color inactiveBg = onLight
+        ? AppTheme.surface2
+        : Colors.white.withValues(alpha: 0.12);
+    final Color borderCol = isTamil
+        ? AppTheme.primary.withValues(alpha: 0.6)
+        : fg.withValues(alpha: 0.35);
 
     return GestureDetector(
       onTap: () => ref.read(studyLangProvider.notifier).state = !isTamil,
@@ -26,7 +33,7 @@ class LangToggleButton extends ConsumerWidget {
         decoration: BoxDecoration(
           color: isTamil ? activeBg : inactiveBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: fg.withValues(alpha: 0.4)),
+          border: Border.all(color: borderCol),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -3,52 +3,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_widgets.dart';
 
 class _ExamOption {
   final String key;
   final String label;
   final String emoji;
-  final Color color;
-  const _ExamOption(this.key, this.label, this.emoji, this.color);
+  final bool comingSoon;
+  const _ExamOption(this.key, this.label, this.emoji, {this.comingSoon = false});
 }
 
+// Only TNPSC is available today; the rest are shown but disabled ("Soon").
 const _exams = [
-  _ExamOption('UPSC', 'UPSC', '🏛️', Color(0xFF7C3AED)),
-  _ExamOption('TNPSC', 'TNPSC', '🌴', Color(0xFF059669)),
-  _ExamOption('SSC', 'SSC', '⚖️', Color(0xFFD97706)),
-  _ExamOption('Banking', 'Banking', '🏦', Color(0xFF0EA5E9)),
-  _ExamOption('NEET', 'NEET', '🩺', Color(0xFFEF4444)),
-  _ExamOption('JEE', 'JEE', '🔬', Color(0xFFEC4899)),
-  _ExamOption('Other', 'Other Exams', '📚', Color(0xFF64748B)),
+  _ExamOption('TNPSC', 'TNPSC', '🌴'),
+  _ExamOption('UPSC', 'UPSC', '🏛️', comingSoon: true),
+  _ExamOption('SSC', 'SSC', '⚖️', comingSoon: true),
+  _ExamOption('Banking', 'Banking', '🏦', comingSoon: true),
+  _ExamOption('NEET', 'NEET', '🩺', comingSoon: true),
+  _ExamOption('JEE', 'JEE', '🔬', comingSoon: true),
 ];
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
-  const ProfileSetupScreen({Key? key}) : super(key: key);
+  const ProfileSetupScreen({super.key});
 
   @override
   ConsumerState<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
-class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
-    with SingleTickerProviderStateMixin {
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final _nameController = TextEditingController();
-  final Set<String> _selected = {};
-  late AnimationController _animController;
+  // Single-select; TNPSC pre-selected since it's the only available exam.
+  String _selectedExam = 'TNPSC';
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    _animController.forward();
-    // Pre-fill name if already set
     final user = ref.read(authProvider).user;
     if (user?.name != null) _nameController.text = user!.name!;
   }
 
   @override
   void dispose() {
-    _animController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -59,22 +54,14 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
       _showSnack('Please enter your name');
       return;
     }
-    if (_selected.isEmpty) {
-      _showSnack('Please select at least one exam');
-      return;
-    }
     ref.read(authProvider.notifier).updateProfile(
           name: name,
-          examTarget: _selected.join(','),
+          examTarget: _selectedExam,
         );
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -89,20 +76,18 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
     });
 
     return Scaffold(
-      backgroundColor: AppTheme.bgLight,
+      backgroundColor: AppTheme.bg,
       body: Stack(
         children: [
-          // Header gradient
+          // Gradient hero header
           Positioned(
-            top: 0, left: 0, right: 0,
-            height: 200,
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 210,
             child: Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF312E81), Color(0xFF4338CA)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: AppTheme.brandGradientDeep,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(32),
                   bottomRight: Radius.circular(32),
@@ -110,23 +95,23 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
               ),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Welcome! 👋',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: Colors.white.withValues(alpha: 0.82),
                           fontSize: 14,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       const Text(
                         'Set Up Your Profile',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 26,
+                          fontSize: 27,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.4,
                         ),
@@ -135,7 +120,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
                       Text(
                         'Personalize your exam prep journey',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: Colors.white.withValues(alpha: 0.72),
                           fontSize: 13,
                         ),
                       ),
@@ -148,25 +133,15 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
 
           // Scrollable content
           Positioned.fill(
-            top: 155,
+            top: 165,
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(18, 0, 18, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Name card
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.07),
-                          blurRadius: 20,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
+                  AppCard(
+                    glow: true,
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,15 +154,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
                             color: AppTheme.textSecondary,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         TextField(
                           controller: _nameController,
-                          style: const TextStyle(
-                              fontSize: 16, color: AppTheme.textPrimary),
+                          style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary),
                           decoration: const InputDecoration(
                             hintText: 'Enter your full name',
-                            prefixIcon: Icon(Icons.person_outline_rounded,
-                                size: 20),
+                            prefixIcon: Icon(Icons.person_outline_rounded, size: 20),
                           ),
                         ),
                       ],
@@ -197,76 +170,35 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
                   const SizedBox(height: 16),
 
                   // Exam selection card
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.07),
-                          blurRadius: 20,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
+                  AppCard(
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            const Text(
-                              'Exam Targets',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                            const Spacer(),
-                            if (_selected.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  '${_selected.length} selected',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
-                              ),
-                          ],
+                        const Text(
+                          'Choose Your Exam',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: 6),
-                        Text(
-                          'Select all exams you\'re preparing for',
-                          style: TextStyle(
-                              fontSize: 12.5, color: AppTheme.textHint),
+                        const Text(
+                          'More exams are on the way — TNPSC is available now',
+                          style: TextStyle(fontSize: 12.5, color: AppTheme.textHint),
                         ),
                         const SizedBox(height: 16),
                         Wrap(
                           spacing: 10,
                           runSpacing: 10,
                           children: _exams.map((exam) {
-                            final isSelected = _selected.contains(exam.key);
                             return _ExamChip(
                               exam: exam,
-                              isSelected: isSelected,
-                              onTap: () {
-                                setState(() {
-                                  if (isSelected) {
-                                    _selected.remove(exam.key);
-                                  } else {
-                                    _selected.add(exam.key);
-                                  }
-                                });
-                              },
+                              isSelected: _selectedExam == exam.key,
+                              onTap: exam.comingSoon
+                                  ? () => _showSnack('${exam.label} is coming soon')
+                                  : () => setState(() => _selectedExam = exam.key),
                             );
                           }).toList(),
                         ),
@@ -279,24 +211,21 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
                   // Region info
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.accent.withValues(alpha: 0.08),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color: AppTheme.accent.withValues(alpha: 0.2)),
+                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25)),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
-                        Icon(Icons.location_on_rounded,
-                            color: AppTheme.accent, size: 18),
+                        const Icon(Icons.location_on_rounded, color: AppTheme.primaryGlow, size: 18),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Currently supporting Tamil Nadu region. More states coming soon!',
                             style: TextStyle(
                               fontSize: 12.5,
-                              color: Color(0xFF065F46),
+                              color: AppTheme.primaryGlow.withValues(alpha: 0.95),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -312,13 +241,11 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.error.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: AppTheme.error.withValues(alpha: 0.2)),
+                        color: AppTheme.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
                       ),
-                      child: Text(authState.error!,
-                          style: const TextStyle(color: AppTheme.error)),
+                      child: Text(authState.error!, style: const TextStyle(color: AppTheme.error)),
                     ),
 
                   GradientButton(
@@ -329,11 +256,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
                   ),
 
                   const SizedBox(height: 12),
-                  Center(
+                  const Center(
                     child: Text(
                       'You can update this later in your profile',
-                      style: TextStyle(
-                          color: AppTheme.textHint, fontSize: 12),
+                      style: TextStyle(color: AppTheme.textHint, fontSize: 12),
                     ),
                   ),
                 ],
@@ -346,7 +272,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
   }
 }
 
-class _ExamChip extends StatefulWidget {
+class _ExamChip extends StatelessWidget {
   final _ExamOption exam;
   final bool isSelected;
   final VoidCallback onTap;
@@ -358,82 +284,76 @@ class _ExamChip extends StatefulWidget {
   });
 
   @override
-  State<_ExamChip> createState() => _ExamChipState();
-}
-
-class _ExamChipState extends State<_ExamChip>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _scaleAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 150));
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.93)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final color = widget.exam.color;
-    final selected = widget.isSelected;
+    final soon = exam.comingSoon;
+    final Color fill = isSelected
+        ? AppTheme.primary
+        : (soon ? AppTheme.surface2 : AppTheme.primary.withValues(alpha: 0.1));
+    final Color borderCol = isSelected
+        ? AppTheme.primary
+        : (soon ? AppTheme.border : AppTheme.primary.withValues(alpha: 0.35));
+    final Color labelCol = isSelected
+        ? const Color(0xFF04120F)
+        : (soon ? AppTheme.textHint : AppTheme.primaryGlow);
 
     return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) {
-        _ctrl.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _ctrl.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnim,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? color : color.withValues(alpha: 0.07),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? color : color.withValues(alpha: 0.25),
-              width: selected ? 1.5 : 1,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderCol, width: isSelected ? 1.5 : 1),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Opacity(
+              opacity: soon ? 0.6 : 1,
+              child: Text(exam.emoji, style: const TextStyle(fontSize: 16)),
             ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    )
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(widget.exam.emoji, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 6),
+            Text(
+              exam.label,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: labelCol,
+              ),
+            ),
+            if (isSelected) ...[
               const SizedBox(width: 6),
-              Text(
-                widget.exam.label,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? Colors.white : color,
+              const Icon(Icons.check_circle, color: Color(0xFF04120F), size: 14),
+            ],
+            if (soon) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.gold.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Soon',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.gold,
+                  ),
                 ),
               ),
-              if (selected) ...[
-                const SizedBox(width: 6),
-                const Icon(Icons.check_circle, color: Colors.white, size: 14),
-              ],
             ],
-          ),
+          ],
         ),
       ),
     );

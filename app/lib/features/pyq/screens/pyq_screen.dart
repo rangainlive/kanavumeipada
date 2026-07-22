@@ -23,18 +23,24 @@ class _PyqScreenState extends ConsumerState<PyqScreen> {
   Widget build(BuildContext context) {
     final isTamil = ref.watch(studyLangProvider);
     final topicsAsync = ref.watch(pyqTopicsProvider(widget.subjectId));
-    final questionsAsync = ref.watch(
-      pyqQuestionsProvider(PyqQuestionsArgs(widget.subjectId, _selectedTopic)),
-    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
         backgroundColor: _primary,
         foregroundColor: Colors.white,
+        leading: _selectedTopic != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => setState(() => _selectedTopic = null),
+              )
+            : null,
         title: Text(
-          isTamil ? 'முந்தைய ஆண்டு வினாக்கள்' : 'Previous Year Questions',
+          _selectedTopic != null
+              ? _toTitleCase(_selectedTopic!)
+              : (isTamil ? 'முந்தைய ஆண்டு வினாக்கள்' : 'Previous Year Questions'),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           const LangToggleButton(),
@@ -45,65 +51,17 @@ class _PyqScreenState extends ConsumerState<PyqScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Topic filter chips
-          topicsAsync.when(
-            loading: () => const SizedBox(height: 48),
-            error: (_, _) => const SizedBox.shrink(),
-            data: (topics) => SizedBox(
-              height: 48,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                children: [
-                  _TopicChip(
-                    label: isTamil ? 'அனைத்தும்' : 'All',
-                    selected: _selectedTopic == null,
-                    onTap: () => setState(() => _selectedTopic = null),
-                  ),
-                  ...topics.map((t) => _TopicChip(
-                        label: '${_toTitleCase(t.topic)} (${t.count})',
-                        selected: _selectedTopic == t.topic,
-                        onTap: () => setState(() => _selectedTopic = t.topic),
-                      )),
-                ],
-              ),
+      body: _selectedTopic == null
+          ? _TopicSectionList(
+              topicsAsync: topicsAsync,
+              isTamil: isTamil,
+              onSelect: (t) => setState(() => _selectedTopic = t),
+            )
+          : _TopicQuestionList(
+              subjectId: widget.subjectId,
+              topic: _selectedTopic!,
+              isTamil: isTamil,
             ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: questionsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator(color: _primary)),
-              error: (e, _) => Center(
-                child: Text(
-                  isTamil ? 'வினாக்களை ஏற்ற முடியவில்லை' : 'Could not load questions',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ),
-              data: (questions) {
-                if (questions.isEmpty) {
-                  return Center(
-                    child: Text(
-                      isTamil ? 'வினாக்கள் இல்லை' : 'No questions found',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 40),
-                  itemCount: questions.length,
-                  itemBuilder: (ctx, i) => _PyqCard(
-                    question: questions[i],
-                    index: i,
-                    isTamil: isTamil,
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -114,26 +72,184 @@ class _PyqScreenState extends ConsumerState<PyqScreen> {
       .join(' ');
 }
 
-class _TopicChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _TopicChip({required this.label, required this.selected, required this.onTap});
+// Vertical, section-wise list of topic cards (one per PYQ topic).
+class _TopicSectionList extends StatelessWidget {
+  final AsyncValue<List<PyqTopic>> topicsAsync;
+  final bool isTamil;
+  final ValueChanged<String> onSelect;
+  const _TopicSectionList({required this.topicsAsync, required this.isTamil, required this.onSelect});
+
+  static const _primary = Color(0xFF059669);
+  static const _icons = [
+    Icons.account_balance_rounded,
+    Icons.trending_up_rounded,
+    Icons.groups_rounded,
+    Icons.public_rounded,
+    Icons.school_rounded,
+    Icons.gavel_rounded,
+    Icons.eco_rounded,
+    Icons.factory_rounded,
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label, style: const TextStyle(fontSize: 12.5)),
-        selected: selected,
-        selectedColor: const Color(0xFF059669).withValues(alpha: 0.15),
-        labelStyle: TextStyle(
-          color: selected ? const Color(0xFF059669) : Colors.grey.shade700,
-          fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+    return topicsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator(color: _primary)),
+      error: (e, _) => Center(
+        child: Text(
+          isTamil ? 'தலைப்புகளை ஏற்ற முடியவில்லை' : 'Could not load topics',
+          style: const TextStyle(color: Colors.grey),
         ),
-        onSelected: (_) => onTap(),
       ),
+      data: (topics) {
+        if (topics.isEmpty) {
+          return Center(
+            child: Text(
+              isTamil ? 'இன்னும் வினாக்கள் இல்லை' : 'No questions yet',
+              style: const TextStyle(color: Colors.grey),
+            ),
+          );
+        }
+        final total = topics.fold<int>(0, (sum, t) => sum + t.count);
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 40),
+          itemCount: topics.length + 1,
+          itemBuilder: (ctx, i) {
+            if (i == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10, left: 2),
+                child: Text(
+                  isTamil
+                      ? '$total வினாக்கள் · ${topics.length} பிரிவுகள்'
+                      : '$total questions · ${topics.length} sections',
+                  style: const TextStyle(
+                      fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF6B7280)),
+                ),
+              );
+            }
+            final t = topics[i - 1];
+            return _TopicSectionCard(
+              topic: t,
+              icon: _icons[(i - 1) % _icons.length],
+              onTap: () => onSelect(t.topic),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _TopicSectionCard extends StatelessWidget {
+  final PyqTopic topic;
+  final IconData icon;
+  final VoidCallback onTap;
+  const _TopicSectionCard({required this.topic, required this.icon, required this.onTap});
+
+  static const _primary = Color(0xFF059669);
+
+  static String _toTitleCase(String s) => s
+      .toLowerCase()
+      .split(' ')
+      .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+      .join(' ');
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: _primary, size: 21),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                _toTitleCase(topic.topic),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${topic.count}',
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)),
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF9CA3AF), size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TopicQuestionList extends ConsumerWidget {
+  final String subjectId;
+  final String topic;
+  final bool isTamil;
+  const _TopicQuestionList({required this.subjectId, required this.topic, required this.isTamil});
+
+  static const _primary = Color(0xFF059669);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final questionsAsync = ref.watch(pyqQuestionsProvider(PyqQuestionsArgs(subjectId, topic)));
+    return questionsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator(color: _primary)),
+      error: (e, _) => Center(
+        child: Text(
+          isTamil ? 'வினாக்களை ஏற்ற முடியவில்லை' : 'Could not load questions',
+          style: const TextStyle(color: Colors.grey),
+        ),
+      ),
+      data: (questions) {
+        if (questions.isEmpty) {
+          return Center(
+            child: Text(
+              isTamil ? 'வினாக்கள் இல்லை' : 'No questions found',
+              style: const TextStyle(color: Colors.grey),
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 40),
+          itemCount: questions.length,
+          itemBuilder: (ctx, i) => _PyqCard(
+            question: questions[i],
+            index: i,
+            isTamil: isTamil,
+          ),
+        );
+      },
     );
   }
 }
