@@ -32,9 +32,9 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     final isTamil = ref.watch(studyLangProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1413),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Color(0xFF11201E),
+        backgroundColor: Color(0xD110201E),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(

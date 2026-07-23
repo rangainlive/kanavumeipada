@@ -90,7 +90,7 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
     final isTamil = ref.watch(studyLangProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bgLight,
+      backgroundColor: Colors.transparent,
       body: NestedScrollView(
         headerSliverBuilder: (_, innerBoxScrolled) => [
           SliverToBoxAdapter(
@@ -187,7 +187,7 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
                       child: TabBar(
                         controller: _tabs,
                         indicator: BoxDecoration(
-                          color: Color(0xFF11201E),
+                          color: Color(0xD110201E),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         indicatorSize: TabBarIndicatorSize.tab,
@@ -260,7 +260,7 @@ class _ArenaTab extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
-          color: Color(0xFF11201E),
+          color: Color(0xD110201E),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -413,7 +413,7 @@ class _ChallengeCard extends StatelessWidget {
     final isActive = challenge.status == 'active';
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF11201E),
+        color: Color(0xD110201E),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(

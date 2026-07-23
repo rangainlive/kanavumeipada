@@ -18,7 +18,7 @@ class ProfileScreen extends ConsumerWidget {
     final exams = (user.examTarget ?? '').split(',').where((e) => e.isNotEmpty).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.bgLight,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           // Gradient hero
@@ -113,7 +113,7 @@ class ProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFF11201E),
+                    color: Color(0xD110201E),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -185,7 +185,7 @@ class ProfileScreen extends ConsumerWidget {
                           child: LinearProgressIndicator(
                             value: (user.xp % 100) / 100.0,
                             minHeight: 10,
-                            backgroundColor: AppTheme.bgLight,
+                            backgroundColor: Colors.transparent,
                             valueColor: const AlwaysStoppedAnimation<Color>(
                                 AppTheme.primary),
                           ),
@@ -332,7 +332,7 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
-          color: Color(0xFF11201E),
+          color: Color(0xD110201E),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -435,7 +435,7 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF11201E),
+        color: Color(0xD110201E),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(

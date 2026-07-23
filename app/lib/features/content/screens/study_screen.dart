@@ -18,7 +18,7 @@ class StudyScreen extends ConsumerWidget {
     final dateStr = '${months[now.month]} ${now.day}, ${now.year}';
 
     return Scaffold(
-      backgroundColor: AppTheme.bgLight,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           // Header

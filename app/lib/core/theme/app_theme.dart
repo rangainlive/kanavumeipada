@@ -130,11 +130,13 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: bg,
+      // Transparent so the global AuroraBackground (wired in main.dart) shows
+      // through every screen.
+      scaffoldBackgroundColor: Colors.transparent,
       textTheme: _textTheme,
 
       appBarTheme: AppBarTheme(
-        backgroundColor: surface,
+        backgroundColor: Colors.transparent,
         foregroundColor: textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,

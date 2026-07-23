@@ -56,7 +56,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final isTamil = ref.watch(studyLangProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1413),
+      backgroundColor: Colors.transparent,
       floatingActionButton: _PostFab(onTap: () => context.push('/feed/create')),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: RefreshIndicator(
@@ -70,7 +70,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             // ── Feed header ─────────────────────────────────────────────
             SliverAppBar(
               pinned: true,
-              backgroundColor: Color(0xFF11201E),
+              backgroundColor: Color(0xD110201E),
               surfaceTintColor: Colors.transparent,
               scrolledUnderElevation: 1,
               shadowColor: Colors.black.withValues(alpha: 0.08),
@@ -397,7 +397,7 @@ class _PostCardState extends ConsumerState<_PostCard>
         onTap: widget.onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Color(0xFF11201E),
+            color: Color(0xD110201E),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(

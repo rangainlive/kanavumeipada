@@ -27,7 +27,7 @@ class TestsScreen extends ConsumerWidget {
     final isTamil = ref.watch(studyLangProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bgLight,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           // Header
@@ -112,7 +112,7 @@ class TestsScreen extends ConsumerWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Color(0xFF11201E),
+                                color: Color(0xD110201E),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -137,7 +137,7 @@ class TestsScreen extends ConsumerWidget {
           // Stats strip
           SliverToBoxAdapter(
             child: Container(
-              color: Color(0xFF11201E),
+              color: Color(0xD110201E),
               padding: const EdgeInsets.symmetric(vertical: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,

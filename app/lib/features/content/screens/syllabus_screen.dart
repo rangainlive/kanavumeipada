@@ -510,7 +510,7 @@ class SyllabusScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0A1413),
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -827,7 +827,7 @@ class _UnitCardState extends State<_UnitCard> {
         ],
       ),
       child: Material(
-        color: Color(0xFF11201E),
+        color: Color(0xD110201E),
         borderRadius: BorderRadius.circular(14),
         clipBehavior: Clip.hardEdge,
         child: Theme(

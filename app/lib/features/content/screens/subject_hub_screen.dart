@@ -24,7 +24,7 @@ class SubjectHubScreen extends ConsumerWidget {
     final hasDbSubject = subject != null && subject!.id.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1413),
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -169,7 +169,7 @@ class _FeatureCard extends ConsumerWidget {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Color(0xFF11201E),
+            color: Color(0xD110201E),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isLocked

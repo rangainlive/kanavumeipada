@@ -25,7 +25,7 @@ class _PyqScreenState extends ConsumerState<PyqScreen> {
     final topicsAsync = ref.watch(pyqTopicsProvider(widget.subjectId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1413),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: _primary,
         foregroundColor: Colors.white,
@@ -162,7 +162,7 @@ class _TopicSectionCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Color(0xFF11201E),
+          color: Color(0xD110201E),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFF23403B)),
           boxShadow: [
@@ -275,7 +275,7 @@ class _PyqCardState extends State<_PyqCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF11201E),
+        color: Color(0xD110201E),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFF23403B)),
         boxShadow: [

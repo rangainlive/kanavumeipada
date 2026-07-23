@@ -148,7 +148,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1413),
+      backgroundColor: Colors.transparent,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -252,7 +252,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
             padding: EdgeInsets.only(bottom: bottom),
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xFF11201E),
+                color: Color(0xD110201E),
                 border: Border(
                     top: BorderSide(
                         color: const Color(0xFF23403B), width: 1)),
@@ -343,7 +343,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF11201E),
+      backgroundColor: const Color(0xD110201E),
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -399,7 +399,7 @@ class _FullPostCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFF11201E),
+        color: Color(0xD110201E),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -547,7 +547,7 @@ class _CommentBubble extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                       decoration: BoxDecoration(
-                        color: Color(0xFF11201E),
+                        color: Color(0xD110201E),
                         borderRadius: const BorderRadius.only(
                           topRight: Radius.circular(16),
                           bottomLeft: Radius.circular(16),

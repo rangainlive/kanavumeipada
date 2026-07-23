@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/app_widgets.dart';
 import 'core/router/app_router.dart';
 import 'features/auth/services/google_sign_in_web_helper.dart';
 
@@ -35,6 +36,9 @@ class KanavuMeipada extends ConsumerWidget {
       themeMode: ThemeMode.dark,
       routerConfig: goRouter,
       debugShowCheckedModeBanner: false,
+      // Global aurora backdrop behind every screen (scaffolds are transparent).
+      builder: (context, child) =>
+          AuroraBackground(child: child ?? const SizedBox.shrink()),
     );
   }
 }

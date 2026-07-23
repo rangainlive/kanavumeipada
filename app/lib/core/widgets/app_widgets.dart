@@ -169,9 +169,11 @@ class _AppCardState extends State<AppCard> {
         padding: widget.padding,
         margin: widget.margin,
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          // Slightly translucent so the aurora glow subtly shows through,
+          // tying every card into the Aurora-Glass background.
+          color: AppTheme.surface.withValues(alpha: 0.82),
           borderRadius: BorderRadius.circular(widget.radius),
-          border: Border.all(color: widget.borderColor ?? AppTheme.border),
+          border: Border.all(color: widget.borderColor ?? AppTheme.glassBorder),
           boxShadow: widget.glow ? AppTheme.glow(widget.glowColor) : AppTheme.cardShadow,
         ),
         child: widget.child,

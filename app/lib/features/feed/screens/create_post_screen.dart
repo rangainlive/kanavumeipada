@@ -157,9 +157,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF11201E),
+      backgroundColor: Color(0xD110201E),
       appBar: AppBar(
-        backgroundColor: Color(0xFF11201E),
+        backgroundColor: Color(0xD110201E),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary),
@@ -215,7 +215,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
         children: [
           // Post type selector
           Container(
-            color: Color(0xFF11201E),
+            color: Color(0xD110201E),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Row(
               children: _PostKind.values.map((k) {

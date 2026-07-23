@@ -76,7 +76,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppTheme.bg,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           // Gradient hero header

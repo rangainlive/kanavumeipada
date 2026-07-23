@@ -17,7 +17,7 @@ class PyqAdminScreen extends ConsumerWidget {
     final unmarkedAsync = ref.watch(pyqUnmarkedProvider(subjectId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1413),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: _primary,
         foregroundColor: Colors.white,
@@ -112,7 +112,7 @@ class _AdminQuestionCardState extends ConsumerState<_AdminQuestionCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF11201E),
+        color: Color(0xD110201E),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFF23403B)),
         boxShadow: [

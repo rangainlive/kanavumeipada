@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
@@ -21,37 +22,44 @@ class MainShell extends StatelessWidget {
     if (selected < 0) selected = 0;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBody: true,
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          border: const Border(top: BorderSide(color: AppTheme.border)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
+      bottomNavigationBar: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.surface.withValues(alpha: 0.72),
+              border: Border(top: BorderSide(color: AppTheme.glassBorder)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, -4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 64,
-            child: Row(
-              children: List.generate(_destinations.length, (i) {
-                final dest = _destinations[i];
-                final isActive = i == selected;
-                return Expanded(
-                  child: _NavItem(
-                    dest: dest,
-                    isActive: isActive,
-                    onTap: () {
-                      if (!isActive) context.go(dest.route);
-                    },
-                  ),
-                );
-              }),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 64,
+                child: Row(
+                  children: List.generate(_destinations.length, (i) {
+                    final dest = _destinations[i];
+                    final isActive = i == selected;
+                    return Expanded(
+                      child: _NavItem(
+                        dest: dest,
+                        isActive: isActive,
+                        onTap: () {
+                          if (!isActive) context.go(dest.route);
+                        },
+                      ),
+                    );
+                  }),
+                ),
+              ),
             ),
           ),
         ),
