@@ -1,5 +1,133 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+
+/// Ambient "aurora" background: a near-black canvas lit by large, soft glowing
+/// color orbs (teal + emerald + gold). Wrap a screen's body in this and keep
+/// the Scaffold background transparent for the premium Aurora-Glass look.
+class AuroraBackground extends StatelessWidget {
+  final Widget child;
+  final bool dense; // dense = a bit more glow (for hero/login screens)
+  const AuroraBackground({super.key, required this.child, this.dense = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final k = dense ? 1.0 : 0.72;
+    return Stack(
+      children: [
+        const Positioned.fill(child: ColoredBox(color: AppTheme.bg)),
+        _orb(top: -140, left: -110, size: 420, color: AppTheme.primary, opacity: 0.34 * k),
+        _orb(top: -80, right: -120, size: 360, color: AppTheme.primaryGlow, opacity: 0.22 * k),
+        _orb(top: 180, right: -160, size: 300, color: AppTheme.gold, opacity: 0.12 * k),
+        _orb(bottom: -120, left: -130, size: 420, color: AppTheme.primaryDim, opacity: 0.24 * k),
+        _orb(bottom: 40, right: -80, size: 300, color: AppTheme.gold, opacity: 0.10 * k),
+        // Subtle darkening vignette so content stays readable over the glow.
+        const Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                radius: 1.1,
+                colors: [Colors.transparent, Color(0x66040807)],
+                stops: [0.55, 1.0],
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(child: child),
+      ],
+    );
+  }
+
+  Widget _orb({
+    double? top,
+    double? left,
+    double? right,
+    double? bottom,
+    required double size,
+    required Color color,
+    required double opacity,
+  }) {
+    return Positioned(
+      top: top,
+      left: left,
+      right: right,
+      bottom: bottom,
+      child: IgnorePointer(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [color.withValues(alpha: opacity), color.withValues(alpha: 0)],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Frosted glassmorphic panel: blurs whatever is behind it, with a translucent
+/// gradient fill, a light top-edge border and a soft drop shadow. The core of
+/// the Aurora-Glass card language.
+class GlassPanel extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final double radius;
+  final double blur;
+  final bool strong;
+  final VoidCallback? onTap;
+  const GlassPanel({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(20),
+    this.radius = 24,
+    this.blur = 18,
+    this.strong = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final panel = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.38),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: strong ? 0.14 : 0.10),
+                  Colors.white.withValues(alpha: strong ? 0.06 : 0.035),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(color: AppTheme.glassBorder),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+    if (onTap == null) return panel;
+    return GestureDetector(onTap: onTap, child: panel);
+  }
+}
 
 /// Standard dark surface card. Optional [glow] adds a teal halo (for hero/primary
 /// cards), [onTap] makes it a pressable surface with a subtle press-scale.

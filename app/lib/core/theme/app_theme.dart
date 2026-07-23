@@ -9,10 +9,15 @@ import 'package:google_fonts/google_fonts.dart';
 /// future retheme is a one-file change.
 class AppTheme {
   // ── Surfaces / background ────────────────────────────────────────────────
-  static const Color bg = Color(0xFF0A1413); // scaffold — deep teal-black
-  static const Color surface = Color(0xFF11201E); // cards, app bars
-  static const Color surface2 = Color(0xFF172B28); // elevated cards, sheets, inputs
-  static const Color border = Color(0xFF23403B); // hairline borders / dividers
+  static const Color bg = Color(0xFF060D0C); // scaffold — near-black teal (aurora canvas)
+  static const Color surface = Color(0xFF10201E); // solid cards, app bars
+  static const Color surface2 = Color(0xFF17302C); // elevated cards, sheets, inputs
+  static const Color border = Color(0xFF244742); // hairline borders / dividers
+
+  // Glass tokens (used with BackdropFilter for the Aurora-Glass look).
+  static Color get glassFill => Colors.white.withValues(alpha: 0.07);
+  static Color get glassFillStrong => Colors.white.withValues(alpha: 0.10);
+  static Color get glassBorder => Colors.white.withValues(alpha: 0.16);
 
   // ── Brand ────────────────────────────────────────────────────────────────
   static const Color primary = Color(0xFF14B8A6); // brand teal
