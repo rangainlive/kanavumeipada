@@ -15,7 +15,7 @@ class CategoryScreen extends ConsumerWidget {
     final colors = colorsFor(category);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFF0A1413),
       body: CustomScrollView(
         slivers: [
           // Header
@@ -84,7 +84,7 @@ class CategoryScreen extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(40),
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.wifi_off_rounded, size: 48, color: Color(0xFF9CA3AF)),
+                      const Icon(Icons.wifi_off_rounded, size: 48, color: Color(0xFF5F736F)),
                       const SizedBox(height: 12),
                       const Text('Could not load',
                           style: TextStyle(fontWeight: FontWeight.w600)),
@@ -171,7 +171,7 @@ class CategoryScreen extends ConsumerWidget {
                             style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF374151))),
+                                color: Color(0xFF9DB2AD))),
                       ]),
                     ),
                   );
@@ -243,11 +243,11 @@ class _GroupCard extends ConsumerWidget {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Color(0xFF11201E),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: item.isLocked
-                  ? const Color(0xFFE5E7EB)
+                  ? const Color(0xFF23403B)
                   : accentColor.withValues(alpha: 0.25),
               width: 1.5,
             ),
@@ -271,7 +271,7 @@ class _GroupCard extends ConsumerWidget {
                   height: 52,
                   decoration: BoxDecoration(
                     color: item.isLocked
-                        ? const Color(0xFFF3F4F6)
+                        ? const Color(0xFF172B28)
                         : accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -291,8 +291,8 @@ class _GroupCard extends ConsumerWidget {
                             fontWeight: FontWeight.w800,
                             fontSize: 18,
                             color: item.isLocked
-                                ? const Color(0xFF9CA3AF)
-                                : const Color(0xFF111827),
+                                ? const Color(0xFF5F736F)
+                                : const Color(0xFFEAF2F0),
                           )),
                       const SizedBox(height: 3),
                       Text(
@@ -302,7 +302,7 @@ class _GroupCard extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 12.5,
                           color: item.isLocked
-                              ? const Color(0xFFD1D5DB)
+                              ? const Color(0xFF5F736F)
                               : accentColor,
                           fontWeight: FontWeight.w500,
                         ),
@@ -313,7 +313,7 @@ class _GroupCard extends ConsumerWidget {
                 // Arrow or lock
                 item.isLocked
                     ? const Icon(Icons.lock_outline_rounded,
-                        color: Color(0xFFD1D5DB), size: 20)
+                        color: Color(0xFF5F736F), size: 20)
                     : Icon(Icons.arrow_forward_ios_rounded,
                         color: accentColor, size: 16),
               ],

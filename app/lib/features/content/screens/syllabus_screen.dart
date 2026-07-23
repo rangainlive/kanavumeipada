@@ -48,7 +48,7 @@ final _prelimUnits = <_Unit>[
     num: 'I',
     title: 'General Science',
     tamilTitle: 'பொது அறிவியல்',
-    color: const Color(0xFF4F46E5),
+    color: const Color(0xFF0D9488),
     topics: [
       'Scientific Knowledge & Scientific Temper — Power of Reasoning, Rote Learning vs Conceptual Learning, Science as a tool to understand the past, present and future',
       'Nature of Universe — General Scientific Laws, Mechanics, Properties of Matter, Force, Motion and Energy — Everyday application of Mechanics, Electricity & Magnetism, Light, Sound, Heat, Nuclear Physics, Laser, Electronics and Communications',
@@ -90,7 +90,7 @@ final _prelimUnits = <_Unit>[
     num: 'III',
     title: 'Geography of India',
     tamilTitle: 'இந்தியப் புவியியல்',
-    color: const Color(0xFF059669),
+    color: const Color(0xFF14B8A6),
     topics: [
       'Location — Physical features, Monsoon, Rainfall, Weather and Climate, Water Resources, Rivers in India, Soil, Minerals and Natural Resources, Forest and Wildlife, Agricultural pattern',
       'Transport — Communication',
@@ -126,7 +126,7 @@ final _prelimUnits = <_Unit>[
     num: 'V',
     title: 'Indian Polity',
     tamilTitle: 'இந்திய அரசியல் அமைப்பு',
-    color: const Color(0xFF7C3AED),
+    color: const Color(0xFF0D9488),
     topics: [
       'Constitution of India — Preamble to the Constitution — Salient features — Union, State and Union Territory',
       'Citizenship, Fundamental Rights, Fundamental Duties, Directive Principles of State Policy',
@@ -148,7 +148,7 @@ final _prelimUnits = <_Unit>[
     num: 'VI',
     title: 'Indian Economy',
     tamilTitle: 'இந்தியப் பொருளாதாரம்',
-    color: const Color(0xFF0891B2),
+    color: const Color(0xFF14B8A6),
     topics: [
       'Nature of Indian Economy — Five year plan models — Planning Commission and NITI Aayog',
       'Sources of revenue — Reserve Bank of India — Fiscal Policy and Monetary Policy — Finance Commission — Resource sharing between Union and State Governments — Goods and Services Tax',
@@ -198,7 +198,7 @@ final _prelimUnits = <_Unit>[
     num: 'IX',
     title: 'Development Administration in Tamil Nadu',
     tamilTitle: 'தமிழ்நாட்டில் வளர்ச்சி நிர்வாகம்',
-    color: const Color(0xFF0E7490),
+    color: const Color(0xFF0D9488),
     topics: [
       'Human Development Indicators in Tamil Nadu and comparative assessment across the Country — Impact of Social Reform Movements in the Socio-Economic Development of Tamil Nadu',
       'Political parties and Welfare schemes for various sections of people — Rationale behind Reservation Policy — Economic trends in Tamil Nadu — Role and impact of social welfare schemes',
@@ -281,13 +281,13 @@ final _mainPapers = <_Paper>[
     tamilTitle: 'பொது ஆய்வு',
     standard: 'Degree Standard',
     tamilStandard: 'பட்டப்படிப்பு தரம்',
-    color: const Color(0xFF4F46E5),
+    color: const Color(0xFF0D9488),
     units: [
       _Unit(
         num: 'I',
         title: 'Modern History of India and Indian Culture',
         tamilTitle: 'இந்தியாவின் நவீன வரலாறும் இந்தியப் பண்பாடும்',
-        color: const Color(0xFF4F46E5),
+        color: const Color(0xFF0D9488),
         topics: [
           'Advent of European invasion — Expansion and consolidation of British rule — Early uprisings — 1857 Revolt — Indian National Congress — Growth of militant movements — National leaders (Gandhi, Nehru, Tagore, Netaji, Ambedkar, Patel, Maulana Abul Kalam Azad) — Era of Acts & Pacts — Second World War and final phase of freedom struggle — Communalism and Partition',
           'Effect of British rule on socio-economic factors — National renaissance — Socio-religious reform movements',
@@ -305,7 +305,7 @@ final _mainPapers = <_Paper>[
         num: 'II',
         title: 'Social Issues in India and Tamil Nadu',
         tamilTitle: 'இந்தியா மற்றும் தமிழ்நாட்டில் சமூகப் பிரச்சினைகள்',
-        color: const Color(0xFF7C3AED),
+        color: const Color(0xFF0D9488),
         topics: [
           'Population Explosion — Unemployment — Child Abuse & Child Labour — Poverty — Rural and Urban Sanitation — Illiteracy',
           'Women Empowerment — Role of Government — Social injustice to Women — Domestic violence, Dowry, Sexual assault — Role of women\'s organisations',
@@ -341,13 +341,13 @@ final _mainPapers = <_Paper>[
     tamilTitle: 'பொது ஆய்வு',
     standard: 'Degree Standard',
     tamilStandard: 'பட்டப்படிப்பு தரம்',
-    color: const Color(0xFF059669),
+    color: const Color(0xFF14B8A6),
     units: [
       _Unit(
         num: 'I',
         title: 'Indian Polity and Emerging Political Trends',
         tamilTitle: 'இந்திய அரசியல் அமைப்பும் வளர்ந்து வரும் அரசியல் போக்குகளும்',
-        color: const Color(0xFF7C3AED),
+        color: const Color(0xFF0D9488),
         topics: [
           'Constitution of India: Historical background, Preamble, Fundamental Rights & Duties, DPSP, Schedules',
           'Union Executive: President, Vice-President, Prime Minister, Council of Ministers, Attorney General of India',
@@ -383,7 +383,7 @@ final _mainPapers = <_Paper>[
         num: 'II',
         title: 'Role and Impact of Science and Technology in Development of India',
         tamilTitle: 'இந்தியாவின் வளர்ச்சியில் அறிவியல் மற்றும் தொழில்நுட்பத்தின் பங்களிப்பு',
-        color: const Color(0xFF0891B2),
+        color: const Color(0xFF14B8A6),
         topics: [
           'Science and Technology — Role, Achievements and Developments — Applications in everyday life — Energy (Conventional and Non-conventional) — Oil exploration — Defence Research Organisations',
           'Advancements in IT, Space, Computers, Robotics, Nano-Technology — Mobile Communication — Remote sensing and its benefits',
@@ -427,13 +427,13 @@ final _mainPapers = <_Paper>[
     tamilTitle: 'பொது ஆய்வு',
     standard: 'Degree Standard',
     tamilStandard: 'பட்டப்படிப்பு தரம்',
-    color: const Color(0xFF0E7490),
+    color: const Color(0xFF0D9488),
     units: [
       _Unit(
         num: 'I',
         title: 'Geography of India with Special Reference to Tamil Nadu',
         tamilTitle: 'இந்திய புவியியல் — தமிழ்நாட்டில் சிறப்பு குறிப்பு',
-        color: const Color(0xFF059669),
+        color: const Color(0xFF14B8A6),
         topics: [
           'Location — Physical features — Major Rivers — Weather & Climate — Monsoon, Rainfall — Natural resources (Soil, Water, Forest, Minerals, Wildlife) — Agricultural pattern — Livestock — Fisheries — Industries — Social-Cultural geography — Population (Growth, Density and Distribution) — Racial, linguistic and major tribes',
           'Oceanography — Bottom relief features of Indian Ocean, Arabian Sea and Bay of Bengal',
@@ -469,7 +469,7 @@ final _mainPapers = <_Paper>[
         num: 'III',
         title: 'Indian Economy — Current Economic Trends',
         tamilTitle: 'இந்தியப் பொருளாதாரம் — நடப்பு பொருளாதார போக்குகள்',
-        color: const Color(0xFF0891B2),
+        color: const Color(0xFF14B8A6),
         topics: [
           'Features of Indian Economy — Demographical profile — National Income — Capital formation — NEP — NITI AYOG — National Development Council',
           'Agriculture — Role, Land reforms, New Agricultural Strategy, Green Revolution — Price Policy, PDS, Subsidy, Food Security — Agricultural Marketing, Crop Insurance, Labour — Rural credit & indebtedness — WTO & Agriculture',
@@ -510,14 +510,14 @@ class SyllabusScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF1F5F9),
+        backgroundColor: const Color(0xFF0A1413),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF059669), Color(0xFF0D9488)],
+                colors: [Color(0xFF14B8A6), Color(0xFF0D9488)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -587,7 +587,7 @@ class _PrelimTab extends StatelessWidget {
           stats: isTamil
               ? ['குறியீடு: 003', '200 வினாக்கள்', '300 மதிப்பெண்கள்', 'பட்டப்படிப்பு தரம்', 'பலவுள் ஒன்று வகை']
               : ['Code No: 003', '200 Questions', '300 Marks', 'Degree Standard', 'Objective Type'],
-          color: const Color(0xFF4338CA),
+          color: const Color(0xFF0D9488),
         ),
         const SizedBox(height: 4),
         ..._prelimUnits.map((u) => _UnitCard(unit: u, isTamil: isTamil)),
@@ -610,7 +610,7 @@ class _MainExamTab extends StatelessWidget {
         stats: isTamil
             ? ['தாள் I: 10-ஆம் வகுப்பு', 'தாள் II–IV: பட்டப்படிப்பு', 'கட்டுரை வகை விடைகள்']
             : ['Paper I: SSLC Std', 'Papers II–IV: Degree Std', 'Essay Type Answers'],
-        color: const Color(0xFF0E7490),
+        color: const Color(0xFF0D9488),
       ),
     ];
 
@@ -813,7 +813,7 @@ class _UnitCardState extends State<_UnitCard> {
         border: Border.all(
           color: _expanded
               ? u.color.withValues(alpha: 0.4)
-              : const Color(0xFFE5E7EB),
+              : const Color(0xFF23403B),
           width: _expanded ? 1.5 : 1,
         ),
         boxShadow: [
@@ -827,7 +827,7 @@ class _UnitCardState extends State<_UnitCard> {
         ],
       ),
       child: Material(
-        color: Colors.white,
+        color: Color(0xFF11201E),
         borderRadius: BorderRadius.circular(14),
         clipBehavior: Clip.hardEdge,
         child: Theme(
@@ -875,13 +875,13 @@ class _UnitCardState extends State<_UnitCard> {
                 style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: Color(0xFF111827))),
+                    color: Color(0xFFEAF2F0))),
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(
                 '${displayTopics.length} ${widget.isTamil ? "தலைப்புகள்" : "topic${displayTopics.length > 1 ? "s" : ""}"}',
                 style: const TextStyle(
-                    color: Color(0xFF9CA3AF), fontSize: 12),
+                    color: Color(0xFF5F736F), fontSize: 12),
               ),
             ),
             trailing: AnimatedRotation(
@@ -936,7 +936,7 @@ class _TopicRow extends StatelessWidget {
                 style: const TextStyle(
                     fontSize: 13.5,
                     height: 1.6,
-                    color: Color(0xFF374151))),
+                    color: Color(0xFF9DB2AD))),
           ),
         ],
       ),

@@ -11,12 +11,12 @@ class _Exam {
 }
 
 const _exams = [
-  _Exam('UPSC',    '🏛️', [Color(0xFF4F46E5), Color(0xFF7C3AED)], 'Civil Services',        'சிவில் சேவைகள்'),
-  _Exam('TNPSC',   '🌴', [Color(0xFF059669), Color(0xFF0EA5E9)], 'State Services',         'மாநில சேவைகள்'),
+  _Exam('UPSC',    '🏛️', [Color(0xFF0D9488), Color(0xFF0D9488)], 'Civil Services',        'சிவில் சேவைகள்'),
+  _Exam('TNPSC',   '🌴', [Color(0xFF14B8A6), Color(0xFF14B8A6)], 'State Services',         'மாநில சேவைகள்'),
   _Exam('SSC',     '⚖️', [Color(0xFFD97706), Color(0xFFF59E0B)], 'Combined Exams',         'ஒருங்கிணைந்த தேர்வுகள்'),
-  _Exam('Banking', '🏦', [Color(0xFF0EA5E9), Color(0xFF4F46E5)], 'PO / Clerk / SO',        'PO / குமாஸ்தா / SO'),
+  _Exam('Banking', '🏦', [Color(0xFF14B8A6), Color(0xFF0D9488)], 'PO / Clerk / SO',        'PO / குமாஸ்தா / SO'),
   _Exam('NEET',    '🩺', [Color(0xFFDC2626), Color(0xFFEC4899)], 'Medical Entrance',       'மருத்துவ நுழைவு'),
-  _Exam('JEE',     '🔬', [Color(0xFF7C3AED), Color(0xFFEC4899)], 'Engineering Entrance',   'பொறியியல் நுழைவு'),
+  _Exam('JEE',     '🔬', [Color(0xFF0D9488), Color(0xFFEC4899)], 'Engineering Entrance',   'பொறியியல் நுழைவு'),
 ];
 
 class TestsScreen extends ConsumerWidget {
@@ -34,11 +34,7 @@ class TestsScreen extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFD97706), Color(0xFFEF4444)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: AppTheme.brandGradientDeep,
               ),
               child: SafeArea(
                 bottom: false,
@@ -116,7 +112,7 @@ class TestsScreen extends ConsumerWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Color(0xFF11201E),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -141,7 +137,7 @@ class TestsScreen extends ConsumerWidget {
           // Stats strip
           SliverToBoxAdapter(
             child: Container(
-              color: Colors.white,
+              color: Color(0xFF11201E),
               padding: const EdgeInsets.symmetric(vertical: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -251,7 +247,7 @@ class TestsScreen extends ConsumerWidget {
 }
 
 Widget _vDivider() => Container(
-    height: 36, width: 1, color: const Color(0xFFE2E8F0));
+    height: 36, width: 1, color: const Color(0xFF23403B));
 
 class _QuickStat extends StatelessWidget {
   final String value, label;

@@ -23,7 +23,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
   int _difficulty = 2;
   String _bloomLevel = 'understand';
 
-  static const _primary = Color(0xFF4338CA);
+  static const _primary = Color(0xFF0D9488);
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +32,9 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
     final isTamil = ref.watch(studyLangProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FF),
+      backgroundColor: const Color(0xFF0A1413),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFF11201E),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(
@@ -428,7 +428,7 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
           style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 14,
-            color: Color(0xFF374151),
+            color: Color(0xFF9DB2AD),
           ),
         ),
       );
@@ -437,9 +437,9 @@ class _GenerateScreenState extends ConsumerState<GenerateScreen> {
       ChoiceChip(
         label: Text(label),
         selected: selected,
-        selectedColor: const Color(0xFF4338CA).withOpacity(0.15),
+        selectedColor: const Color(0xFF0D9488).withOpacity(0.15),
         labelStyle: TextStyle(
-          color: selected ? const Color(0xFF4338CA) : Colors.grey.shade700,
+          color: selected ? const Color(0xFF0D9488) : Colors.grey.shade700,
           fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
         ),
         onSelected: (_) => onTap(),
@@ -461,7 +461,7 @@ class _QuestionCard extends StatelessWidget {
     required this.onReject,
   });
 
-  static const _primary = Color(0xFF4338CA);
+  static const _primary = Color(0xFF0D9488);
 
   @override
   Widget build(BuildContext context) {
@@ -483,7 +483,7 @@ class _QuestionCard extends StatelessWidget {
               ? Colors.green.shade200
               : rejected
                   ? Colors.red.shade200
-                  : const Color(0xFFE5E7EB),
+                  : const Color(0xFF23403B),
         ),
         boxShadow: approved || rejected
             ? null
@@ -522,7 +522,7 @@ class _QuestionCard extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 height: 1.5,
-                color: Color(0xFF111827),
+                color: Color(0xFFEAF2F0),
               ),
             ),
             const SizedBox(height: 12),
@@ -536,12 +536,12 @@ class _QuestionCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isCorrect
                       ? Colors.green.shade50
-                      : const Color(0xFFF9FAFB),
+                      : const Color(0xFF172B28),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isCorrect
                         ? Colors.green.shade300
-                        : const Color(0xFFE5E7EB),
+                        : const Color(0xFF23403B),
                   ),
                 ),
                 child: Row(
@@ -564,7 +564,7 @@ class _QuestionCard extends StatelessWidget {
                           fontSize: 13,
                           color: isCorrect
                               ? Colors.green.shade800
-                              : const Color(0xFF374151),
+                              : const Color(0xFF9DB2AD),
                           fontWeight: isCorrect
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -716,7 +716,7 @@ class _BloomBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFFEDE9FE),
+        color: const Color(0xFF172B28),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
@@ -724,7 +724,7 @@ class _BloomBadge extends StatelessWidget {
         style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF6D28D9)),
+            color: Color(0xFF0D9488)),
       ),
     );
   }

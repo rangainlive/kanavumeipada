@@ -24,7 +24,7 @@ class SubjectHubScreen extends ConsumerWidget {
     final hasDbSubject = subject != null && subject!.id.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFF0A1413),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -85,7 +85,7 @@ class SubjectHubScreen extends ConsumerWidget {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF374151),
+                      color: Color(0xFF9DB2AD),
                     ),
                   ),
                 ),
@@ -121,7 +121,7 @@ class SubjectHubScreen extends ConsumerWidget {
                   emoji: '🎯',
                   title: isTamil ? 'பயிற்சி தேர்வுகள்' : 'Practice Tests',
                   subtitle: isTamil ? 'நேரமிட்ட மாதிரி தேர்வுகள் விரைவில்' : 'Timed mock tests coming soon',
-                  accentColor: const Color(0xFF9CA3AF),
+                  accentColor: const Color(0xFF5F736F),
                   isLocked: true,
                 ),
 
@@ -130,7 +130,7 @@ class SubjectHubScreen extends ConsumerWidget {
                   emoji: '🤖',
                   title: isTamil ? 'AI வினா உருவாக்கி' : 'AI Question Generator',
                   subtitle: isTamil ? 'உள்ளடக்கத்திலிருந்து MCQ தானாக உருவாக்கம்' : 'Auto-generate MCQs from content',
-                  accentColor: const Color(0xFF9CA3AF),
+                  accentColor: const Color(0xFF5F736F),
                   isLocked: true,
                 ),
               ]),
@@ -169,11 +169,11 @@ class _FeatureCard extends ConsumerWidget {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Color(0xFF11201E),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isLocked
-                  ? const Color(0xFFE5E7EB)
+                  ? const Color(0xFF23403B)
                   : accentColor.withValues(alpha: 0.2),
               width: 1.5,
             ),
@@ -196,7 +196,7 @@ class _FeatureCard extends ConsumerWidget {
                   height: 52,
                   decoration: BoxDecoration(
                     color: isLocked
-                        ? const Color(0xFFF3F4F6)
+                        ? const Color(0xFF172B28)
                         : accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -215,8 +215,8 @@ class _FeatureCard extends ConsumerWidget {
                             fontWeight: FontWeight.w700,
                             fontSize: 15,
                             color: isLocked
-                                ? const Color(0xFF9CA3AF)
-                                : const Color(0xFF111827),
+                                ? const Color(0xFF5F736F)
+                                : const Color(0xFFEAF2F0),
                           )),
                       const SizedBox(height: 3),
                       Text(
@@ -225,7 +225,7 @@ class _FeatureCard extends ConsumerWidget {
                             : subtitle,
                         style: const TextStyle(
                           fontSize: 12.5,
-                          color: Color(0xFF6B7280),
+                          color: Color(0xFF5F736F),
                         ),
                       ),
                     ],
@@ -233,7 +233,7 @@ class _FeatureCard extends ConsumerWidget {
                 ),
                 isLocked
                     ? const Icon(Icons.lock_outline_rounded,
-                        color: Color(0xFFD1D5DB), size: 20)
+                        color: Color(0xFF5F736F), size: 20)
                     : Icon(Icons.arrow_forward_ios_rounded,
                         color: accentColor, size: 16),
               ],

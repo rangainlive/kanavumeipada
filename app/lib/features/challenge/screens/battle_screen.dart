@@ -97,7 +97,7 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF1E1B4B), Color(0xFF4F46E5)],
+                  colors: [Color(0xFF071F1D), Color(0xFF0D9488)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -187,7 +187,7 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
                       child: TabBar(
                         controller: _tabs,
                         indicator: BoxDecoration(
-                          color: Colors.white,
+                          color: Color(0xFF11201E),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         indicatorSize: TabBarIndicatorSize.tab,
@@ -260,7 +260,7 @@ class _ArenaTab extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF11201E),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -271,7 +271,7 @@ class _ArenaTab extends StatelessWidget {
               width: 40, height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
+                color: const Color(0xFF23403B),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -327,7 +327,7 @@ class _ArenaTab extends StatelessWidget {
                 _doJoin(context, c.id);
               },
               gradient: const LinearGradient(
-                colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                colors: [Color(0xFF0D9488), Color(0xFF0D9488)],
               ),
             ),
             const SizedBox(height: 10),
@@ -413,7 +413,7 @@ class _ChallengeCard extends StatelessWidget {
     final isActive = challenge.status == 'active';
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFF11201E),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -431,8 +431,8 @@ class _ChallengeCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isActive
-                    ? [const Color(0xFF1E1B4B), const Color(0xFF4F46E5)]
-                    : [const Color(0xFF374151), const Color(0xFF6B7280)],
+                    ? [const Color(0xFF071F1D), const Color(0xFF0D9488)]
+                    : [const Color(0xFF9DB2AD), const Color(0xFF5F736F)],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(18),
@@ -508,7 +508,7 @@ class _ChallengeCard extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                          colors: [Color(0xFF0D9488), Color(0xFF0D9488)],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [

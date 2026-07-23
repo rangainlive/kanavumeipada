@@ -89,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF3B82F6)],
+                  colors: [Color(0xFF0B3B37), Color(0xFF0D9488), Color(0xFF14B8A6)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -150,7 +150,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Color(0xFF11201E),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
@@ -258,7 +258,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
-                          side: const BorderSide(color: Color(0xFFE2E8F0)),
+                          side: const BorderSide(color: Color(0xFF23403B)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -309,15 +309,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
+            color: active ? AppTheme.primary.withValues(alpha: 0.18) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
-            boxShadow: active
-                ? [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2))
-                  ]
+            border: active
+                ? Border.all(color: AppTheme.primary.withValues(alpha: 0.5))
                 : null,
           ),
           child: Text(
@@ -326,7 +321,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             style: TextStyle(
               fontSize: 14,
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color: active ? AppTheme.primary : AppTheme.textHint,
+              color: active ? AppTheme.primaryGlow : AppTheme.textHint,
             ),
           ),
         ),

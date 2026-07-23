@@ -25,11 +25,7 @@ class StudyScreen extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF059669), Color(0xFF0EA5E9)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: AppTheme.brandGradientDeep,
               ),
               child: SafeArea(
                 bottom: false,
