@@ -293,7 +293,7 @@ class _ExamChip extends StatelessWidget {
         ? AppTheme.primary
         : (soon ? AppTheme.border : AppTheme.primary.withValues(alpha: 0.35));
     final Color labelCol = isSelected
-        ? const Color(0xFF04120F)
+        ? const Color(0xFFFFFFFF)
         : (soon ? AppTheme.textHint : AppTheme.primaryGlow);
 
     return GestureDetector(
@@ -333,7 +333,7 @@ class _ExamChip extends StatelessWidget {
             ),
             if (isSelected) ...[
               const SizedBox(width: 6),
-              const Icon(Icons.check_circle, color: Color(0xFF04120F), size: 14),
+              const Icon(Icons.check_circle, color: Color(0xFFFFFFFF), size: 14),
             ],
             if (soon) ...[
               const SizedBox(width: 6),

@@ -3,12 +3,34 @@ import { Pool } from 'pg';
 import { createChallengeService } from '../services/challenge.service';
 import { z } from 'zod';
 
-const createChallengeSchema = z.object({
-  testId: z.string().uuid(),
-  entryFeeCoins: z.number().min(10).max(10000),
-  durationMinutes: z.number().min(60).max(10080).optional(),
-  maxParticipants: z.number().optional(),
-});
+// Keys for the Battle tab's arcade mini-games — must match the Flutter
+// registry in app/lib/features/challenge/minigames/minigame_registry.dart.
+export const MINIGAME_KEYS = [
+  'bang_bang_2',
+  'mosquito',
+  'counting_stars',
+  'puzzle_good',
+  'autobahn',
+  'apple_shootout',
+  'frog_leap',
+  'knife_throw',
+  'road_safety_dodge',
+  'deal_or_no_deal',
+  'cave_puzzle',
+] as const;
+
+const createChallengeSchema = z
+  .object({
+    gameType: z.enum(['test', 'minigame']).default('test'),
+    testId: z.string().uuid().optional(),
+    minigameKey: z.enum(MINIGAME_KEYS).optional(),
+    entryFeeCoins: z.number().min(10).max(10000),
+    durationMinutes: z.number().min(60).max(10080).optional(),
+    maxParticipants: z.number().optional(),
+  })
+  .refine((d) => (d.gameType === 'test' ? !!d.testId : !!d.minigameKey), {
+    message: 'testId is required for test challenges, minigameKey is required for minigame challenges',
+  });
 
 export async function challengeRoutes(fastify: FastifyInstance, pool: Pool) {
   const challengeService = createChallengeService(pool);
@@ -22,13 +44,15 @@ export async function challengeRoutes(fastify: FastifyInstance, pool: Pool) {
         const data = createChallengeSchema.parse(request.body);
         const creatorId = request.user.userId;
 
-        const challenge = await challengeService.createChallenge(
-          data.testId,
+        const challenge = await challengeService.createChallenge({
+          gameType: data.gameType,
+          testId: data.testId,
+          minigameKey: data.minigameKey,
           creatorId,
-          data.entryFeeCoins,
-          data.durationMinutes || 1440,
-          data.maxParticipants
-        );
+          entryFeeCoins: data.entryFeeCoins,
+          durationMinutes: data.durationMinutes || 1440,
+          maxParticipants: data.maxParticipants,
+        });
 
         return reply.code(201).send({ challenge });
       } catch (error: any) {
@@ -99,6 +123,28 @@ export async function challengeRoutes(fastify: FastifyInstance, pool: Pool) {
       } catch (error: any) {
         return reply.code(400).send({
           error: 'Failed to submit attempt',
+          message: error.message,
+        });
+      }
+    }
+  );
+
+  // Submit a mini-game score to a challenge
+  fastify.post(
+    '/api/challenges/:challengeId/submit-minigame-score',
+    { onRequest: [fastify.authenticate] },
+    async (request: any, reply) => {
+      try {
+        const { challengeId } = request.params;
+        const { score, timeTakenMs } = request.body;
+        const userId = request.user.userId;
+
+        await challengeService.submitMinigameScore(challengeId, userId, score, timeTakenMs);
+
+        return reply.code(200).send({ message: 'Score submitted' });
+      } catch (error: any) {
+        return reply.code(409).send({
+          error: 'Failed to submit score',
           message: error.message,
         });
       }

@@ -152,7 +152,7 @@ class SubjectChaptersScreen extends ConsumerWidget {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.auto_awesome, size: 20),
-                        color: const Color(0xFF0D9488),
+                        color: const Color(0xFF059669),
                         tooltip: isTamil ? 'AI மூலம் வினாக்கள் உருவாக்கு' : 'Generate Questions with AI',
                         visualDensity: VisualDensity.compact,
                         onPressed: () => context.push(

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
@@ -25,40 +24,38 @@ class MainShell extends StatelessWidget {
       backgroundColor: Colors.transparent,
       extendBody: true,
       body: child,
-      bottomNavigationBar: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppTheme.surface.withValues(alpha: 0.72),
-              border: Border(top: BorderSide(color: AppTheme.glassBorder)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                height: 64,
-                child: Row(
-                  children: List.generate(_destinations.length, (i) {
-                    final dest = _destinations[i];
-                    final isActive = i == selected;
-                    return Expanded(
-                      child: _NavItem(
-                        dest: dest,
-                        isActive: isActive,
-                        onTap: () {
-                          if (!isActive) context.go(dest.route);
-                        },
-                      ),
-                    );
-                  }),
-                ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.10),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 62,
+              child: Row(
+                children: List.generate(_destinations.length, (i) {
+                  final dest = _destinations[i];
+                  final isActive = i == selected;
+                  return Expanded(
+                    child: _NavItem(
+                      dest: dest,
+                      isActive: isActive,
+                      onTap: () {
+                        if (!isActive) context.go(dest.route);
+                      },
+                    ),
+                  );
+                }),
               ),
             ),
           ),
@@ -124,24 +121,13 @@ class _NavItemState extends State<_NavItem>
               duration: const Duration(milliseconds: 200),
               width: 42, height: 30,
               decoration: BoxDecoration(
-                color: active
-                    ? AppTheme.primary.withValues(alpha: 0.16)
-                    : Colors.transparent,
+                color: active ? AppTheme.primarySoft : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: active
-                    ? [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
               ),
               child: Icon(
                 active ? widget.dest.icon : widget.dest.outlineIcon,
                 size: 22,
-                color: active ? AppTheme.primaryGlow : AppTheme.textHint,
+                color: active ? AppTheme.primaryDim : AppTheme.textHint,
               ),
             ),
           ),
@@ -151,7 +137,7 @@ class _NavItemState extends State<_NavItem>
             style: TextStyle(
               fontSize: 10.5,
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color: active ? AppTheme.primaryGlow : AppTheme.textHint,
+              color: active ? AppTheme.primaryDim : AppTheme.textHint,
             ),
             child: Text(widget.dest.label),
           ),

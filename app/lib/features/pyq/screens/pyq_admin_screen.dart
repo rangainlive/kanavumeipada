@@ -9,7 +9,7 @@ class PyqAdminScreen extends ConsumerWidget {
   final String subjectId;
   const PyqAdminScreen({super.key, required this.subjectId});
 
-  static const _primary = Color(0xFF14B8A6);
+  static const _primary = Color(0xFF10B981);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,7 +43,7 @@ class PyqAdminScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.check_circle_outline, size: 48, color: Color(0xFF14B8A6)),
+                    const Icon(Icons.check_circle_outline, size: 48, color: Color(0xFF10B981)),
                     const SizedBox(height: 12),
                     Text(
                       isTamil
@@ -112,9 +112,9 @@ class _AdminQuestionCardState extends ConsumerState<_AdminQuestionCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Color(0xD110201E),
+        color: Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF23403B)),
+        border: Border.all(color: const Color(0xFFE9ECF3)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
         ],
@@ -129,11 +129,11 @@ class _AdminQuestionCardState extends ConsumerState<_AdminQuestionCard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF14B8A6).withValues(alpha: 0.1),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text('Q${widget.index + 1}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF14B8A6))),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
                 ),
                 const SizedBox(width: 8),
                 if (q.topic != null)
@@ -149,19 +149,19 @@ class _AdminQuestionCardState extends ConsumerState<_AdminQuestionCard> {
             const SizedBox(height: 10),
             Text(
               q.text,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.5, color: Color(0xFFEAF2F0)),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.5, color: Color(0xFF0F172A)),
             ),
             if (isTamil && q.textTamil != null) ...[
               const SizedBox(height: 6),
               Text(
                 q.textTamil!,
-                style: const TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF9DB2AD)),
+                style: const TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF64748B)),
               ),
             ],
             const SizedBox(height: 4),
             Text(
               isTamil ? 'சரியான விடையை தட்டவும்:' : 'Tap the correct option:',
-              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF5F736F)),
+              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)),
             ),
             const SizedBox(height: 8),
             ...q.options.map((o) => GestureDetector(
@@ -170,20 +170,20 @@ class _AdminQuestionCardState extends ConsumerState<_AdminQuestionCard> {
                     margin: const EdgeInsets.only(bottom: 6),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF172B28),
+                      color: const Color(0xFFF1F4F9),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF23403B)),
+                      border: Border.all(color: const Color(0xFFE9ECF3)),
                     ),
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text(o.text, style: const TextStyle(fontSize: 13, color: Color(0xFF9DB2AD))),
+                          child: Text(o.text, style: const TextStyle(fontSize: 13, color: Color(0xFF64748B))),
                         ),
                         if (_saving)
                           const SizedBox(
                               width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                         else
-                          const Icon(Icons.radio_button_unchecked, size: 16, color: Color(0xFF5F736F)),
+                          const Icon(Icons.radio_button_unchecked, size: 16, color: Color(0xFF94A3B8)),
                       ],
                     ),
                   ),

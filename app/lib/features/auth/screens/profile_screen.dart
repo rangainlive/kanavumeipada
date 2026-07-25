@@ -26,7 +26,7 @@ class ProfileScreen extends ConsumerWidget {
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF0B3B37), Color(0xFF0D9488), Color(0xFF0D9488)],
+                  colors: [Color(0xFF047857), Color(0xFF059669), Color(0xFF059669)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -113,7 +113,7 @@ class ProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Color(0xD110201E),
+                    color: Color(0xFFFFFFFF),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -332,7 +332,7 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
-          color: Color(0xD110201E),
+          color: Color(0xFFFFFFFF),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -343,7 +343,7 @@ class ProfileScreen extends ConsumerWidget {
               width: 40, height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: const Color(0xFF23403B),
+                color: const Color(0xFFE9ECF3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -400,7 +400,7 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 Widget _vDiv() => Container(
-    width: 1, height: 40, color: const Color(0xFF23403B));
+    width: 1, height: 40, color: const Color(0xFFE9ECF3));
 
 class _StatItem extends StatelessWidget {
   final String icon, value, label;
@@ -435,7 +435,7 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xD110201E),
+        color: Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(

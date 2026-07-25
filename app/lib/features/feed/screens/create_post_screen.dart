@@ -157,9 +157,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xD110201E),
+      backgroundColor: Color(0xFFFFFFFF),
       appBar: AppBar(
-        backgroundColor: Color(0xD110201E),
+        backgroundColor: Color(0xFFFFFFFF),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary),
@@ -177,7 +177,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: _canSubmit ? AppTheme.brandGradient : null,
-                color: _canSubmit ? null : const Color(0xFF23403B),
+                color: _canSubmit ? null : const Color(0xFFE9ECF3),
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: _canSubmit
                     ? [BoxShadow(
@@ -215,7 +215,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
         children: [
           // Post type selector
           Container(
-            color: Color(0xD110201E),
+            color: Color(0xFFFFFFFF),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Row(
               children: _PostKind.values.map((k) {
@@ -229,7 +229,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         gradient: selected ? AppTheme.brandGradient : null,
-                        color: selected ? null : const Color(0xFF0A1413),
+                        color: selected ? null : const Color(0xFFF4F6FB),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
@@ -374,7 +374,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                       gradient: isCorrect ? AppTheme.accentGradient : null,
                       border: isCorrect
                           ? null
-                          : Border.all(color: const Color(0xFF23403B), width: 2),
+                          : Border.all(color: const Color(0xFFE9ECF3), width: 2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
@@ -407,14 +407,14 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen>
                         borderSide: BorderSide(
                             color: isCorrect
                                 ? AppTheme.accent.withValues(alpha: 0.4)
-                                : const Color(0xFF23403B)),
+                                : const Color(0xFFE9ECF3)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(
                             color: isCorrect
                                 ? AppTheme.accent.withValues(alpha: 0.4)
-                                : const Color(0xFF23403B)),
+                                : const Color(0xFFE9ECF3)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),

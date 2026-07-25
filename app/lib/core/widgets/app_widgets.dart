@@ -150,7 +150,7 @@ class AppCard extends StatefulWidget {
     this.glow = false,
     this.glowColor,
     this.borderColor,
-    this.radius = 16,
+    this.radius = 20,
   });
 
   @override
@@ -169,11 +169,11 @@ class _AppCardState extends State<AppCard> {
         padding: widget.padding,
         margin: widget.margin,
         decoration: BoxDecoration(
-          // Slightly translucent so the aurora glow subtly shows through,
-          // tying every card into the Aurora-Glass background.
-          color: AppTheme.surface.withValues(alpha: 0.82),
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(widget.radius),
-          border: Border.all(color: widget.borderColor ?? AppTheme.glassBorder),
+          border: widget.borderColor != null
+              ? Border.all(color: widget.borderColor!)
+              : null,
           boxShadow: widget.glow ? AppTheme.glow(widget.glowColor) : AppTheme.cardShadow,
         ),
         child: widget.child,

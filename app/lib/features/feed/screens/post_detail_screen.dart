@@ -252,10 +252,10 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
             padding: EdgeInsets.only(bottom: bottom),
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xD110201E),
+                color: Color(0xFFFFFFFF),
                 border: Border(
                     top: BorderSide(
-                        color: const Color(0xFF23403B), width: 1)),
+                        color: const Color(0xFFE9ECF3), width: 1)),
                 boxShadow: [
                   BoxShadow(
                       color: Colors.black.withValues(alpha: 0.06),
@@ -277,7 +277,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                       counterText: '',
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 12),
-                      fillColor: const Color(0xFF0A1413),
+                      fillColor: const Color(0xFFF4F6FB),
                       filled: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
@@ -304,7 +304,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
                       decoration: BoxDecoration(
                         gradient:
                             hasText ? AppTheme.brandGradient : null,
-                        color: hasText ? null : const Color(0xFF23403B),
+                        color: hasText ? null : const Color(0xFFE9ECF3),
                         borderRadius: BorderRadius.circular(23),
                         boxShadow: hasText
                             ? [
@@ -343,7 +343,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen>
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xD110201E),
+      backgroundColor: const Color(0xFFFFFFFF),
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -399,7 +399,7 @@ class _FullPostCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xD110201E),
+        color: Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -439,7 +439,7 @@ class _FullPostCard extends StatelessWidget {
           ),
 
           const SizedBox(height: 14),
-          const Divider(height: 1, color: Color(0xFF0A1413)),
+          const Divider(height: 1, color: Color(0xFFF4F6FB)),
 
           // Action row
           Padding(
@@ -547,7 +547,7 @@ class _CommentBubble extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                       decoration: BoxDecoration(
-                        color: Color(0xD110201E),
+                        color: Color(0xFFFFFFFF),
                         borderRadius: const BorderRadius.only(
                           topRight: Radius.circular(16),
                           bottomLeft: Radius.circular(16),
@@ -598,14 +598,14 @@ class _CommentBubble extends StatelessWidget {
 
 Color _accentFor(FeedPost post) {
   switch (post.contentType) {
-    case 'mcq': return const Color(0xFF0D9488);
-    case 'poll': return const Color(0xFF14B8A6);
+    case 'mcq': return const Color(0xFF059669);
+    case 'poll': return const Color(0xFF10B981);
     case 'score': return AppTheme.accent;
     default: break;
   }
   switch (post.postType) {
     case 'result_shared': return AppTheme.accent;
-    case 'challenge_created': return const Color(0xFF0D9488);
+    case 'challenge_created': return const Color(0xFF059669);
     case 'test_published': return AppTheme.warning;
     default: return AppTheme.primary;
   }
@@ -735,13 +735,13 @@ class _MCQWidgetState extends State<_MCQWidget> {
               border = AppTheme.error;
               textC = AppTheme.error;
             } else {
-              bg = const Color(0xFF172B28);
-              border = const Color(0xFF23403B);
+              bg = const Color(0xFFF1F4F9);
+              border = const Color(0xFFE9ECF3);
               textC = AppTheme.textSecondary;
             }
           } else {
-            bg = const Color(0xFF172B28);
-            border = const Color(0xFF23403B);
+            bg = const Color(0xFFF1F4F9);
+            border = const Color(0xFFE9ECF3);
           }
 
           return GestureDetector(
@@ -867,7 +867,7 @@ class _PollWidgetState extends State<_PollWidget> {
                   border: Border.all(
                     color: isVoted
                         ? widget.color
-                        : const Color(0xFF23403B),
+                        : const Color(0xFFE9ECF3),
                     width: isVoted ? 1.5 : 1,
                   ),
                 ),
@@ -948,7 +948,7 @@ class _ScoreWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF14B8A6), Color(0xFF14B8A6)],
+          colors: [Color(0xFF10B981), Color(0xFF10B981)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

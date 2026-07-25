@@ -33,15 +33,15 @@ final subjectsProvider = FutureProvider.autoDispose<List<Subject>>((ref) async {
   return list.map((j) => Subject.fromJson(j as Map<String, dynamic>)).toList();
 });
 
-// Dark-mode tuned category gradients. TNPSC uses the brand teal; the other
-// exams (currently "coming soon") use muted, desaturated dark gradients.
+// Light-theme category gradients. TNPSC uses the brand emerald; other exams
+// (currently "coming soon") use clean vibrant gradients.
 const catColors = {
-  'TNPSC':   [Color(0xFF0D9488), Color(0xFF14B8A6)],
-  'UPSC':    [Color(0xFF3B3172), Color(0xFF5B4B9E)],
-  'SSC':     [Color(0xFF7A5320), Color(0xFF9C6F2A)],
-  'Banking': [Color(0xFF23507A), Color(0xFF356A99)],
-  'NEET':    [Color(0xFF7A2E3E), Color(0xFF9C4457)],
-  'JEE':     [Color(0xFF5B3172), Color(0xFF7A459E)],
+  'TNPSC':   [Color(0xFF10B981), Color(0xFF059669)],
+  'UPSC':    [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+  'SSC':     [Color(0xFFF59E0B), Color(0xFFF97316)],
+  'Banking': [Color(0xFF3B82F6), Color(0xFF06B6D4)],
+  'NEET':    [Color(0xFFEF4444), Color(0xFFEC4899)],
+  'JEE':     [Color(0xFF8B5CF6), Color(0xFFEC4899)],
 };
 
 List<Color> colorsFor(String? cat) =>

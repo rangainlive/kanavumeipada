@@ -61,7 +61,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: RefreshIndicator(
         onRefresh: _onRefresh,
-        color: const Color(0xFF0D9488),
+        color: const Color(0xFF059669),
         child: CustomScrollView(
           controller: _scroll,
           physics: const AlwaysScrollableScrollPhysics(
@@ -70,7 +70,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             // ── Feed header ─────────────────────────────────────────────
             SliverAppBar(
               pinned: true,
-              backgroundColor: Color(0xD110201E),
+              backgroundColor: Color(0xFFFFFFFF),
               surfaceTintColor: Colors.transparent,
               scrolledUnderElevation: 1,
               shadowColor: Colors.black.withValues(alpha: 0.08),
@@ -82,7 +82,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     height: 28,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+                        colors: [Color(0xFF059669), Color(0xFF10B981)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -95,7 +95,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   const Text(
                     'கனவு மெய்ப்பட',
                     style: TextStyle(
-                        color: Color(0xFFEAF2F0),
+                        color: Color(0xFF0F172A),
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
                         letterSpacing: -0.3),
@@ -107,7 +107,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.search_rounded,
-                      color: Color(0xFF9DB2AD), size: 22),
+                      color: Color(0xFF64748B), size: 22),
                   onPressed: () {},
                   tooltip: 'Search',
                 ),
@@ -117,7 +117,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 preferredSize: const Size.fromHeight(1),
                 child: Container(
                   height: 1,
-                  color: const Color(0xFF23403B),
+                  color: const Color(0xFFE9ECF3),
                 ),
               ),
             ),
@@ -214,14 +214,14 @@ class _PostFabState extends State<_PostFab>
           height: 52,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+              colors: [Color(0xFF059669), Color(0xFF10B981)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0D9488).withValues(alpha: 0.45),
+                color: const Color(0xFF059669).withValues(alpha: 0.45),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -397,7 +397,7 @@ class _PostCardState extends ConsumerState<_PostCard>
         onTap: widget.onTap,
         child: Container(
           decoration: BoxDecoration(
-            color: Color(0xD110201E),
+            color: Color(0xFFFFFFFF),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -476,7 +476,7 @@ class _PostCardState extends ConsumerState<_PostCard>
               ),
 
               const SizedBox(height: 12),
-              const Divider(height: 1, color: Color(0xFF0A1413)),
+              const Divider(height: 1, color: Color(0xFFF4F6FB)),
 
               // ── Actions ─────────────────────────────────────────────
               Padding(
@@ -665,8 +665,8 @@ class _MCQPreviewState extends ConsumerState<_MCQPreview> {
         if (revealed) {
           if (isCorrect) { bg = const Color(0xFFD1FAE5); border = AppTheme.accent; textC = const Color(0xFF065F46); }
           else if (isSelected) { bg = const Color(0xFFFEE2E2); border = AppTheme.error; textC = AppTheme.error; }
-          else { bg = const Color(0xFF172B28); border = const Color(0xFF23403B); textC = AppTheme.textHint; }
-        } else { bg = const Color(0xFF172B28); border = const Color(0xFF23403B); }
+          else { bg = const Color(0xFFF1F4F9); border = const Color(0xFFE9ECF3); textC = AppTheme.textHint; }
+        } else { bg = const Color(0xFFF1F4F9); border = const Color(0xFFE9ECF3); }
 
         return GestureDetector(
           onTap: revealed ? null : () => setState(() => _selected = i),
@@ -750,9 +750,9 @@ class _PollPreviewState extends ConsumerState<_PollPreview> {
               duration: const Duration(milliseconds: 240),
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               decoration: BoxDecoration(
-                color: isVoted ? widget.color.withValues(alpha: 0.08) : const Color(0xFF172B28),
+                color: isVoted ? widget.color.withValues(alpha: 0.08) : const Color(0xFFF1F4F9),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: isVoted ? widget.color : const Color(0xFF23403B), width: isVoted ? 1.5 : 1),
+                border: Border.all(color: isVoted ? widget.color : const Color(0xFFE9ECF3), width: isVoted ? 1.5 : 1),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
@@ -807,7 +807,7 @@ class _ScorePreview extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF14B8A6), Color(0xFF14B8A6)],
+          colors: [Color(0xFF10B981), Color(0xFF10B981)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(14),
@@ -839,14 +839,14 @@ class _ScorePreview extends StatelessWidget {
 
 Color _accentFor(FeedPost post) {
   switch (post.contentType) {
-    case 'mcq': return const Color(0xFF0D9488);
-    case 'poll': return const Color(0xFF14B8A6);
+    case 'mcq': return const Color(0xFF059669);
+    case 'poll': return const Color(0xFF10B981);
     case 'score': return AppTheme.accent;
     default: break;
   }
   switch (post.postType) {
     case 'result_shared': return AppTheme.accent;
-    case 'challenge_created': return const Color(0xFF0D9488);
+    case 'challenge_created': return const Color(0xFF059669);
     case 'test_published': return AppTheme.warning;
     default: return AppTheme.primary;
   }

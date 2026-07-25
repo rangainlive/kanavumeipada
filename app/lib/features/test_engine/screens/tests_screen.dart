@@ -11,12 +11,12 @@ class _Exam {
 }
 
 const _exams = [
-  _Exam('UPSC',    '🏛️', [Color(0xFF0D9488), Color(0xFF0D9488)], 'Civil Services',        'சிவில் சேவைகள்'),
-  _Exam('TNPSC',   '🌴', [Color(0xFF14B8A6), Color(0xFF14B8A6)], 'State Services',         'மாநில சேவைகள்'),
+  _Exam('UPSC',    '🏛️', [Color(0xFF059669), Color(0xFF059669)], 'Civil Services',        'சிவில் சேவைகள்'),
+  _Exam('TNPSC',   '🌴', [Color(0xFF10B981), Color(0xFF10B981)], 'State Services',         'மாநில சேவைகள்'),
   _Exam('SSC',     '⚖️', [Color(0xFFD97706), Color(0xFFF59E0B)], 'Combined Exams',         'ஒருங்கிணைந்த தேர்வுகள்'),
-  _Exam('Banking', '🏦', [Color(0xFF14B8A6), Color(0xFF0D9488)], 'PO / Clerk / SO',        'PO / குமாஸ்தா / SO'),
+  _Exam('Banking', '🏦', [Color(0xFF10B981), Color(0xFF059669)], 'PO / Clerk / SO',        'PO / குமாஸ்தா / SO'),
   _Exam('NEET',    '🩺', [Color(0xFFDC2626), Color(0xFFEC4899)], 'Medical Entrance',       'மருத்துவ நுழைவு'),
-  _Exam('JEE',     '🔬', [Color(0xFF0D9488), Color(0xFFEC4899)], 'Engineering Entrance',   'பொறியியல் நுழைவு'),
+  _Exam('JEE',     '🔬', [Color(0xFF059669), Color(0xFFEC4899)], 'Engineering Entrance',   'பொறியியல் நுழைவு'),
 ];
 
 class TestsScreen extends ConsumerWidget {
@@ -112,7 +112,7 @@ class TestsScreen extends ConsumerWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Color(0xD110201E),
+                                color: Color(0xFFFFFFFF),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -137,7 +137,7 @@ class TestsScreen extends ConsumerWidget {
           // Stats strip
           SliverToBoxAdapter(
             child: Container(
-              color: Color(0xD110201E),
+              color: Color(0xFFFFFFFF),
               padding: const EdgeInsets.symmetric(vertical: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -247,7 +247,7 @@ class TestsScreen extends ConsumerWidget {
 }
 
 Widget _vDivider() => Container(
-    height: 36, width: 1, color: const Color(0xFF23403B));
+    height: 36, width: 1, color: const Color(0xFFE9ECF3));
 
 class _QuickStat extends StatelessWidget {
   final String value, label;

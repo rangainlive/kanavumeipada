@@ -17,7 +17,7 @@ class PyqScreen extends ConsumerStatefulWidget {
 class _PyqScreenState extends ConsumerState<PyqScreen> {
   String? _selectedTopic;
 
-  static const _primary = Color(0xFF14B8A6);
+  static const _primary = Color(0xFF10B981);
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +79,7 @@ class _TopicSectionList extends StatelessWidget {
   final ValueChanged<String> onSelect;
   const _TopicSectionList({required this.topicsAsync, required this.isTamil, required this.onSelect});
 
-  static const _primary = Color(0xFF14B8A6);
+  static const _primary = Color(0xFF10B981);
   static const _icons = [
     Icons.account_balance_rounded,
     Icons.trending_up_rounded,
@@ -123,7 +123,7 @@ class _TopicSectionList extends StatelessWidget {
                       ? '$total வினாக்கள் · ${topics.length} பிரிவுகள்'
                       : '$total questions · ${topics.length} sections',
                   style: const TextStyle(
-                      fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF5F736F)),
+                      fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)),
                 ),
               );
             }
@@ -146,7 +146,7 @@ class _TopicSectionCard extends StatelessWidget {
   final VoidCallback onTap;
   const _TopicSectionCard({required this.topic, required this.icon, required this.onTap});
 
-  static const _primary = Color(0xFF14B8A6);
+  static const _primary = Color(0xFF10B981);
 
   static String _toTitleCase(String s) => s
       .toLowerCase()
@@ -162,9 +162,9 @@ class _TopicSectionCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Color(0xD110201E),
+          color: Color(0xFFFFFFFF),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF23403B)),
+          border: Border.all(color: const Color(0xFFE9ECF3)),
           boxShadow: [
             BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
           ],
@@ -187,7 +187,7 @@ class _TopicSectionCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFFEAF2F0),
+                  color: Color(0xFF0F172A),
                 ),
               ),
             ),
@@ -195,16 +195,16 @@ class _TopicSectionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF172B28),
+                color: const Color(0xFFF1F4F9),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 '${topic.count}',
-                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF5F736F)),
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8)),
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF5F736F), size: 20),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8), size: 20),
           ],
         ),
       ),
@@ -218,7 +218,7 @@ class _TopicQuestionList extends ConsumerWidget {
   final bool isTamil;
   const _TopicQuestionList({required this.subjectId, required this.topic, required this.isTamil});
 
-  static const _primary = Color(0xFF14B8A6);
+  static const _primary = Color(0xFF10B981);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -275,9 +275,9 @@ class _PyqCardState extends State<_PyqCard> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Color(0xD110201E),
+        color: Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF23403B)),
+        border: Border.all(color: const Color(0xFFE9ECF3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -296,13 +296,13 @@ class _PyqCardState extends State<_PyqCard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF14B8A6).withValues(alpha: 0.1),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'Q${widget.index + 1}',
                     style: const TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF14B8A6)),
+                        fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
                   ),
                 ),
                 const Spacer(),
@@ -328,7 +328,7 @@ class _PyqCardState extends State<_PyqCard> {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 height: 1.5,
-                color: Color(0xFFEAF2F0),
+                color: Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 12),
@@ -336,9 +336,9 @@ class _PyqCardState extends State<_PyqCard> {
               final isSelected = _selectedOptionId == o.id;
               final revealed = _selectedOptionId != null && q.answerMarked;
               final isCorrectOpt = o.isCorrect;
-              Color bg = const Color(0xFF172B28);
-              Color border = const Color(0xFF23403B);
-              Color fg = const Color(0xFF9DB2AD);
+              Color bg = const Color(0xFFF1F4F9);
+              Color border = const Color(0xFFE9ECF3);
+              Color fg = const Color(0xFF64748B);
               if (revealed) {
                 if (isCorrectOpt) {
                   bg = Colors.green.shade50;
@@ -350,8 +350,8 @@ class _PyqCardState extends State<_PyqCard> {
                   fg = Colors.red.shade800;
                 }
               } else if (isSelected) {
-                bg = const Color(0xFF14B8A6).withValues(alpha: 0.08);
-                border = const Color(0xFF14B8A6);
+                bg = const Color(0xFF10B981).withValues(alpha: 0.08);
+                border = const Color(0xFF10B981);
               }
               return GestureDetector(
                 onTap: () {

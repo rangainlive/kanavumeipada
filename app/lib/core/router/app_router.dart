@@ -17,6 +17,7 @@ import '../../features/content/screens/subject_chapters_screen.dart';
 import '../../features/content/screens/syllabus_screen.dart';
 import '../../features/test_engine/screens/tests_screen.dart';
 import '../../features/challenge/screens/battle_screen.dart';
+import '../../features/challenge/screens/minigame_host_screen.dart';
 import '../../features/ai_generator/screens/generate_screen.dart';
 import '../../features/pyq/screens/pyq_screen.dart';
 import '../../features/pyq/screens/pyq_admin_screen.dart';
@@ -144,6 +145,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/battle',
             builder: (context, state) => const BattleScreen(),
+          ),
+          GoRoute(
+            path: '/battle/minigame/:challengeId',
+            builder: (context, state) => MiniGameHostScreen(
+              challengeId: state.pathParameters['challengeId']!,
+              minigameKey: state.extra as String,
+            ),
           ),
           GoRoute(
             path: '/profile',

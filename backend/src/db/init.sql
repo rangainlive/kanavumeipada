@@ -43,6 +43,18 @@ ALTER TABLE IF EXISTS question_options ADD COLUMN IF NOT EXISTS text_tamil TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_questions_is_pyq ON questions(is_pyq) WHERE is_pyq = true;
 
+-- Battle tab: coin-staked arcade mini-games alongside quiz-test challenges
+ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS game_type VARCHAR(20) NOT NULL DEFAULT 'test';
+ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS minigame_key VARCHAR(50);
+ALTER TABLE IF EXISTS challenges ALTER COLUMN test_id DROP NOT NULL;
+ALTER TABLE IF EXISTS challenges DROP CONSTRAINT IF EXISTS challenges_game_type_shape;
+ALTER TABLE IF EXISTS challenges ADD CONSTRAINT challenges_game_type_shape CHECK (
+  (game_type = 'test'     AND test_id IS NOT NULL AND minigame_key IS NULL) OR
+  (game_type = 'minigame' AND test_id IS NULL AND minigame_key IS NOT NULL)
+);
+ALTER TABLE IF EXISTS challenge_participants ADD COLUMN IF NOT EXISTS score INT;
+ALTER TABLE IF EXISTS challenge_participants ADD COLUMN IF NOT EXISTS time_taken_ms INT;
+
 -- User Streaks table
 CREATE TABLE IF NOT EXISTS user_streaks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

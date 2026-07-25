@@ -3,7 +3,9 @@ import { createWalletService } from './wallet.service';
 
 export interface Challenge {
   id: string;
-  testId: string;
+  gameType: 'test' | 'minigame';
+  testId?: string;
+  minigameKey?: string;
   creatorId: string;
   entryFeeCoins: number;
   prizePoolCoins: number;
@@ -19,6 +21,8 @@ export interface ChallengeParticipant {
   challengeId: string;
   userId: string;
   attemptId?: string;
+  score?: number;
+  timeTakenMs?: number;
   rank?: number;
   prizeWonCoins: number;
   joinedAt: Date;
@@ -31,25 +35,35 @@ class ChallengeService {
     this.walletService = createWalletService(pool);
   }
 
-  async createChallenge(
-    testId: string,
-    creatorId: string,
-    entryFeeCoins: number,
-    durationMinutes: number = 1440,
-    maxParticipants?: number
-  ): Promise<Challenge> {
+  async createChallenge(opts: {
+    gameType: 'test' | 'minigame';
+    testId?: string;
+    minigameKey?: string;
+    creatorId: string;
+    entryFeeCoins: number;
+    durationMinutes?: number;
+    maxParticipants?: number;
+  }): Promise<Challenge> {
     const endAt = new Date();
-    endAt.setMinutes(endAt.getMinutes() + durationMinutes);
+    endAt.setMinutes(endAt.getMinutes() + (opts.durationMinutes ?? 1440));
 
     const result = await this.pool.query(
-      `INSERT INTO challenges (test_id, creator_id, entry_fee_coins, prize_pool_coins,
-                               max_participants, start_at, end_at, status)
-       VALUES ($1, $2, $3, 0, $4, CURRENT_TIMESTAMP, $5, 'draft')
-       RETURNING id, test_id as "testId", creator_id as "creatorId",
-         entry_fee_coins as "entryFeeCoins", prize_pool_coins as "prizePoolCoins",
+      `INSERT INTO challenges (game_type, test_id, minigame_key, creator_id, entry_fee_coins,
+                               prize_pool_coins, max_participants, start_at, end_at, status)
+       VALUES ($1, $2, $3, $4, $5, 0, $6, CURRENT_TIMESTAMP, $7, 'draft')
+       RETURNING id, game_type as "gameType", test_id as "testId", minigame_key as "minigameKey",
+         creator_id as "creatorId", entry_fee_coins as "entryFeeCoins", prize_pool_coins as "prizePoolCoins",
          max_participants as "maxParticipants", start_at as "startAt",
          end_at as "endAt", status, created_at as "createdAt"`,
-      [testId, creatorId, entryFeeCoins, maxParticipants || null, endAt]
+      [
+        opts.gameType,
+        opts.testId || null,
+        opts.minigameKey || null,
+        opts.creatorId,
+        opts.entryFeeCoins,
+        opts.maxParticipants || null,
+        endAt,
+      ]
     );
 
     return result.rows[0];
@@ -57,7 +71,8 @@ class ChallengeService {
 
   async getChallengeById(id: string): Promise<Challenge | null> {
     const result = await this.pool.query(
-      `SELECT id, test_id as "testId", creator_id as "creatorId",
+      `SELECT id, game_type as "gameType", test_id as "testId", minigame_key as "minigameKey",
+              creator_id as "creatorId",
               entry_fee_coins as "entryFeeCoins", prize_pool_coins as "prizePoolCoins",
               max_participants as "maxParticipants", start_at as "startAt",
               end_at as "endAt", status, created_at as "createdAt"
@@ -139,7 +154,8 @@ class ChallengeService {
   async getParticipants(challengeId: string): Promise<ChallengeParticipant[]> {
     const result = await this.pool.query(
       `SELECT id, challenge_id as "challengeId", user_id as "userId",
-              attempt_id as "attemptId", rank, prize_won_coins as "prizeWonCoins",
+              attempt_id as "attemptId", score, time_taken_ms as "timeTakenMs",
+              rank, prize_won_coins as "prizeWonCoins",
               joined_at as "joinedAt"
        FROM challenge_participants
        WHERE challenge_id = $1
@@ -162,6 +178,32 @@ class ChallengeService {
        WHERE challenge_id = $2 AND user_id = $3`,
       [attemptId, challengeId, userId]
     );
+  }
+
+  async submitMinigameScore(
+    challengeId: string,
+    userId: string,
+    score: number,
+    timeTakenMs?: number
+  ): Promise<void> {
+    const challenge = await this.getChallengeById(challengeId);
+    if (!challenge) {
+      throw new Error('Challenge not found');
+    }
+    if (challenge.gameType !== 'minigame') {
+      throw new Error('Challenge is not a minigame challenge');
+    }
+
+    const result = await this.pool.query(
+      `UPDATE challenge_participants
+       SET score = $1, time_taken_ms = $2
+       WHERE challenge_id = $3 AND user_id = $4 AND score IS NULL`,
+      [score, timeTakenMs ?? null, challengeId, userId]
+    );
+
+    if (result.rowCount === 0) {
+      throw new Error('Score already submitted, or you have not joined this challenge');
+    }
   }
 
   async closeChallenge(challengeId: string): Promise<void> {
@@ -190,13 +232,16 @@ class ChallengeService {
       const challenge = challengeResult.rows[0];
       const totalPool = challenge.prizePoolCoins;
 
-      // Get ranked participants with scores
+      // Get ranked participants with scores — normalizes quiz-test scores
+      // (via test_attempts) and raw minigame scores into one ranking shape.
       const participantsResult = await client.query(
-        `SELECT cp.id, cp.user_id as "userId", ta.score, ta.time_taken_sec as "timeTakenSec"
+        `SELECT cp.id, cp.user_id as "userId",
+                COALESCE(ta.score, cp.score, 0) as score,
+                COALESCE(ta.time_taken_sec * 1000, cp.time_taken_ms, 999999999) as "timeTakenMs"
          FROM challenge_participants cp
          LEFT JOIN test_attempts ta ON cp.attempt_id = ta.id
          WHERE cp.challenge_id = $1
-         ORDER BY COALESCE(ta.score, 0) DESC, COALESCE(ta.time_taken_sec, 999999) ASC`,
+         ORDER BY score DESC, "timeTakenMs" ASC`,
         [challengeId]
       );
 
@@ -278,13 +323,14 @@ class ChallengeService {
 
   async getActiveChallenges(limit: number = 20, offset: number = 0): Promise<any[]> {
     const result = await this.pool.query(
-      `SELECT c.id, c.test_id as "testId", c.creator_id as "creatorId",
+      `SELECT c.id, c.game_type as "gameType", c.test_id as "testId",
+              c.minigame_key as "minigameKey", c.creator_id as "creatorId",
               c.entry_fee_coins as "entryFeeCoins", c.prize_pool_coins as "prizePoolCoins",
               c.status, c.end_at as "endAt",
               t.title, u.name as "creatorName",
               COUNT(cp.id) as "participantCount"
        FROM challenges c
-       JOIN tests t ON c.test_id = t.id
+       LEFT JOIN tests t ON c.test_id = t.id
        JOIN users u ON c.creator_id = u.id
        LEFT JOIN challenge_participants cp ON c.id = cp.challenge_id
        WHERE c.status IN ('draft', 'active')
@@ -299,12 +345,13 @@ class ChallengeService {
 
   async getUserChallenges(userId: string): Promise<any[]> {
     const result = await this.pool.query(
-      `SELECT c.id, c.test_id as "testId", c.creator_id as "creatorId",
+      `SELECT c.id, c.game_type as "gameType", c.test_id as "testId",
+              c.minigame_key as "minigameKey", c.creator_id as "creatorId",
               c.entry_fee_coins as "entryFeeCoins", c.prize_pool_coins as "prizePoolCoins",
               c.status, c.created_at as "createdAt",
               t.title, COUNT(cp.id) as "participantCount"
        FROM challenges c
-       JOIN tests t ON c.test_id = t.id
+       LEFT JOIN tests t ON c.test_id = t.id
        LEFT JOIN challenge_participants cp ON c.id = cp.challenge_id
        WHERE c.creator_id = $1
        GROUP BY c.id, t.title

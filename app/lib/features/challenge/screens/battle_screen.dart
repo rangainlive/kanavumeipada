@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../auth/providers/auth_provider.dart';
 import '../../content/models/subject_model.dart';
 import '../../content/widgets/lang_toggle_button.dart';
 import '../../../core/theme/app_theme.dart';
+import '../minigames/minigame_registry.dart';
 
 const _apiUrl = 'https://kanavumeipada-production.up.railway.app/api';
 
 class Challenge {
   final String id;
+  final String gameType;
+  final String? minigameKey;
   final String? title;
   final String? creatorName;
   final int entryFeeCoins;
@@ -21,6 +25,8 @@ class Challenge {
 
   Challenge({
     required this.id,
+    this.gameType = 'test',
+    this.minigameKey,
     this.title, this.creatorName,
     required this.entryFeeCoins,
     required this.prizePoolCoins,
@@ -29,8 +35,12 @@ class Challenge {
     this.endAt,
   });
 
+  bool get isMinigame => gameType == 'minigame';
+
   factory Challenge.fromJson(Map<String, dynamic> j) => Challenge(
         id: j['id'],
+        gameType: j['gameType'] ?? 'test',
+        minigameKey: j['minigameKey'],
         title: j['title'],
         creatorName: j['creatorName'],
         entryFeeCoins: (j['entryFeeCoins'] as num?)?.toInt() ?? 0,
@@ -97,7 +107,7 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF071F1D), Color(0xFF0D9488)],
+                  colors: [Color(0xFF047857), Color(0xFF059669)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -187,7 +197,7 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
                       child: TabBar(
                         controller: _tabs,
                         indicator: BoxDecoration(
-                          color: Color(0xD110201E),
+                          color: Color(0xFFFFFFFF),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         indicatorSize: TabBarIndicatorSize.tab,
@@ -260,7 +270,7 @@ class _ArenaTab extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
-          color: Color(0xD110201E),
+          color: Color(0xFFFFFFFF),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -271,17 +281,25 @@ class _ArenaTab extends StatelessWidget {
               width: 40, height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: const Color(0xFF23403B),
+                color: const Color(0xFFE9ECF3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Text('⚔️', style: TextStyle(fontSize: 48)),
+            Text(
+              c.isMinigame ? (kMiniGameMeta[c.minigameKey]?.emoji ?? '🎮') : '⚔️',
+              style: const TextStyle(fontSize: 48),
+            ),
             const SizedBox(height: 12),
-            Text(c.title ?? (isTamil ? 'போரில் சேர்' : 'Join Battle'),
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary)),
+            Text(
+              c.isMinigame
+                  ? (kMiniGameMeta[c.minigameKey]?.label(isTamil) ??
+                      (isTamil ? 'போரில் சேர்' : 'Join Battle'))
+                  : (c.title ?? (isTamil ? 'போரில் சேர்' : 'Join Battle')),
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary),
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -310,9 +328,13 @@ class _ArenaTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                isTamil
-                    ? 'தரவரிசையில் இடம் பெற தேர்வை முடிக்கவும். வென்றவர் பரிசுத் தொகை பெறுவார்!'
-                    : 'Complete the test to appear on the leaderboard. Winner takes the prize pool!',
+                c.isMinigame
+                    ? (isTamil
+                        ? 'விளையாடி உங்கள் மதிப்பெண்ணை சமர்ப்பிக்கவும். வென்றவர் பரிசுத் தொகை பெறுவார்!'
+                        : 'Play the game and submit your score. Winner takes the prize pool!')
+                    : (isTamil
+                        ? 'தரவரிசையில் இடம் பெற தேர்வை முடிக்கவும். வென்றவர் பரிசுத் தொகை பெறுவார்!'
+                        : 'Complete the test to appear on the leaderboard. Winner takes the prize pool!'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
               ),
@@ -324,10 +346,10 @@ class _ArenaTab extends StatelessWidget {
                   : 'Join Battle — ${c.entryFeeCoins} 🪙',
               onPressed: () {
                 Navigator.pop(context);
-                _doJoin(context, c.id);
+                _doJoin(context, c);
               },
               gradient: const LinearGradient(
-                colors: [Color(0xFF0D9488), Color(0xFF0D9488)],
+                colors: [Color(0xFF059669), Color(0xFF059669)],
               ),
             ),
             const SizedBox(height: 10),
@@ -342,10 +364,10 @@ class _ArenaTab extends StatelessWidget {
     );
   }
 
-  Future<void> _doJoin(BuildContext context, String id) async {
+  Future<void> _doJoin(BuildContext context, Challenge c) async {
     final token = ref.read(authProvider).token;
     final r = await http.post(
-      Uri.parse('$_apiUrl/challenges/$id/join'),
+      Uri.parse('$_apiUrl/challenges/${c.id}/join'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -353,15 +375,19 @@ class _ArenaTab extends StatelessWidget {
     );
     if (!context.mounted) return;
     if (r.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('🎉 Joined! Complete the test to compete.'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppTheme.accent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
       ref.invalidate(_myChallengesProvider);
+      if (c.isMinigame) {
+        context.push('/battle/minigame/${c.id}', extra: c.minigameKey);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('🎉 Joined! Complete the test to compete.'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppTheme.accent,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
     } else {
       final data = jsonDecode(r.body);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -411,9 +437,13 @@ class _ChallengeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isActive = challenge.status == 'active';
+    final meta = challenge.isMinigame ? kMiniGameMeta[challenge.minigameKey] : null;
+    final displayTitle = challenge.isMinigame
+        ? (meta?.label(isTamil) ?? challenge.minigameKey ?? 'Mini-game')
+        : (challenge.title ?? 'Battle');
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xD110201E),
+        color: Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -431,8 +461,8 @@ class _ChallengeCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isActive
-                    ? [const Color(0xFF071F1D), const Color(0xFF0D9488)]
-                    : [const Color(0xFF9DB2AD), const Color(0xFF5F736F)],
+                    ? [const Color(0xFF047857), const Color(0xFF059669)]
+                    : [const Color(0xFF64748B), const Color(0xFF94A3B8)],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(18),
@@ -441,11 +471,11 @@ class _ChallengeCard extends StatelessWidget {
             ),
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Row(children: [
-              const Text('⚔️', style: TextStyle(fontSize: 22)),
+              Text(meta?.emoji ?? '⚔️', style: const TextStyle(fontSize: 22)),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  challenge.title ?? 'Battle',
+                  displayTitle,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 15,
@@ -508,7 +538,7 @@ class _ChallengeCard extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF0D9488), Color(0xFF0D9488)],
+                          colors: [Color(0xFF059669), Color(0xFF059669)],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [

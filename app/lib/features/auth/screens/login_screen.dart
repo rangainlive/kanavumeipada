@@ -68,198 +68,175 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       }
       if (next.error != null && (prev?.error != next.error)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!), backgroundColor: AppTheme.surface2),
+          SnackBar(content: Text(next.error!), backgroundColor: AppTheme.error),
         );
       }
     });
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
-      body: AuroraBackground(
-        dense: true,
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnim,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 8, 22, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 24),
-                  // Glowing glass logo badge
-                  Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
-                      gradient: AppTheme.brandGradient,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.55),
-                          blurRadius: 34,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.auto_stories_rounded,
-                        color: Color(0xFF04120F), size: 38),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnim,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 28),
+                // Emerald logo badge
+                Container(
+                  width: 78,
+                  height: 78,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: AppTheme.brandGradient,
+                    boxShadow: AppTheme.glow(),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'KanavuMeipada',
-                    style: TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
+                  child: const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 40),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'KanavuMeipada',
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Prepare Smart · Compete Fair · Win Big',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary.withValues(alpha: 0.9),
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Prepare Smart · Compete Fair · Win Big',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                ),
+                const SizedBox(height: 28),
 
-                  // Glass form panel
-                  GlassPanel(
-                    padding: const EdgeInsets.all(22),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Tab switcher
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: Row(children: [
-                            _tab('Sign In', !_isSignUp),
-                            _tab('Sign Up', _isSignUp),
-                          ]),
-                        ),
-                        const SizedBox(height: 22),
-
-                        if (_isSignUp) ...[
-                          _label('Full Name'),
-                          const SizedBox(height: 6),
-                          _field(
-                            controller: _nameController,
-                            hint: 'Your full name',
-                            icon: Icons.person_outline_rounded,
-                          ),
-                          const SizedBox(height: 14),
-                        ],
-
-                        _label('Phone Number'),
-                        const SizedBox(height: 6),
-                        _field(
-                          controller: _phoneController,
-                          hint: '10-digit mobile number',
-                          icon: Icons.phone_outlined,
-                          type: TextInputType.phone,
-                        ),
-                        const SizedBox(height: 14),
-
-                        _label('Password'),
-                        const SizedBox(height: 6),
-                        _field(
-                          controller: _passwordController,
-                          hint: _isSignUp ? 'Min. 6 characters' : 'Your password',
-                          icon: Icons.lock_outline_rounded,
-                          obscure: _obscurePassword,
-                          suffix: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: AppTheme.textHint,
-                              size: 20,
-                            ),
-                            onPressed: () =>
-                                setState(() => _obscurePassword = !_obscurePassword),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        GradientButton(
-                          label: _isSignUp ? 'Create Account' : 'Sign In',
-                          onPressed: authState.isLoading ? null : _submit,
-                          isLoading: authState.isLoading,
-                          icon: _isSignUp
-                              ? Icons.rocket_launch_rounded
-                              : Icons.login_rounded,
-                        ),
-
-                        const SizedBox(height: 18),
-                        Row(children: [
-                          Expanded(
-                              child: Divider(color: Colors.white.withValues(alpha: 0.12))),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('or',
-                                style: TextStyle(color: AppTheme.textHint, fontSize: 13)),
-                          ),
-                          Expanded(
-                              child: Divider(color: Colors.white.withValues(alpha: 0.12))),
-                        ]),
-                        const SizedBox(height: 14),
-
-                        // Google button
-                        Material(
-                          color: Colors.white.withValues(alpha: 0.06),
+                // White form card
+                AppCard(
+                  padding: const EdgeInsets.all(22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Tab switcher
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface2,
                           borderRadius: BorderRadius.circular(14),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(14),
-                            onTap: authState.isLoading
-                                ? null
-                                : () => ref.read(authProvider.notifier).loginWithGoogle(),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-                              ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.g_mobiledata, size: 24, color: Color(0xFFEA4335)),
-                                  SizedBox(width: 6),
-                                  Flexible(
-                                    child: Text(
-                                      'Continue with Google',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppTheme.textPrimary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: Row(children: [
+                          _tab('Sign In', !_isSignUp),
+                          _tab('Sign Up', _isSignUp),
+                        ]),
+                      ),
+                      const SizedBox(height: 22),
+
+                      if (_isSignUp) ...[
+                        _label('Full Name'),
+                        const SizedBox(height: 6),
+                        _field(
+                          controller: _nameController,
+                          hint: 'Your full name',
+                          icon: Icons.person_outline_rounded,
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+
+                      _label('Phone Number'),
+                      const SizedBox(height: 6),
+                      _field(
+                        controller: _phoneController,
+                        hint: '10-digit mobile number',
+                        icon: Icons.phone_outlined,
+                        type: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 14),
+
+                      _label('Password'),
+                      const SizedBox(height: 6),
+                      _field(
+                        controller: _passwordController,
+                        hint: _isSignUp ? 'Min. 6 characters' : 'Your password',
+                        icon: Icons.lock_outline_rounded,
+                        obscure: _obscurePassword,
+                        suffix: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: AppTheme.textHint,
+                            size: 20,
+                          ),
+                          onPressed: () =>
+                              setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      GradientButton(
+                        label: _isSignUp ? 'Create Account' : 'Sign In',
+                        onPressed: authState.isLoading ? null : _submit,
+                        isLoading: authState.isLoading,
+                        icon: _isSignUp
+                            ? Icons.rocket_launch_rounded
+                            : Icons.login_rounded,
+                      ),
+
+                      const SizedBox(height: 18),
+                      Row(children: [
+                        const Expanded(child: Divider(color: AppTheme.border)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('or',
+                              style: TextStyle(color: AppTheme.textHint, fontSize: 13)),
+                        ),
+                        const Expanded(child: Divider(color: AppTheme.border)),
+                      ]),
+                      const SizedBox(height: 14),
+
+                      // Google button
+                      OutlinedButton(
+                        onPressed: authState.isLoading
+                            ? null
+                            : () => ref.read(authProvider.notifier).loginWithGoogle(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          side: const BorderSide(color: AppTheme.border),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.g_mobiledata, size: 24, color: Color(0xFFEA4335)),
+                            SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Continue with Google',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                ),
 
-                  const SizedBox(height: 18),
-                  Text(
-                    'By continuing you agree to our Terms & Privacy Policy',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppTheme.textHint, fontSize: 11),
-                  ),
-                ],
-              ),
+                const SizedBox(height: 18),
+                const Text(
+                  'By continuing you agree to our Terms & Privacy Policy',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppTheme.textHint, fontSize: 11),
+                ),
+              ],
             ),
           ),
         ),
@@ -273,16 +250,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         onTap: () => setState(() => _isSignUp = label == 'Sign Up'),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
-            gradient: active ? AppTheme.brandGradient : null,
-            borderRadius: BorderRadius.circular(9),
+            color: active ? AppTheme.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(11),
             boxShadow: active
                 ? [
                     BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.4),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ]
                 : null,
@@ -293,7 +270,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             style: TextStyle(
               fontSize: 14,
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color: active ? const Color(0xFF04120F) : AppTheme.textSecondary,
+              color: active ? AppTheme.primaryDim : AppTheme.textHint,
             ),
           ),
         ),
@@ -324,16 +301,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         hintText: hint,
         prefixIcon: Icon(icon, size: 20),
         suffixIcon: suffix,
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.06),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppTheme.primaryGlow, width: 1.5),
-        ),
       ),
     );
   }
