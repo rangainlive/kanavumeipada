@@ -22,6 +22,9 @@ class Challenge {
   final int participantCount;
   final String status;
   final DateTime? endAt;
+  final int? myScore;
+  final int? myRank;
+  final int? myPrizeWonCoins;
 
   Challenge({
     required this.id,
@@ -34,6 +37,9 @@ class Challenge {
     required this.participantCount,
     required this.status,
     this.endAt,
+    this.myScore,
+    this.myRank,
+    this.myPrizeWonCoins,
   });
 
   bool get isMinigame => gameType == 'minigame';
@@ -50,6 +56,9 @@ class Challenge {
         int.tryParse(j['participantCount']?.toString() ?? '0') ?? 0,
     status: j['status'] ?? 'active',
     endAt: j['endAt'] != null ? DateTime.tryParse(j['endAt']) : null,
+    myScore: (j['myScore'] as num?)?.toInt(),
+    myRank: (j['myRank'] as num?)?.toInt(),
+    myPrizeWonCoins: (j['myPrizeWonCoins'] as num?)?.toInt(),
   );
 }
 
@@ -616,6 +625,57 @@ class _ChallengeCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (challenge.myScore != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.bgLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          isTamil
+                              ? 'உங்கள் மதிப்பெண்: ${challenge.myScore}'
+                              : 'Your score: ${challenge.myScore}',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        if (challenge.myRank != null) ...[
+                          const SizedBox(width: 10),
+                          Text(
+                            isTamil
+                                ? 'தரவரிசை #${challenge.myRank}'
+                                : 'Rank #${challenge.myRank}',
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                        if (challenge.myPrizeWonCoins != null &&
+                            challenge.myPrizeWonCoins! > 0) ...[
+                          const Spacer(),
+                          Text(
+                            '🏆 +${challenge.myPrizeWonCoins}',
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.accent,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
                 if (onJoin != null) ...[
                   const SizedBox(height: 14),
                   SizedBox(

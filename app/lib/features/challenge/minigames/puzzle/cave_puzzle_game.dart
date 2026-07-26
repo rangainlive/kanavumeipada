@@ -28,6 +28,16 @@ class _CavePuzzleGameState extends ConsumerState<CavePuzzleGame> {
   bool _showing = true;
   bool _done = false;
   Timer? _t;
+  Timer? _idleTimer;
+
+  // Safety net: nothing else ends the round if the player stops tapping
+  // mid-retrace, so re-arm a timeout on every successful advance.
+  void _armIdleTimer() {
+    _idleTimer?.cancel();
+    _idleTimer = Timer(const Duration(seconds: 50), () {
+      if (mounted && !_done) setState(() => _done = true);
+    });
+  }
 
   @override
   void initState() {
@@ -55,6 +65,7 @@ class _CavePuzzleGameState extends ConsumerState<CavePuzzleGame> {
             _lit = -1;
             _showing = false;
           });
+          _armIdleTimer();
           return;
         }
         setState(() => _lit = _seq[i]);
@@ -77,11 +88,13 @@ class _CavePuzzleGameState extends ConsumerState<CavePuzzleGame> {
         _lit = cell;
         _inputPos++;
       });
+      _armIdleTimer();
       Timer(const Duration(milliseconds: 140), () {
         if (mounted) setState(() => _lit = -1);
       });
       if (_inputPos >= _seq.length) {
         _round++;
+        _idleTimer?.cancel();
         Timer(const Duration(milliseconds: 400), () {
           if (mounted) _extendAndShow();
         });
@@ -94,6 +107,7 @@ class _CavePuzzleGameState extends ConsumerState<CavePuzzleGame> {
   @override
   void dispose() {
     _t?.cancel();
+    _idleTimer?.cancel();
     super.dispose();
   }
 

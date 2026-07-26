@@ -29,6 +29,7 @@ class _RoadSafetyDodgeGameState extends ConsumerState<RoadSafetyDodgeGame> {
   final _rng = Random();
   late final List<_Lane?> _lanes; // index by row; null = safe (start/goal)
   Timer? _loop;
+  Timer? _idleTimer;
   int _playerRow = 0;
   int _crossings = 0;
   bool _playing = true;
@@ -44,6 +45,10 @@ class _RoadSafetyDodgeGameState extends ConsumerState<RoadSafetyDodgeGame> {
       return _Lane(sp, cars[_rng.nextInt(cars.length)], _rng.nextDouble());
     });
     _loop = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());
+    // Safety net: standing on a safe row forever never ends the round.
+    _idleTimer = Timer(const Duration(seconds: 50), () {
+      if (_playing) _end(false);
+    });
   }
 
   void _tick() {
@@ -85,6 +90,7 @@ class _RoadSafetyDodgeGameState extends ConsumerState<RoadSafetyDodgeGame> {
   @override
   void dispose() {
     _loop?.cancel();
+    _idleTimer?.cancel();
     super.dispose();
   }
 

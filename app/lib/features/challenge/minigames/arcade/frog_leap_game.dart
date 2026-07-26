@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../content/models/subject_model.dart';
@@ -22,12 +23,23 @@ class _FrogLeapGameState extends ConsumerState<FrogLeapGame>
   double _half = 0.16; // half-width of the safe zone
   bool _playing = true;
   bool _splash = false;
+  Timer? _idleTimer;
 
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
       ..repeat(reverse: true);
+    // Safety net: without input the marker just oscillates forever.
+    _idleTimer = Timer(const Duration(seconds: 50), () {
+      if (_playing) {
+        setState(() {
+          _splash = true;
+          _playing = false;
+        });
+        _ctrl.stop();
+      }
+    });
   }
 
   void _tap() {
@@ -54,6 +66,7 @@ class _FrogLeapGameState extends ConsumerState<FrogLeapGame>
 
   @override
   void dispose() {
+    _idleTimer?.cancel();
     _ctrl.dispose();
     super.dispose();
   }

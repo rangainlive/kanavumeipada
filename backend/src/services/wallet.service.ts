@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 
 export interface WalletTransaction {
   id: string;
@@ -81,32 +81,7 @@ class WalletService {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
-
-      // Check balance with FOR UPDATE lock
-      const balanceResult = await client.query(
-        `SELECT coins_balance FROM users WHERE id = $1 FOR UPDATE`,
-        [userId]
-      );
-
-      if (!balanceResult.rows[0]) {
-        throw new Error('User not found');
-      }
-
-      if (balanceResult.rows[0].coins_balance < amount) {
-        throw new Error('Insufficient coins');
-      }
-
-      await client.query(
-        `UPDATE users SET coins_balance = coins_balance - $1 WHERE id = $2`,
-        [amount, userId]
-      );
-
-      await client.query(
-        `INSERT INTO wallet_transactions (user_id, type, amount_coins, status, description, reference_id)
-         VALUES ($1, $2, $3, 'success', $4, $5)`,
-        [userId, type, -amount, description || null, referenceId || null]
-      );
-
+      await this.deductCoinsWithClient(client, userId, amount, type, description, referenceId);
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');
@@ -114,6 +89,44 @@ class WalletService {
     } finally {
       client.release();
     }
+  }
+
+  // Same deduction logic as deductCoins, but runs on a caller-supplied client
+  // so it participates in the caller's own transaction instead of opening an
+  // independent one — needed so a multi-step flow like joinChallenge either
+  // commits or rolls back as a single atomic unit.
+  async deductCoinsWithClient(
+    client: PoolClient,
+    userId: string,
+    amount: number,
+    type: string = 'entry_fee',
+    description?: string,
+    referenceId?: string
+  ): Promise<void> {
+    // Check balance with FOR UPDATE lock
+    const balanceResult = await client.query(
+      `SELECT coins_balance FROM users WHERE id = $1 FOR UPDATE`,
+      [userId]
+    );
+
+    if (!balanceResult.rows[0]) {
+      throw new Error('User not found');
+    }
+
+    if (balanceResult.rows[0].coins_balance < amount) {
+      throw new Error('Insufficient coins');
+    }
+
+    await client.query(
+      `UPDATE users SET coins_balance = coins_balance - $1 WHERE id = $2`,
+      [amount, userId]
+    );
+
+    await client.query(
+      `INSERT INTO wallet_transactions (user_id, type, amount_coins, status, description, reference_id)
+       VALUES ($1, $2, $3, 'success', $4, $5)`,
+      [userId, type, -amount, description || null, referenceId || null]
+    );
   }
 
   async getTransactions(

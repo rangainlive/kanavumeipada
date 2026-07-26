@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,11 +24,17 @@ class _KnifeThrowGameState extends ConsumerState<KnifeThrowGame>
   int _count = 0;
   bool _playing = true;
   static const _minSep = 0.34; // radians (~19.5°)
+  Timer? _idleTimer;
 
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
+    // Safety net: an idle player would otherwise never lose (no auto-miss),
+    // leaving the round — and any challenge waiting on it — unresolved.
+    _idleTimer = Timer(const Duration(seconds: 50), () {
+      if (_playing) _end();
+    });
   }
 
   double get _rot => _ctrl.value * 2 * pi;
@@ -70,6 +77,7 @@ class _KnifeThrowGameState extends ConsumerState<KnifeThrowGame>
 
   @override
   void dispose() {
+    _idleTimer?.cancel();
     _ctrl.dispose();
     super.dispose();
   }

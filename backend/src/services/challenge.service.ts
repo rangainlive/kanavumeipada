@@ -105,6 +105,17 @@ class ChallengeService {
         throw new Error('Challenge is not accepting participants');
       }
 
+      // Already joined? Bail out before touching coins. Safe against a
+      // concurrent double-join because both calls must first acquire the
+      // FOR UPDATE lock on the challenge row above, so they serialize here.
+      const existingResult = await client.query(
+        `SELECT 1 FROM challenge_participants WHERE challenge_id = $1 AND user_id = $2`,
+        [challengeId, userId]
+      );
+      if (existingResult.rows.length > 0) {
+        throw new Error('You have already joined this challenge');
+      }
+
       // Check max participants
       if (challenge.maxParticipants) {
         const countResult = await client.query(
@@ -117,8 +128,11 @@ class ChallengeService {
         }
       }
 
-      // Deduct coins from user
-      await this.walletService.deductCoins(
+      // Deduct coins from user — on this same client/transaction, so a
+      // failure anywhere below rolls the deduction back too instead of
+      // leaving a committed charge with no participant row to show for it.
+      await this.walletService.deductCoinsWithClient(
+        client,
         userId,
         challenge.entryFeeCoins,
         'entry_fee',
@@ -349,12 +363,16 @@ class ChallengeService {
               c.minigame_key as "minigameKey", c.creator_id as "creatorId",
               c.entry_fee_coins as "entryFeeCoins", c.prize_pool_coins as "prizePoolCoins",
               c.status, c.created_at as "createdAt",
-              t.title, COUNT(cp.id) as "participantCount"
+              t.title, COUNT(cp.id) as "participantCount",
+              me.score as "myScore", me.rank as "myRank",
+              me.prize_won_coins as "myPrizeWonCoins"
        FROM challenges c
        LEFT JOIN tests t ON c.test_id = t.id
        LEFT JOIN challenge_participants cp ON c.id = cp.challenge_id
+       LEFT JOIN challenge_participants me ON me.challenge_id = c.id AND me.user_id = $1
        WHERE c.creator_id = $1
-       GROUP BY c.id, t.title
+          OR c.id IN (SELECT challenge_id FROM challenge_participants WHERE user_id = $1)
+       GROUP BY c.id, t.title, me.score, me.rank, me.prize_won_coins
        ORDER BY c.created_at DESC`,
       [userId]
     );
