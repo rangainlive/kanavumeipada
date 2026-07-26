@@ -21,6 +21,7 @@ import '../../features/challenge/screens/minigame_host_screen.dart';
 import '../../features/ai_generator/screens/generate_screen.dart';
 import '../../features/pyq/screens/pyq_screen.dart';
 import '../../features/pyq/screens/pyq_admin_screen.dart';
+import '../../features/challenge/minigames/minigame_registry.dart';
 import '../widgets/main_shell.dart';
 
 // ChangeNotifier that fires whenever auth state changes, used as GoRouter refreshListenable
@@ -64,6 +65,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [
+      // Dev-only: render any registered mini-game directly, bypassing login
+      // and the challenge/host-screen flow, for quick visual checks.
+      GoRoute(
+        path: '/gd/:key',
+        builder: (context, state) {
+          final key = state.pathParameters['key']!;
+          final b = kMiniGameRegistry[key];
+          return Scaffold(
+            body: SafeArea(
+              child: b == null
+                  ? const Center(child: Text('no game'))
+                  : b('demo', (_) {}),
+            ),
+          );
+        },
+      ),
       GoRoute(
         path: '/auth/login',
         builder: (context, state) => const LoginScreen(),
