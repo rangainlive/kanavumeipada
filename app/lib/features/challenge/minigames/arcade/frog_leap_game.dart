@@ -9,8 +9,9 @@ import '../common/game_common.dart';
 /// Each leap gets faster and the zone shrinks. Miss and you splash.
 class FrogLeapGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const FrogLeapGame({super.key, required this.challengeId, required this.onFinish});
+  const FrogLeapGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<FrogLeapGame> createState() => _FrogLeapGameState();

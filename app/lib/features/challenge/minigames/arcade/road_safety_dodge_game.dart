@@ -10,8 +10,9 @@ import '../common/game_common.dart';
 /// safely to score a crossing; get hit and it's over.
 class RoadSafetyDodgeGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const RoadSafetyDodgeGame({super.key, required this.challengeId, required this.onFinish});
+  const RoadSafetyDodgeGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<RoadSafetyDodgeGame> createState() => _RoadSafetyDodgeGameState();

@@ -10,8 +10,9 @@ import '../common/game_common.dart';
 /// and you're out. Score = knives landed.
 class KnifeThrowGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const KnifeThrowGame({super.key, required this.challengeId, required this.onFinish});
+  const KnifeThrowGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<KnifeThrowGame> createState() => _KnifeThrowGameState();

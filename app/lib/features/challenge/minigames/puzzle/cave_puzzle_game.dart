@@ -11,8 +11,9 @@ import '../common/game_common.dart';
 /// Each round the path grows by one. Score = rounds cleared.
 class CavePuzzleGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const CavePuzzleGame({super.key, required this.challengeId, required this.onFinish});
+  const CavePuzzleGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<CavePuzzleGame> createState() => _CavePuzzleGameState();

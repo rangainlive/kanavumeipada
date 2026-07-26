@@ -11,8 +11,9 @@ import '../common/game_common.dart';
 /// number. 5 rounds.
 class CountingStarsGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const CountingStarsGame({super.key, required this.challengeId, required this.onFinish});
+  const CountingStarsGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<CountingStarsGame> createState() => _CountingStarsGameState();

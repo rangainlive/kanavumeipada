@@ -12,8 +12,9 @@ enum _Phase { waiting, draw, falseStart, result }
 /// Random delay, then "DRAW!"; score rewards a faster tap.
 class BangBangGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const BangBangGame({super.key, required this.challengeId, required this.onFinish});
+  const BangBangGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<BangBangGame> createState() => _BangBangGameState();

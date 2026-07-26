@@ -29,6 +29,28 @@ class _MiniGameHostScreenState extends ConsumerState<MiniGameHostScreen> {
   _Stage _stage = _Stage.intro;
   MiniGameResult? _result;
   String? _errorMessage;
+  Map<String, dynamic>? _gameConfig;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConfig();
+  }
+
+  // Best-effort: if this fails, games just fall back to their own defaults.
+  Future<void> _loadConfig() async {
+    try {
+      final r = await http.get(Uri.parse('$_apiUrl/challenges/${widget.challengeId}'));
+      if (r.statusCode != 200) return;
+      final data = jsonDecode(r.body);
+      final cfg = data['challenge']?['gameConfig'];
+      if (cfg is Map<String, dynamic> && mounted) {
+        setState(() => _gameConfig = cfg);
+      }
+    } catch (_) {
+      // ignore
+    }
+  }
 
   Future<void> _submitScore(MiniGameResult result) async {
     setState(() {
@@ -87,7 +109,7 @@ class _MiniGameHostScreenState extends ConsumerState<MiniGameHostScreen> {
               onStart: () => setState(() => _stage = _Stage.playing),
             ),
           _Stage.playing => builder != null
-              ? builder(widget.challengeId, _submitScore)
+              ? builder(widget.challengeId, _gameConfig, _submitScore)
               : _ComingSoonView(isTamil: isTamil),
           _Stage.submitting => const Center(child: CircularProgressIndicator()),
           _Stage.done => _DoneView(isTamil: isTamil, result: _result),

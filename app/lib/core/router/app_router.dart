@@ -18,6 +18,7 @@ import '../../features/content/screens/syllabus_screen.dart';
 import '../../features/test_engine/screens/tests_screen.dart';
 import '../../features/challenge/screens/battle_screen.dart';
 import '../../features/challenge/screens/minigame_host_screen.dart';
+import '../../features/challenge/screens/create_battle_screen.dart';
 import '../../features/ai_generator/screens/generate_screen.dart';
 import '../../features/pyq/screens/pyq_screen.dart';
 import '../../features/pyq/screens/pyq_admin_screen.dart';
@@ -76,7 +77,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             body: SafeArea(
               child: b == null
                   ? const Center(child: Text('no game'))
-                  : b('demo', (_) {}),
+                  : b('demo', null, (_) {}),
             ),
           );
         },
@@ -162,6 +163,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/battle',
             builder: (context, state) => const BattleScreen(),
+          ),
+          GoRoute(
+            path: '/battle/create',
+            builder: (context, state) => const CreateBattleScreen(),
           ),
           GoRoute(
             path: '/battle/minigame/:challengeId',

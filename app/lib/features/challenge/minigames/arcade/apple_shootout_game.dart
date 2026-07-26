@@ -9,8 +9,9 @@ import '../common/game_common.dart';
 /// Apple Shootout — pop the falling apples before they land. 3 misses and out.
 class AppleShootoutGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const AppleShootoutGame({super.key, required this.challengeId, required this.onFinish});
+  const AppleShootoutGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<AppleShootoutGame> createState() => _AppleShootoutGameState();

@@ -31,8 +31,9 @@ const _pool = <_Q>[
 /// How Smart Are You — 5 quick brain-teasers, 4 options each.
 class PuzzleGoodGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const PuzzleGoodGame({super.key, required this.challengeId, required this.onFinish});
+  const PuzzleGoodGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<PuzzleGoodGame> createState() => _PuzzleGoodGameState();

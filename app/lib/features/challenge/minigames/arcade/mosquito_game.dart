@@ -9,8 +9,9 @@ import '../common/game_common.dart';
 /// Mosquito Swat — tap the mosquitoes before they fly away. 20s round.
 class MosquitoGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const MosquitoGame({super.key, required this.challengeId, required this.onFinish});
+  const MosquitoGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<MosquitoGame> createState() => _MosquitoGameState();

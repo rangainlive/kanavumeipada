@@ -55,6 +55,14 @@ ALTER TABLE IF EXISTS challenges ADD CONSTRAINT challenges_game_type_shape CHECK
 ALTER TABLE IF EXISTS challenge_participants ADD COLUMN IF NOT EXISTS score INT;
 ALTER TABLE IF EXISTS challenge_participants ADD COLUMN IF NOT EXISTS time_taken_ms INT;
 
+-- Battle tab: creator-configured min/max participants, public vs private
+-- (join-code) battles, and a generic per-game config payload.
+ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS min_participants INT DEFAULT 3;
+ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT true;
+ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS join_code VARCHAR(8);
+ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS game_config JSONB;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_challenges_join_code ON challenges(join_code) WHERE join_code IS NOT NULL;
+
 -- User Streaks table
 CREATE TABLE IF NOT EXISTS user_streaks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

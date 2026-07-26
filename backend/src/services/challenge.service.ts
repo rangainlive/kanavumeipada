@@ -9,11 +9,25 @@ export interface Challenge {
   creatorId: string;
   entryFeeCoins: number;
   prizePoolCoins: number;
+  minParticipants: number;
   maxParticipants?: number;
+  isPublic: boolean;
+  joinCode?: string;
+  gameConfig?: any;
   startAt: Date;
   endAt: Date;
   status: 'draft' | 'active' | 'closed' | 'distributed';
   createdAt: Date;
+}
+
+const JOIN_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I to avoid ambiguity
+
+function generateJoinCode(): string {
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += JOIN_CODE_CHARS[Math.floor(Math.random() * JOIN_CODE_CHARS.length)];
+  }
+  return code;
 }
 
 export interface ChallengeParticipant {
@@ -42,26 +56,56 @@ class ChallengeService {
     creatorId: string;
     entryFeeCoins: number;
     durationMinutes?: number;
+    minParticipants?: number;
     maxParticipants?: number;
+    isPublic?: boolean;
+    gameConfig?: any;
   }): Promise<Challenge> {
     const endAt = new Date();
     endAt.setMinutes(endAt.getMinutes() + (opts.durationMinutes ?? 1440));
+    const isPublic = opts.isPublic ?? true;
+
+    // Private battles get a short shareable code; retry on the rare
+    // collision against the unique index instead of pre-checking.
+    let joinCode: string | null = null;
+    if (!isPublic) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const candidate = generateJoinCode();
+        const existing = await this.pool.query(
+          `SELECT 1 FROM challenges WHERE join_code = $1`,
+          [candidate]
+        );
+        if (existing.rows.length === 0) {
+          joinCode = candidate;
+          break;
+        }
+      }
+      if (!joinCode) {
+        throw new Error('Could not generate a unique join code, please try again');
+      }
+    }
 
     const result = await this.pool.query(
       `INSERT INTO challenges (game_type, test_id, minigame_key, creator_id, entry_fee_coins,
-                               prize_pool_coins, max_participants, start_at, end_at, status)
-       VALUES ($1, $2, $3, $4, $5, 0, $6, CURRENT_TIMESTAMP, $7, 'draft')
+                               prize_pool_coins, min_participants, max_participants,
+                               is_public, join_code, game_config, start_at, end_at, status)
+       VALUES ($1, $2, $3, $4, $5, 0, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, $11, 'draft')
        RETURNING id, game_type as "gameType", test_id as "testId", minigame_key as "minigameKey",
          creator_id as "creatorId", entry_fee_coins as "entryFeeCoins", prize_pool_coins as "prizePoolCoins",
-         max_participants as "maxParticipants", start_at as "startAt",
-         end_at as "endAt", status, created_at as "createdAt"`,
+         min_participants as "minParticipants", max_participants as "maxParticipants",
+         is_public as "isPublic", join_code as "joinCode", game_config as "gameConfig",
+         start_at as "startAt", end_at as "endAt", status, created_at as "createdAt"`,
       [
         opts.gameType,
         opts.testId || null,
         opts.minigameKey || null,
         opts.creatorId,
         opts.entryFeeCoins,
+        opts.minParticipants ?? 3,
         opts.maxParticipants || null,
+        isPublic,
+        joinCode,
+        opts.gameConfig ? JSON.stringify(opts.gameConfig) : null,
         endAt,
       ]
     );
@@ -74,10 +118,28 @@ class ChallengeService {
       `SELECT id, game_type as "gameType", test_id as "testId", minigame_key as "minigameKey",
               creator_id as "creatorId",
               entry_fee_coins as "entryFeeCoins", prize_pool_coins as "prizePoolCoins",
-              max_participants as "maxParticipants", start_at as "startAt",
+              min_participants as "minParticipants", max_participants as "maxParticipants",
+              is_public as "isPublic", join_code as "joinCode", game_config as "gameConfig",
+              start_at as "startAt",
               end_at as "endAt", status, created_at as "createdAt"
        FROM challenges WHERE id = $1`,
       [id]
+    );
+
+    return result.rows[0] || null;
+  }
+
+  async getChallengeByJoinCode(joinCode: string): Promise<Challenge | null> {
+    const result = await this.pool.query(
+      `SELECT id, game_type as "gameType", test_id as "testId", minigame_key as "minigameKey",
+              creator_id as "creatorId",
+              entry_fee_coins as "entryFeeCoins", prize_pool_coins as "prizePoolCoins",
+              min_participants as "minParticipants", max_participants as "maxParticipants",
+              is_public as "isPublic", join_code as "joinCode", game_config as "gameConfig",
+              start_at as "startAt",
+              end_at as "endAt", status, created_at as "createdAt"
+       FROM challenges WHERE join_code = $1`,
+      [joinCode.toUpperCase()]
     );
 
     return result.rows[0] || null;
@@ -165,6 +227,15 @@ class ChallengeService {
     }
   }
 
+  async joinChallengeByCode(joinCode: string, userId: string): Promise<Challenge> {
+    const challenge = await this.getChallengeByJoinCode(joinCode);
+    if (!challenge) {
+      throw new Error('Invalid or expired join code');
+    }
+    await this.joinChallenge(challenge.id, userId);
+    return challenge;
+  }
+
   async getParticipants(challengeId: string): Promise<ChallengeParticipant[]> {
     const result = await this.pool.query(
       `SELECT id, challenge_id as "challengeId", user_id as "userId",
@@ -234,7 +305,8 @@ class ChallengeService {
 
       // Get challenge and participants
       const challengeResult = await client.query(
-        `SELECT creator_id as "creatorId", prize_pool_coins as "prizePoolCoins"
+        `SELECT creator_id as "creatorId", prize_pool_coins as "prizePoolCoins",
+                min_participants as "minParticipants"
          FROM challenges WHERE id = $1`,
         [challengeId]
       );
@@ -260,8 +332,9 @@ class ChallengeService {
       );
 
       const participants = participantsResult.rows;
+      const minParticipants = challenge.minParticipants ?? 3;
 
-      if (participants.length < 3) {
+      if (participants.length < minParticipants) {
         // Refund if not enough participants
         await client.query(
           `UPDATE challenge_participants
@@ -340,6 +413,7 @@ class ChallengeService {
       `SELECT c.id, c.game_type as "gameType", c.test_id as "testId",
               c.minigame_key as "minigameKey", c.creator_id as "creatorId",
               c.entry_fee_coins as "entryFeeCoins", c.prize_pool_coins as "prizePoolCoins",
+              c.min_participants as "minParticipants", c.max_participants as "maxParticipants",
               c.status, c.end_at as "endAt",
               t.title, u.name as "creatorName",
               COUNT(cp.id) as "participantCount"
@@ -347,7 +421,7 @@ class ChallengeService {
        LEFT JOIN tests t ON c.test_id = t.id
        JOIN users u ON c.creator_id = u.id
        LEFT JOIN challenge_participants cp ON c.id = cp.challenge_id
-       WHERE c.status IN ('draft', 'active')
+       WHERE c.status IN ('draft', 'active') AND c.is_public = true
        GROUP BY c.id, t.title, u.name
        ORDER BY c.created_at DESC
        LIMIT $1 OFFSET $2`,
@@ -362,6 +436,8 @@ class ChallengeService {
       `SELECT c.id, c.game_type as "gameType", c.test_id as "testId",
               c.minigame_key as "minigameKey", c.creator_id as "creatorId",
               c.entry_fee_coins as "entryFeeCoins", c.prize_pool_coins as "prizePoolCoins",
+              c.min_participants as "minParticipants", c.max_participants as "maxParticipants",
+              c.is_public as "isPublic", c.join_code as "joinCode",
               c.status, c.created_at as "createdAt",
               t.title, COUNT(cp.id) as "participantCount",
               me.score as "myScore", me.rank as "myRank",

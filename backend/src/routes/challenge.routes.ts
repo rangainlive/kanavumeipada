@@ -26,11 +26,21 @@ const createChallengeSchema = z
     minigameKey: z.enum(MINIGAME_KEYS).optional(),
     entryFeeCoins: z.number().min(10).max(10000),
     durationMinutes: z.number().min(60).max(10080).optional(),
-    maxParticipants: z.number().optional(),
+    minParticipants: z.number().min(2).max(1000).optional(),
+    maxParticipants: z.number().min(2).max(1000).optional(),
+    isPublic: z.boolean().optional(),
+    gameConfig: z.record(z.any()).optional(),
   })
   .refine((d) => (d.gameType === 'test' ? !!d.testId : !!d.minigameKey), {
     message: 'testId is required for test challenges, minigameKey is required for minigame challenges',
+  })
+  .refine((d) => !(d.minParticipants && d.maxParticipants) || d.minParticipants <= d.maxParticipants, {
+    message: 'minParticipants must be less than or equal to maxParticipants',
   });
+
+const joinByCodeSchema = z.object({
+  joinCode: z.string().min(4).max(8),
+});
 
 export async function challengeRoutes(fastify: FastifyInstance, pool: Pool) {
   const challengeService = createChallengeService(pool);
@@ -51,7 +61,10 @@ export async function challengeRoutes(fastify: FastifyInstance, pool: Pool) {
           creatorId,
           entryFeeCoins: data.entryFeeCoins,
           durationMinutes: data.durationMinutes || 1440,
+          minParticipants: data.minParticipants,
           maxParticipants: data.maxParticipants,
+          isPublic: data.isPublic,
+          gameConfig: data.gameConfig,
         });
 
         return reply.code(201).send({ challenge });
@@ -98,6 +111,27 @@ export async function challengeRoutes(fastify: FastifyInstance, pool: Pool) {
         await challengeService.joinChallenge(challengeId, userId);
 
         return reply.code(200).send({ message: 'Joined challenge' });
+      } catch (error: any) {
+        return reply.code(400).send({
+          error: 'Failed to join challenge',
+          message: error.message,
+        });
+      }
+    }
+  );
+
+  // Join a private challenge via its share code
+  fastify.post(
+    '/api/challenges/join-by-code',
+    { onRequest: [fastify.authenticate] },
+    async (request: any, reply) => {
+      try {
+        const { joinCode } = joinByCodeSchema.parse(request.body);
+        const userId = request.user.userId;
+
+        const challenge = await challengeService.joinChallengeByCode(joinCode, userId);
+
+        return reply.code(200).send({ message: 'Joined challenge', challenge });
       } catch (error: any) {
         return reply.code(400).send({
           error: 'Failed to join challenge',

@@ -40,26 +40,26 @@ const Map<String, MiniGameMeta> kMiniGameMeta = {
 /// absent here — MiniGameHostScreen renders a "Coming soon" placeholder
 /// for those instead of crashing.
 final Map<String, MiniGameBuilder> kMiniGameRegistry = {
-  'bang_bang_2': (challengeId, onFinish) =>
-      BangBangGame(challengeId: challengeId, onFinish: onFinish),
-  'mosquito': (challengeId, onFinish) =>
-      MosquitoGame(challengeId: challengeId, onFinish: onFinish),
-  'apple_shootout': (challengeId, onFinish) =>
-      AppleShootoutGame(challengeId: challengeId, onFinish: onFinish),
-  'knife_throw': (challengeId, onFinish) =>
-      KnifeThrowGame(challengeId: challengeId, onFinish: onFinish),
-  'frog_leap': (challengeId, onFinish) =>
-      FrogLeapGame(challengeId: challengeId, onFinish: onFinish),
-  'autobahn': (challengeId, onFinish) =>
-      AutobahnGame(challengeId: challengeId, onFinish: onFinish),
-  'road_safety_dodge': (challengeId, onFinish) =>
-      RoadSafetyDodgeGame(challengeId: challengeId, onFinish: onFinish),
-  'counting_stars': (challengeId, onFinish) =>
-      CountingStarsGame(challengeId: challengeId, onFinish: onFinish),
-  'puzzle_good': (challengeId, onFinish) =>
-      PuzzleGoodGame(challengeId: challengeId, onFinish: onFinish),
-  'deal_or_no_deal': (challengeId, onFinish) =>
-      DealOrNoDealGame(challengeId: challengeId, onFinish: onFinish),
-  'cave_puzzle': (challengeId, onFinish) =>
-      CavePuzzleGame(challengeId: challengeId, onFinish: onFinish),
+  'bang_bang_2': (challengeId, config, onFinish) =>
+      BangBangGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'mosquito': (challengeId, config, onFinish) =>
+      MosquitoGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'apple_shootout': (challengeId, config, onFinish) =>
+      AppleShootoutGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'knife_throw': (challengeId, config, onFinish) =>
+      KnifeThrowGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'frog_leap': (challengeId, config, onFinish) =>
+      FrogLeapGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'autobahn': (challengeId, config, onFinish) =>
+      AutobahnGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'road_safety_dodge': (challengeId, config, onFinish) =>
+      RoadSafetyDodgeGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'counting_stars': (challengeId, config, onFinish) =>
+      CountingStarsGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'puzzle_good': (challengeId, config, onFinish) =>
+      PuzzleGoodGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'deal_or_no_deal': (challengeId, config, onFinish) =>
+      DealOrNoDealGame(challengeId: challengeId, config: config, onFinish: onFinish),
+  'cave_puzzle': (challengeId, config, onFinish) =>
+      CavePuzzleGame(challengeId: challengeId, config: config, onFinish: onFinish),
 };

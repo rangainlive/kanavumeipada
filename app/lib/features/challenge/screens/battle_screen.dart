@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 import 'dart:convert';
 import '../../auth/providers/auth_provider.dart';
 import '../../content/models/subject_model.dart';
@@ -17,8 +19,13 @@ class Challenge {
   final String? minigameKey;
   final String? title;
   final String? creatorName;
+  final String? creatorId;
   final int entryFeeCoins;
   final int prizePoolCoins;
+  final int minParticipants;
+  final int? maxParticipants;
+  final bool isPublic;
+  final String? joinCode;
   final int participantCount;
   final String status;
   final DateTime? endAt;
@@ -32,8 +39,13 @@ class Challenge {
     this.minigameKey,
     this.title,
     this.creatorName,
+    this.creatorId,
     required this.entryFeeCoins,
     required this.prizePoolCoins,
+    this.minParticipants = 3,
+    this.maxParticipants,
+    this.isPublic = true,
+    this.joinCode,
     required this.participantCount,
     required this.status,
     this.endAt,
@@ -50,8 +62,13 @@ class Challenge {
     minigameKey: j['minigameKey'],
     title: j['title'],
     creatorName: j['creatorName'],
+    creatorId: j['creatorId'],
     entryFeeCoins: (j['entryFeeCoins'] as num?)?.toInt() ?? 0,
     prizePoolCoins: (j['prizePoolCoins'] as num?)?.toInt() ?? 0,
+    minParticipants: (j['minParticipants'] as num?)?.toInt() ?? 3,
+    maxParticipants: (j['maxParticipants'] as num?)?.toInt(),
+    isPublic: j['isPublic'] as bool? ?? true,
+    joinCode: j['joinCode'],
     participantCount:
         int.tryParse(j['participantCount']?.toString() ?? '0') ?? 0,
     status: j['status'] ?? 'active',
@@ -153,6 +170,14 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
                                 ),
                               ),
                               const Spacer(),
+                              TextButton.icon(
+                                onPressed: () => _showJoinByCodeDialog(context, ref, isTamil),
+                                icon: const Icon(Icons.key_rounded, color: Colors.white, size: 16),
+                                label: Text(
+                                  isTamil ? 'குறியீடு?' : 'Have a code?',
+                                  style: const TextStyle(color: Colors.white, fontSize: 12.5),
+                                ),
+                              ),
                               const LangToggleButton(),
                             ],
                           ),
@@ -266,8 +291,173 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final created = await context.push<bool>('/battle/create');
+          if (created == true) {
+            ref.invalidate(_challengesProvider);
+            ref.invalidate(_myChallengesProvider);
+          }
+        },
+        backgroundColor: AppTheme.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: Text(
+          isTamil ? 'போர் உருவாக்கு' : 'Create Battle',
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
+      ),
     );
   }
+}
+
+void _showShareCodeSheet(BuildContext context, bool isTamil, Challenge challenge) {
+  final code = challenge.joinCode!;
+  final meta = challenge.isMinigame ? kMiniGameMeta[challenge.minigameKey] : null;
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (_) => Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isTamil ? 'உங்கள் தனியார் போர் குறியீடு' : 'Your private battle code',
+            style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              color: AppTheme.primarySoft,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              code,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 6,
+                color: AppTheme.primaryDim,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: code));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(isTamil ? 'நகலெடுக்கப்பட்டது!' : 'Copied!')),
+                    );
+                  },
+                  icon: const Icon(Icons.copy_rounded, size: 18),
+                  label: Text(isTamil ? 'நகலெடு' : 'Copy'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => Share.share(
+                    isTamil
+                        ? 'எனது ${meta?.labelTa ?? ''} போரில் சேரவும் — குறியீடு: $code'
+                        : 'Join my ${meta?.labelEn ?? ''} battle — code: $code',
+                  ),
+                  icon: const Icon(Icons.share_rounded, size: 18),
+                  label: Text(isTamil ? 'பகிர்' : 'Share'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<void> _showJoinByCodeDialog(BuildContext context, WidgetRef ref, bool isTamil) async {
+  final controller = TextEditingController();
+  String? error;
+  final token = ref.read(authProvider).token;
+
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setDialogState) => AlertDialog(
+        title: Text(isTamil ? 'குறியீட்டுடன் சேரவும்' : 'Join with a code'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              textCapitalization: TextCapitalization.characters,
+              maxLength: 6,
+              decoration: InputDecoration(
+                hintText: isTamil ? 'உ.ம். AB12CD' : 'e.g. AB12CD',
+                errorText: error,
+              ),
+              onChanged: (v) {
+                final upper = v.toUpperCase();
+                if (upper != v) {
+                  controller.value = controller.value.copyWith(
+                    text: upper,
+                    selection: TextSelection.collapsed(offset: upper.length),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(isTamil ? 'ரத்து செய்' : 'Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final code = controller.text.trim();
+              if (code.isEmpty) return;
+              final r = await http.post(
+                Uri.parse('$_apiUrl/challenges/join-by-code'),
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer $token',
+                },
+                body: jsonEncode({'joinCode': code}),
+              );
+              if (r.statusCode == 200) {
+                if (!dialogContext.mounted) return;
+                final data = jsonDecode(r.body);
+                final challenge = Challenge.fromJson(data['challenge']);
+                Navigator.of(dialogContext).pop();
+                ref.invalidate(_myChallengesProvider);
+                if (!context.mounted) return;
+                if (challenge.isMinigame) {
+                  context.push('/battle/minigame/${challenge.id}', extra: challenge.minigameKey);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(isTamil ? '🎉 சேர்ந்தீர்கள்!' : '🎉 Joined!')),
+                  );
+                }
+              } else {
+                final data = jsonDecode(r.body);
+                setDialogState(() => error = data['message'] ?? 'Invalid code');
+              }
+            },
+            child: Text(isTamil ? 'சேர்' : 'Join'),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _ArenaTab extends StatelessWidget {
@@ -296,6 +486,7 @@ class _ArenaTab extends StatelessWidget {
                   child: _ChallengeCard(
                     challenge: challenges[i],
                     isTamil: isTamil,
+                    currentUserId: ref.read(authProvider).user?.id,
                     onJoin: () => _confirmJoin(ctx, challenges[i]),
                   ),
                 ),
@@ -492,6 +683,7 @@ class _MyBattlesTab extends StatelessWidget {
                 child: _ChallengeCard(
                   challenge: challenges[i],
                   isTamil: isTamil,
+                  currentUserId: ref.read(authProvider).user?.id,
                 ),
               ),
             ),
@@ -502,10 +694,12 @@ class _MyBattlesTab extends StatelessWidget {
 class _ChallengeCard extends StatelessWidget {
   final Challenge challenge;
   final bool isTamil;
+  final String? currentUserId;
   final VoidCallback? onJoin;
   const _ChallengeCard({
     required this.challenge,
     required this.isTamil,
+    this.currentUserId,
     this.onJoin,
   });
 
@@ -561,6 +755,10 @@ class _ChallengeCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (!challenge.isPublic) ...[
+                  const Icon(Icons.lock_rounded, color: Colors.white70, size: 14),
+                  const SizedBox(width: 6),
+                ],
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -623,6 +821,41 @@ class _ChallengeCard extends StatelessWidget {
                       AppTheme.primary.withValues(alpha: 0.1),
                       AppTheme.primary,
                     ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      isTamil
+                          ? 'குறை. ${challenge.minParticipants}${challenge.maxParticipants != null ? ' / அதி. ${challenge.maxParticipants}' : ''}'
+                          : 'Min ${challenge.minParticipants}${challenge.maxParticipants != null ? ' / Max ${challenge.maxParticipants}' : ''}',
+                      style: const TextStyle(fontSize: 11.5, color: AppTheme.textHint),
+                    ),
+                    if (!challenge.isPublic &&
+                        challenge.joinCode != null &&
+                        challenge.creatorId != null &&
+                        challenge.creatorId == currentUserId) ...[
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () => _showShareCodeSheet(context, isTamil, challenge),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primarySoft,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            isTamil ? '🔒 குறியீட்டைப் பகிர்' : '🔒 Share code',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primaryDim,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
                 if (challenge.myScore != null) ...[

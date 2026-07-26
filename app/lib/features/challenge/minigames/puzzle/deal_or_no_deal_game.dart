@@ -10,8 +10,9 @@ import '../common/game_common.dart';
 /// risk it. Score = coins you walk away with.
 class DealOrNoDealGame extends ConsumerStatefulWidget {
   final String challengeId;
+  final Map<String, dynamic>? config;
   final ValueChanged<MiniGameResult> onFinish;
-  const DealOrNoDealGame({super.key, required this.challengeId, required this.onFinish});
+  const DealOrNoDealGame({super.key, required this.challengeId, this.config, required this.onFinish});
 
   @override
   ConsumerState<DealOrNoDealGame> createState() => _DealOrNoDealGameState();
