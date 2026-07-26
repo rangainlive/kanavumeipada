@@ -103,8 +103,8 @@ class WalletService {
 
       await client.query(
         `INSERT INTO wallet_transactions (user_id, type, amount_coins, status, description, reference_id)
-         VALUES ($1, $2, -$3, 'success', $4, $5)`,
-        [userId, type, amount, description || null, referenceId || null]
+         VALUES ($1, $2, $3, 'success', $4, $5)`,
+        [userId, type, -amount, description || null, referenceId || null]
       );
 
       await client.query('COMMIT');

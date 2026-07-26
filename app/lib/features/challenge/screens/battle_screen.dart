@@ -420,6 +420,7 @@ class _ArenaTab extends StatelessWidget {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
+      body: jsonEncode({}),
     );
     if (!context.mounted) return;
     if (r.statusCode == 200) {
