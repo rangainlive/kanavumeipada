@@ -1,5 +1,15 @@
 import 'minigame_contract.dart';
 import 'reflex/bang_bang_game.dart';
+import 'arcade/mosquito_game.dart';
+import 'arcade/apple_shootout_game.dart';
+import 'arcade/knife_throw_game.dart';
+import 'arcade/frog_leap_game.dart';
+import 'arcade/autobahn_game.dart';
+import 'arcade/road_safety_dodge_game.dart';
+import 'puzzle/counting_stars_game.dart';
+import 'puzzle/puzzle_good_game.dart';
+import 'puzzle/deal_or_no_deal_game.dart';
+import 'puzzle/cave_puzzle_game.dart';
 
 class MiniGameMeta {
   final String labelEn;
@@ -32,4 +42,24 @@ const Map<String, MiniGameMeta> kMiniGameMeta = {
 final Map<String, MiniGameBuilder> kMiniGameRegistry = {
   'bang_bang_2': (challengeId, onFinish) =>
       BangBangGame(challengeId: challengeId, onFinish: onFinish),
+  'mosquito': (challengeId, onFinish) =>
+      MosquitoGame(challengeId: challengeId, onFinish: onFinish),
+  'apple_shootout': (challengeId, onFinish) =>
+      AppleShootoutGame(challengeId: challengeId, onFinish: onFinish),
+  'knife_throw': (challengeId, onFinish) =>
+      KnifeThrowGame(challengeId: challengeId, onFinish: onFinish),
+  'frog_leap': (challengeId, onFinish) =>
+      FrogLeapGame(challengeId: challengeId, onFinish: onFinish),
+  'autobahn': (challengeId, onFinish) =>
+      AutobahnGame(challengeId: challengeId, onFinish: onFinish),
+  'road_safety_dodge': (challengeId, onFinish) =>
+      RoadSafetyDodgeGame(challengeId: challengeId, onFinish: onFinish),
+  'counting_stars': (challengeId, onFinish) =>
+      CountingStarsGame(challengeId: challengeId, onFinish: onFinish),
+  'puzzle_good': (challengeId, onFinish) =>
+      PuzzleGoodGame(challengeId: challengeId, onFinish: onFinish),
+  'deal_or_no_deal': (challengeId, onFinish) =>
+      DealOrNoDealGame(challengeId: challengeId, onFinish: onFinish),
+  'cave_puzzle': (challengeId, onFinish) =>
+      CavePuzzleGame(challengeId: challengeId, onFinish: onFinish),
 };
