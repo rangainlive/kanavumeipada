@@ -27,7 +27,8 @@ class Challenge {
     required this.id,
     this.gameType = 'test',
     this.minigameKey,
-    this.title, this.creatorName,
+    this.title,
+    this.creatorName,
     required this.entryFeeCoins,
     required this.prizePoolCoins,
     required this.participantCount,
@@ -38,38 +39,47 @@ class Challenge {
   bool get isMinigame => gameType == 'minigame';
 
   factory Challenge.fromJson(Map<String, dynamic> j) => Challenge(
-        id: j['id'],
-        gameType: j['gameType'] ?? 'test',
-        minigameKey: j['minigameKey'],
-        title: j['title'],
-        creatorName: j['creatorName'],
-        entryFeeCoins: (j['entryFeeCoins'] as num?)?.toInt() ?? 0,
-        prizePoolCoins: (j['prizePoolCoins'] as num?)?.toInt() ?? 0,
-        participantCount:
-            int.tryParse(j['participantCount']?.toString() ?? '0') ?? 0,
-        status: j['status'] ?? 'active',
-        endAt: j['endAt'] != null ? DateTime.tryParse(j['endAt']) : null,
-      );
+    id: j['id'],
+    gameType: j['gameType'] ?? 'test',
+    minigameKey: j['minigameKey'],
+    title: j['title'],
+    creatorName: j['creatorName'],
+    entryFeeCoins: (j['entryFeeCoins'] as num?)?.toInt() ?? 0,
+    prizePoolCoins: (j['prizePoolCoins'] as num?)?.toInt() ?? 0,
+    participantCount:
+        int.tryParse(j['participantCount']?.toString() ?? '0') ?? 0,
+    status: j['status'] ?? 'active',
+    endAt: j['endAt'] != null ? DateTime.tryParse(j['endAt']) : null,
+  );
 }
 
-final _challengesProvider = FutureProvider.autoDispose<List<Challenge>>((ref) async {
+final _challengesProvider = FutureProvider.autoDispose<List<Challenge>>((
+  ref,
+) async {
   final r = await http.get(Uri.parse('$_apiUrl/challenges'));
   if (r.statusCode != 200) throw Exception('Failed');
   final data = jsonDecode(r.body);
   final list = data['challenges'] as List? ?? [];
-  return list.map((j) => Challenge.fromJson(j as Map<String, dynamic>)).toList();
+  return list
+      .map((j) => Challenge.fromJson(j as Map<String, dynamic>))
+      .toList();
 });
 
-final _myChallengesProvider =
-    FutureProvider.autoDispose<List<Challenge>>((ref) async {
+final _myChallengesProvider = FutureProvider.autoDispose<List<Challenge>>((
+  ref,
+) async {
   final token = ref.watch(authProvider).token;
   if (token == null) return [];
-  final r = await http.get(Uri.parse('$_apiUrl/challenges/user/my'),
-      headers: {'Authorization': 'Bearer $token'});
+  final r = await http.get(
+    Uri.parse('$_apiUrl/challenges/user/my'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
   if (r.statusCode != 200) return [];
   final data = jsonDecode(r.body);
   final list = data['challenges'] as List? ?? [];
-  return list.map((j) => Challenge.fromJson(j as Map<String, dynamic>)).toList();
+  return list
+      .map((j) => Challenge.fromJson(j as Map<String, dynamic>))
+      .toList();
 });
 
 class BattleScreen extends ConsumerStatefulWidget {
@@ -122,17 +132,21 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(children: [
-                            Text(isTamil ? 'போர் அரங்கம் ⚔️' : 'Battle Arena ⚔️',
+                          Row(
+                            children: [
+                              Text(
+                                isTamil ? 'போர் அரங்கம் ⚔️' : 'Battle Arena ⚔️',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: -0.3,
-                                )),
-                            const Spacer(),
-                            const LangToggleButton(),
-                          ]),
+                                ),
+                              ),
+                              const Spacer(),
+                              const LangToggleButton(),
+                            ],
+                          ),
                           const SizedBox(height: 4),
                           Text(
                             isTamil
@@ -151,37 +165,46 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
                               color: Colors.white.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2)),
-                            ),
-                            child: Row(children: [
-                              const Text('🏆', style: TextStyle(fontSize: 32)),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      isTamil ? 'உண்மையான நாணயங்கள் வெல்லுங்கள்!' : 'Win real coins!',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      isTamil
-                                          ? 'போர்களில் சேரவும், எதிரிகளை வெல்லுங்கள், பரிசு நாணயங்கள் சேகரியுங்கள்'
-                                          : 'Join battles, beat opponents, collect prize coins',
-                                      style: const TextStyle(
-                                        color: Color(0xFFBFDBFE),
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                color: Colors.white.withValues(alpha: 0.2),
                               ),
-                            ]),
+                            ),
+                            child: Row(
+                              children: [
+                                const Text(
+                                  '🏆',
+                                  style: TextStyle(fontSize: 32),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        isTamil
+                                            ? 'உண்மையான நாணயங்கள் வெல்லுங்கள்!'
+                                            : 'Win real coins!',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        isTamil
+                                            ? 'போர்களில் சேரவும், எதிரிகளை வெல்லுங்கள், பரிசு நாணயங்கள் சேகரியுங்கள்'
+                                            : 'Join battles, beat opponents, collect prize coins',
+                                        style: const TextStyle(
+                                          color: Color(0xFFBFDBFE),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 16),
                         ],
@@ -205,11 +228,17 @@ class _BattleScreenState extends ConsumerState<BattleScreen>
                         labelColor: AppTheme.primary,
                         unselectedLabelColor: Colors.white,
                         labelStyle: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 13.5),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.5,
+                        ),
                         dividerColor: Colors.transparent,
                         tabs: [
                           Tab(text: isTamil ? '⚔️  அரங்கம்' : '⚔️  Arena'),
-                          Tab(text: isTamil ? '🛡️  என் போர்கள்' : '🛡️  My Battles'),
+                          Tab(
+                            text: isTamil
+                                ? '🛡️  என் போர்கள்'
+                                : '🛡️  My Battles',
+                          ),
                         ],
                       ),
                     ),
@@ -243,7 +272,9 @@ class _ArenaTab extends StatelessWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => _ErrorView(
-          isTamil: isTamil, onRetry: () => ref.refresh(_challengesProvider)),
+        isTamil: isTamil,
+        onRetry: () => ref.refresh(_challengesProvider),
+      ),
       data: (challenges) => challenges.isEmpty
           ? _EmptyArena(isTamil: isTamil)
           : RefreshIndicator(
@@ -268,97 +299,114 @@ class _ArenaTab extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (_) => Container(
         decoration: const BoxDecoration(
           color: Color(0xFFFFFFFF),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40, height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE9ECF3),
-                borderRadius: BorderRadius.circular(2),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          24 + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE9ECF3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Text(
-              c.isMinigame ? (kMiniGameMeta[c.minigameKey]?.emoji ?? '🎮') : '⚔️',
-              style: const TextStyle(fontSize: 48),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              c.isMinigame
-                  ? (kMiniGameMeta[c.minigameKey]?.label(isTamil) ??
-                      (isTamil ? 'போரில் சேர்' : 'Join Battle'))
-                  : (c.title ?? (isTamil ? 'போரில் சேர்' : 'Join Battle')),
-              style: const TextStyle(
+              Text(
+                c.isMinigame
+                    ? (kMiniGameMeta[c.minigameKey]?.emoji ?? '🎮')
+                    : '⚔️',
+                style: const TextStyle(fontSize: 48),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                c.isMinigame
+                    ? (kMiniGameMeta[c.minigameKey]?.label(isTamil) ??
+                          (isTamil ? 'போரில் சேர்' : 'Join Battle'))
+                    : (c.title ?? (isTamil ? 'போரில் சேர்' : 'Join Battle')),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _BattleStat(
-                    label: isTamil ? 'நுழைவு கட்டணம்' : 'Entry Fee',
-                    value: '${c.entryFeeCoins} 🪙',
-                    color: AppTheme.warning,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _BattleStat(
+                      label: isTamil ? 'நுழைவு கட்டணம்' : 'Entry Fee',
+                      value: '${c.entryFeeCoins} 🪙',
+                      color: AppTheme.warning,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _BattleStat(
+                      label: isTamil ? 'பரிசுத் தொகை' : 'Prize Pool',
+                      value: '${c.prizePoolCoins} 🪙',
+                      color: AppTheme.accent,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.bgLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  c.isMinigame
+                      ? (isTamil
+                            ? 'விளையாடி உங்கள் மதிப்பெண்ணை சமர்ப்பிக்கவும். வென்றவர் பரிசுத் தொகை பெறுவார்!'
+                            : 'Play the game and submit your score. Winner takes the prize pool!')
+                      : (isTamil
+                            ? 'தரவரிசையில் இடம் பெற தேர்வை முடிக்கவும். வென்றவர் பரிசுத் தொகை பெறுவார்!'
+                            : 'Complete the test to appear on the leaderboard. Winner takes the prize pool!'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _BattleStat(
-                    label: isTamil ? 'பரிசுத் தொகை' : 'Prize Pool',
-                    value: '${c.prizePoolCoins} 🪙',
-                    color: AppTheme.accent,
-                  ),
+              ),
+              const SizedBox(height: 20),
+              GradientButton(
+                label: isTamil
+                    ? 'போரில் சேர் — ${c.entryFeeCoins} 🪙'
+                    : 'Join Battle — ${c.entryFeeCoins} 🪙',
+                onPressed: () {
+                  Navigator.pop(context);
+                  _doJoin(context, c);
+                },
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF059669), Color(0xFF059669)],
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.bgLight,
-                borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                c.isMinigame
-                    ? (isTamil
-                        ? 'விளையாடி உங்கள் மதிப்பெண்ணை சமர்ப்பிக்கவும். வென்றவர் பரிசுத் தொகை பெறுவார்!'
-                        : 'Play the game and submit your score. Winner takes the prize pool!')
-                    : (isTamil
-                        ? 'தரவரிசையில் இடம் பெற தேர்வை முடிக்கவும். வென்றவர் பரிசுத் தொகை பெறுவார்!'
-                        : 'Complete the test to appear on the leaderboard. Winner takes the prize pool!'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  isTamil ? 'ரத்து செய்' : 'Cancel',
+                  style: const TextStyle(color: AppTheme.textSecondary),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            GradientButton(
-              label: isTamil
-                  ? 'போரில் சேர் — ${c.entryFeeCoins} 🪙'
-                  : 'Join Battle — ${c.entryFeeCoins} 🪙',
-              onPressed: () {
-                Navigator.pop(context);
-                _doJoin(context, c);
-              },
-              gradient: const LinearGradient(
-                colors: [Color(0xFF059669), Color(0xFF059669)],
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(isTamil ? 'ரத்து செய்' : 'Cancel',
-                  style: const TextStyle(color: AppTheme.textSecondary)),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -384,17 +432,21 @@ class _ArenaTab extends StatelessWidget {
             content: const Text('🎉 Joined! Complete the test to compete.'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppTheme.accent,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
     } else {
       final data = jsonDecode(r.body);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(data['error'] ?? 'Failed to join'),
-        backgroundColor: AppTheme.error,
-        behavior: SnackBarBehavior.floating,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(data['error'] ?? 'Failed to join'),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 }
@@ -410,18 +462,27 @@ class _MyBattlesTab extends StatelessWidget {
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, _) => _EmptyArena(
-          isTamil: isTamil,
-          message: isTamil ? 'அரங்கம் தாவலில் இருந்து ஒரு போரில் சேரவும்!' : 'Join a battle from the Arena tab!'),
+        isTamil: isTamil,
+        message: isTamil
+            ? 'அரங்கம் தாவலில் இருந்து ஒரு போரில் சேரவும்!'
+            : 'Join a battle from the Arena tab!',
+      ),
       data: (challenges) => challenges.isEmpty
           ? _EmptyArena(
               isTamil: isTamil,
-              message: isTamil ? 'இன்னும் போர்கள் இல்லை. அரங்கத்தில் இருந்து ஒன்றில் சேரவும்!' : 'No battles yet. Join one from the Arena!')
+              message: isTamil
+                  ? 'இன்னும் போர்கள் இல்லை. அரங்கத்தில் இருந்து ஒன்றில் சேரவும்!'
+                  : 'No battles yet. Join one from the Arena!',
+            )
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
               itemCount: challenges.length,
               itemBuilder: (_, i) => Padding(
                 padding: const EdgeInsets.only(bottom: 14),
-                child: _ChallengeCard(challenge: challenges[i], isTamil: isTamil),
+                child: _ChallengeCard(
+                  challenge: challenges[i],
+                  isTamil: isTamil,
+                ),
               ),
             ),
     );
@@ -432,12 +493,18 @@ class _ChallengeCard extends StatelessWidget {
   final Challenge challenge;
   final bool isTamil;
   final VoidCallback? onJoin;
-  const _ChallengeCard({required this.challenge, required this.isTamil, this.onJoin});
+  const _ChallengeCard({
+    required this.challenge,
+    required this.isTamil,
+    this.onJoin,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isActive = challenge.status == 'active';
-    final meta = challenge.isMinigame ? kMiniGameMeta[challenge.minigameKey] : null;
+    final meta = challenge.isMinigame
+        ? kMiniGameMeta[challenge.minigameKey]
+        : null;
     final displayTitle = challenge.isMinigame
         ? (meta?.label(isTamil) ?? challenge.minigameKey ?? 'Mini-game')
         : (challenge.title ?? 'Battle');
@@ -470,35 +537,42 @@ class _ChallengeCard extends StatelessWidget {
               ),
             ),
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-            child: Row(children: [
-              Text(meta?.emoji ?? '⚔️', style: const TextStyle(fontSize: 22)),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  displayTitle,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+            child: Row(
+              children: [
+                Text(meta?.emoji ?? '⚔️', style: const TextStyle(fontSize: 22)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    displayTitle,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  challenge.status.toUpperCase(),
-                  style: TextStyle(
-                    color: isActive ? const Color(0xFF6EE7B7) : Colors.white70,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    challenge.status.toUpperCase(),
+                    style: TextStyle(
+                      color: isActive
+                          ? const Color(0xFF6EE7B7)
+                          : Colors.white70,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
 
           Padding(
@@ -512,25 +586,35 @@ class _ChallengeCard extends StatelessWidget {
                     child: Text(
                       '${isTamil ? 'உருவாக்கியவர்' : 'Created by'} ${challenge.creatorName}',
                       style: const TextStyle(
-                          fontSize: 12.5, color: AppTheme.textHint),
+                        fontSize: 12.5,
+                        color: AppTheme.textHint,
+                      ),
                     ),
                   ),
-                Row(children: [
-                  _StatPill(
-                      '🪙 ${challenge.entryFeeCoins}', isTamil ? 'நுழைவு' : 'Entry',
+                Row(
+                  children: [
+                    _StatPill(
+                      '🪙 ${challenge.entryFeeCoins}',
+                      isTamil ? 'நுழைவு' : 'Entry',
                       AppTheme.warning.withValues(alpha: 0.12),
-                      AppTheme.warning),
-                  const SizedBox(width: 8),
-                  _StatPill(
-                      '🏆 ${challenge.prizePoolCoins}', isTamil ? 'பரிசு' : 'Prize',
+                      AppTheme.warning,
+                    ),
+                    const SizedBox(width: 8),
+                    _StatPill(
+                      '🏆 ${challenge.prizePoolCoins}',
+                      isTamil ? 'பரிசு' : 'Prize',
                       AppTheme.accent.withValues(alpha: 0.12),
-                      AppTheme.accent),
-                  const SizedBox(width: 8),
-                  _StatPill(
-                      '👥 ${challenge.participantCount}', isTamil ? 'சேர்ந்தவர்கள்' : 'Joined',
+                      AppTheme.accent,
+                    ),
+                    const SizedBox(width: 8),
+                    _StatPill(
+                      '👥 ${challenge.participantCount}',
+                      isTamil ? 'சேர்ந்தவர்கள்' : 'Joined',
                       AppTheme.primary.withValues(alpha: 0.1),
-                      AppTheme.primary),
-                ]),
+                      AppTheme.primary,
+                    ),
+                  ],
+                ),
                 if (onJoin != null) ...[
                   const SizedBox(height: 14),
                   SizedBox(
@@ -544,22 +628,30 @@ class _ChallengeCard extends StatelessWidget {
                         boxShadow: [
                           BoxShadow(
                             color: AppTheme.primary.withValues(alpha: 0.35),
-                            blurRadius: 8, offset: const Offset(0, 3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: TextButton.icon(
                         onPressed: onJoin,
-                        icon: const Icon(Icons.flash_on_rounded,
-                            color: Colors.white, size: 16),
-                        label: Text(isTamil ? 'போரில் சேர்' : 'Join Battle',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14)),
+                        icon: const Icon(
+                          Icons.flash_on_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        label: Text(
+                          isTamil ? 'போரில் சேர்' : 'Join Battle',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
                         style: TextButton.styleFrom(
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -585,18 +677,23 @@ class _StatPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: bg, borderRadius: BorderRadius.circular(10),
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: fg)),
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 10, color: AppTheme.textHint)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: fg,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, color: AppTheme.textHint),
+          ),
         ],
       ),
     );
@@ -606,7 +703,11 @@ class _StatPill extends StatelessWidget {
 class _BattleStat extends StatelessWidget {
   final String label, value;
   final Color color;
-  const _BattleStat({required this.label, required this.value, required this.color});
+  const _BattleStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -619,15 +720,19 @@ class _BattleStat extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: color)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 12, color: AppTheme.textSecondary)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          ),
         ],
       ),
     );
@@ -642,23 +747,30 @@ class _EmptyArena extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Text('⚔️', style: TextStyle(fontSize: 64)),
-        const SizedBox(height: 16),
-        Text(isTamil ? 'இன்னும் போர்கள் இல்லை' : 'No battles yet',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('⚔️', style: TextStyle(fontSize: 64)),
+          const SizedBox(height: 16),
+          Text(
+            isTamil ? 'இன்னும் போர்கள் இல்லை' : 'No battles yet',
             style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary)),
-        const SizedBox(height: 6),
-        Text(
-          message ?? (isTamil
-              ? 'போர்கள் உருவாக்கப்பட்டதும் இங்கே தோன்றும்.'
-              : 'Battles will appear here once they\'re created.'),
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppTheme.textHint, fontSize: 13),
-        ),
-      ]),
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message ??
+                (isTamil
+                    ? 'போர்கள் உருவாக்கப்பட்டதும் இங்கே தோன்றும்.'
+                    : 'Battles will appear here once they\'re created.'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppTheme.textHint, fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -671,18 +783,29 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.wifi_off_rounded, size: 52, color: AppTheme.textHint),
-        const SizedBox(height: 12),
-        Text(isTamil ? 'போர்களை ஏற்ற முடியவில்லை' : 'Could not load battles',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.wifi_off_rounded,
+            size: 52,
+            color: AppTheme.textHint,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isTamil ? 'போர்களை ஏற்ற முடியவில்லை' : 'Could not load battles',
             style: const TextStyle(
-                fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: onRetry,
-          child: Text(isTamil ? 'மீண்டும் முயற்சி' : 'Retry'),
-        ),
-      ]),
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: onRetry,
+            child: Text(isTamil ? 'மீண்டும் முயற்சி' : 'Retry'),
+          ),
+        ],
+      ),
     );
   }
 }
