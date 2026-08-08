@@ -49,6 +49,20 @@ final pyqQuestionsProvider =
   return list.map((j) => PyqQuestion.fromJson(j as Map<String, dynamic>)).toList();
 });
 
+// Fetches the correct option id for a question — called only after the
+// user has picked an answer, so the answer key isn't loaded up front.
+final revealPyqAnswerProvider =
+    FutureProvider.autoDispose.family<String?, String>((ref, questionId) async {
+  final token = ref.watch(authProvider).token;
+  final response = await http.get(
+    Uri.parse('$kApiUrl/pyq/questions/$questionId/reveal'),
+    headers: token != null ? {'Authorization': 'Bearer $token'} : {},
+  );
+  if (response.statusCode != 200) throw Exception('Failed to reveal answer');
+  final data = jsonDecode(response.body);
+  return data['correctOptionId'] as String?;
+});
+
 final pyqUnmarkedProvider =
     FutureProvider.autoDispose.family<List<PyqQuestion>, String>((ref, subjectId) async {
   final token = ref.watch(authProvider).token;

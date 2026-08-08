@@ -90,7 +90,11 @@ export async function challengeRoutes(fastify: FastifyInstance, pool: Pool) {
 
       const participants = await challengeService.getParticipants(challengeId);
 
-      return reply.code(200).send({ challenge, participants });
+      // This route is unauthenticated — never leak the private-battle join
+      // code to anyone who happens to know/guess the challenge id.
+      const { joinCode, ...publicChallenge } = challenge;
+
+      return reply.code(200).send({ challenge: publicChallenge, participants });
     } catch (error: any) {
       return reply.code(500).send({
         error: 'Failed to fetch challenge',

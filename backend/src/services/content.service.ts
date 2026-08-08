@@ -134,7 +134,7 @@ class ContentService {
 
     for (const q of questionsResult.rows) {
       const optionsResult = await this.pool.query(
-        `SELECT id, text, is_correct as "isCorrect"
+        `SELECT id, text
          FROM question_options
          WHERE question_id = $1
          ORDER BY RANDOM()`,

@@ -66,7 +66,7 @@ class PyqService {
     const questions: PyqQuestion[] = [];
     for (const q of questionsResult.rows) {
       const optionsResult = await this.pool.query(
-        `SELECT id, text, text_tamil as "textTamil", is_correct as "isCorrect"
+        `SELECT id, text, text_tamil as "textTamil"
          FROM question_options
          WHERE question_id = $1
          ORDER BY text ASC`,
@@ -76,6 +76,16 @@ class PyqService {
     }
 
     return { questions, total: countResult.rows[0].total };
+  }
+
+  // Correct-option id only — fetched after the user answers, not bundled
+  // with the question so the answer key can't be read before attempting.
+  async getCorrectOptionId(questionId: string): Promise<string | null> {
+    const result = await this.pool.query(
+      `SELECT id FROM question_options WHERE question_id = $1 AND is_correct = true`,
+      [questionId]
+    );
+    return result.rows[0]?.id ?? null;
   }
 
   async getUnmarkedQuestions(subjectId: string, limit = 20): Promise<PyqQuestion[]> {

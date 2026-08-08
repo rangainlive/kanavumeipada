@@ -2,20 +2,17 @@ class PyqOption {
   final String id;
   final String text;
   final String? textTamil;
-  final bool isCorrect;
 
   PyqOption({
     required this.id,
     required this.text,
     this.textTamil,
-    required this.isCorrect,
   });
 
   factory PyqOption.fromJson(Map<String, dynamic> j) => PyqOption(
         id: j['id'],
         text: j['text'] ?? '',
         textTamil: j['textTamil'],
-        isCorrect: j['isCorrect'] ?? false,
       );
 
   String display(bool isTamil) =>

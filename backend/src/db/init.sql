@@ -41,8 +41,6 @@ ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS exam_year INT;
 ALTER TABLE IF EXISTS questions ADD COLUMN IF NOT EXISTS answer_marked BOOLEAN DEFAULT false;
 ALTER TABLE IF EXISTS question_options ADD COLUMN IF NOT EXISTS text_tamil TEXT;
 
-CREATE INDEX IF NOT EXISTS idx_questions_is_pyq ON questions(is_pyq) WHERE is_pyq = true;
-
 -- Battle tab: coin-staked arcade mini-games alongside quiz-test challenges
 ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS game_type VARCHAR(20) NOT NULL DEFAULT 'test';
 ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS minigame_key VARCHAR(50);
@@ -61,7 +59,6 @@ ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS min_participants INT D
 ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT true;
 ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS join_code VARCHAR(8);
 ALTER TABLE IF EXISTS challenges ADD COLUMN IF NOT EXISTS game_config JSONB;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_challenges_join_code ON challenges(join_code) WHERE join_code IS NOT NULL;
 
 -- User Streaks table
 CREATE TABLE IF NOT EXISTS user_streaks (
@@ -89,8 +86,10 @@ CREATE TABLE IF NOT EXISTS chapters (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   subject_id UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
+  title_tamil VARCHAR(255),
   order_index INT DEFAULT 0,
   content_text TEXT,
+  content_text_tamil TEXT,
   content_url VARCHAR(500),
   is_approved BOOLEAN DEFAULT false,
   created_by UUID REFERENCES users(id),
@@ -103,11 +102,19 @@ CREATE TABLE IF NOT EXISTS questions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   chapter_id UUID NOT NULL REFERENCES chapters(id) ON DELETE CASCADE,
   text TEXT NOT NULL,
+  text_tamil TEXT,
+  explanation TEXT,
   difficulty INT DEFAULT 1,
+  bloom_level VARCHAR(20) DEFAULT 'remember',
   source VARCHAR(100),
   created_by_user_id UUID REFERENCES users(id),
   ai_generated BOOLEAN DEFAULT false,
   is_approved BOOLEAN DEFAULT false,
+  is_pyq BOOLEAN DEFAULT false,
+  topic VARCHAR(255),
+  exam_name VARCHAR(255),
+  exam_year INT,
+  answer_marked BOOLEAN DEFAULT false,
   helpful_count INT DEFAULT 0,
   flagged_count INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -119,6 +126,7 @@ CREATE TABLE IF NOT EXISTS question_options (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
   text TEXT NOT NULL,
+  text_tamil TEXT,
   is_correct BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -189,16 +197,26 @@ CREATE TABLE IF NOT EXISTS attempt_answers (
 -- Challenges table
 CREATE TABLE IF NOT EXISTS challenges (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  test_id UUID NOT NULL REFERENCES tests(id) ON DELETE CASCADE,
+  test_id UUID REFERENCES tests(id) ON DELETE CASCADE,
+  game_type VARCHAR(20) NOT NULL DEFAULT 'test',
+  minigame_key VARCHAR(50),
   creator_id UUID NOT NULL REFERENCES users(id),
   entry_fee_coins INT NOT NULL,
   prize_pool_coins INT DEFAULT 0,
+  min_participants INT DEFAULT 3,
   max_participants INT,
+  is_public BOOLEAN DEFAULT true,
+  join_code VARCHAR(8),
+  game_config JSONB,
   start_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   end_at TIMESTAMP NOT NULL,
   status VARCHAR(50) DEFAULT 'draft',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT challenges_game_type_shape CHECK (
+    (game_type = 'test'     AND test_id IS NOT NULL AND minigame_key IS NULL) OR
+    (game_type = 'minigame' AND test_id IS NULL AND minigame_key IS NOT NULL)
+  )
 );
 
 -- Challenge Participants table
@@ -207,6 +225,8 @@ CREATE TABLE IF NOT EXISTS challenge_participants (
   challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   attempt_id UUID REFERENCES test_attempts(id),
+  score INT,
+  time_taken_ms INT,
   rank INT,
   prize_won_coins INT DEFAULT 0,
   joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -305,11 +325,13 @@ CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
 CREATE INDEX IF NOT EXISTS idx_users_exam_target ON users(exam_target);
 CREATE INDEX IF NOT EXISTS idx_chapters_subject_id ON chapters(subject_id);
 CREATE INDEX IF NOT EXISTS idx_questions_chapter_id ON questions(chapter_id);
+CREATE INDEX IF NOT EXISTS idx_questions_is_pyq ON questions(is_pyq) WHERE is_pyq = true;
 CREATE INDEX IF NOT EXISTS idx_tests_creator_id ON tests(creator_id);
 CREATE INDEX IF NOT EXISTS idx_tests_chapter_id ON tests(chapter_id);
 CREATE INDEX IF NOT EXISTS idx_test_attempts_user_id ON test_attempts(user_id);
 CREATE INDEX IF NOT EXISTS idx_test_attempts_test_id ON test_attempts(test_id);
 CREATE INDEX IF NOT EXISTS idx_challenges_creator_id ON challenges(creator_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_challenges_join_code ON challenges(join_code) WHERE join_code IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_challenge_participants_user_id ON challenge_participants(user_id);
 CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user_id ON wallet_transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_feed_posts_user_id ON feed_posts(user_id);

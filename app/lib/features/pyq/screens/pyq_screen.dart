@@ -254,18 +254,19 @@ class _TopicQuestionList extends ConsumerWidget {
   }
 }
 
-class _PyqCard extends StatefulWidget {
+class _PyqCard extends ConsumerStatefulWidget {
   final PyqQuestion question;
   final int index;
   final bool isTamil;
   const _PyqCard({required this.question, required this.index, required this.isTamil});
 
   @override
-  State<_PyqCard> createState() => _PyqCardState();
+  ConsumerState<_PyqCard> createState() => _PyqCardState();
 }
 
-class _PyqCardState extends State<_PyqCard> {
+class _PyqCardState extends ConsumerState<_PyqCard> {
   String? _selectedOptionId;
+  String? _correctOptionId;
 
   @override
   Widget build(BuildContext context) {
@@ -334,8 +335,8 @@ class _PyqCardState extends State<_PyqCard> {
             const SizedBox(height: 12),
             ...q.options.map((o) {
               final isSelected = _selectedOptionId == o.id;
-              final revealed = _selectedOptionId != null && q.answerMarked;
-              final isCorrectOpt = o.isCorrect;
+              final revealed = _correctOptionId != null && q.answerMarked;
+              final isCorrectOpt = revealed && o.id == _correctOptionId;
               Color bg = const Color(0xFFF1F4F9);
               Color border = const Color(0xFFE9ECF3);
               Color fg = const Color(0xFF64748B);
@@ -354,7 +355,7 @@ class _PyqCardState extends State<_PyqCard> {
                 border = const Color(0xFF10B981);
               }
               return GestureDetector(
-                onTap: () {
+                onTap: () async {
                   setState(() => _selectedOptionId = o.id);
                   if (!q.answerMarked) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -364,6 +365,12 @@ class _PyqCardState extends State<_PyqCard> {
                       behavior: SnackBarBehavior.floating,
                       duration: const Duration(seconds: 2),
                     ));
+                    return;
+                  }
+                  if (_correctOptionId == null) {
+                    final correctId =
+                        await ref.read(revealPyqAnswerProvider(q.id).future);
+                    if (mounted) setState(() => _correctOptionId = correctId);
                   }
                 },
                 child: Container(

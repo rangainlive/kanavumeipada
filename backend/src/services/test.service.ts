@@ -110,7 +110,7 @@ class TestService {
 
     for (const q of result.rows) {
       const optionsResult = await this.pool.query(
-        `SELECT id, text, is_correct as "isCorrect"
+        `SELECT id, text
          FROM question_options
          WHERE question_id = $1`,
         [q.id]

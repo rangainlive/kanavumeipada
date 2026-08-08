@@ -169,6 +169,21 @@ class WalletService {
     try {
       await client.query('BEGIN');
 
+      // Lock the order row, scoped to the caller so one user can't confirm
+      // (and collect coins for) another user's order, and check it hasn't
+      // already been credited so a repeat call can't double-credit.
+      const orderResult = await client.query(
+        `SELECT status FROM payment_orders
+         WHERE razorpay_order_id = $1 AND user_id = $2 FOR UPDATE`,
+        [razorpayOrderId, userId]
+      );
+      if (!orderResult.rows[0]) {
+        throw new Error('Payment order not found');
+      }
+      if (orderResult.rows[0].status === 'success') {
+        throw new Error('Payment already confirmed');
+      }
+
       // Update payment order
       await client.query(
         `UPDATE payment_orders SET status = 'success' WHERE razorpay_order_id = $1`,

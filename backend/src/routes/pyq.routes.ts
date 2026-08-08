@@ -47,6 +47,23 @@ export async function pyqRoutes(fastify: FastifyInstance, pool: Pool) {
     }
   );
 
+  // Reveal the correct option for a question — called after the user has
+  // picked an answer, kept separate from the question fetch so the answer
+  // key isn't visible before attempting.
+  fastify.get(
+    '/api/pyq/questions/:questionId/reveal',
+    { onRequest: [fastify.authenticate] },
+    async (request: any, reply) => {
+      try {
+        const { questionId } = request.params;
+        const correctOptionId = await svc.getCorrectOptionId(questionId);
+        return reply.code(200).send({ correctOptionId });
+      } catch (error: any) {
+        return reply.code(500).send({ error: 'Failed to reveal answer', message: error.message });
+      }
+    }
+  );
+
   // Mark the correct option for a PYQ question
   fastify.post(
     '/api/pyq/questions/:questionId/mark-answer',

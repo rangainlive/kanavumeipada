@@ -236,10 +236,13 @@ class ChallengeService {
     return challenge;
   }
 
+  // Public participant view — deliberately omits attempt_id (would let one
+  // participant read/submit another's test attempt) and any per-user data
+  // beyond what's needed to show a leaderboard.
   async getParticipants(challengeId: string): Promise<ChallengeParticipant[]> {
     const result = await this.pool.query(
       `SELECT id, challenge_id as "challengeId", user_id as "userId",
-              attempt_id as "attemptId", score, time_taken_ms as "timeTakenMs",
+              score, time_taken_ms as "timeTakenMs",
               rank, prize_won_coins as "prizeWonCoins",
               joined_at as "joinedAt"
        FROM challenge_participants
@@ -257,6 +260,16 @@ class ChallengeService {
     attemptId: string,
     score: number
   ): Promise<void> {
+    // The attempt must actually belong to the caller — otherwise a user
+    // could submit someone else's (higher-scoring) attempt as their own.
+    const owner = await this.pool.query(
+      `SELECT 1 FROM test_attempts WHERE id = $1 AND user_id = $2`,
+      [attemptId, userId]
+    );
+    if (owner.rows.length === 0) {
+      throw new Error('This attempt does not belong to you');
+    }
+
     await this.pool.query(
       `UPDATE challenge_participants
        SET attempt_id = $1
@@ -303,11 +316,12 @@ class ChallengeService {
     try {
       await client.query('BEGIN');
 
-      // Get challenge and participants
+      // Get challenge and participants — locked so a concurrent or repeat
+      // call can't distribute the same pool twice.
       const challengeResult = await client.query(
         `SELECT creator_id as "creatorId", prize_pool_coins as "prizePoolCoins",
-                min_participants as "minParticipants"
-         FROM challenges WHERE id = $1`,
+                min_participants as "minParticipants", status, end_at as "endAt"
+         FROM challenges WHERE id = $1 FOR UPDATE`,
         [challengeId]
       );
 
@@ -316,6 +330,14 @@ class ChallengeService {
       }
 
       const challenge = challengeResult.rows[0];
+
+      if (challenge.status === 'distributed') {
+        throw new Error('Prizes have already been distributed for this challenge');
+      }
+      if (new Date(challenge.endAt).getTime() > Date.now()) {
+        throw new Error('Challenge has not ended yet');
+      }
+
       const totalPool = challenge.prizePoolCoins;
 
       // Get ranked participants with scores — normalizes quiz-test scores
